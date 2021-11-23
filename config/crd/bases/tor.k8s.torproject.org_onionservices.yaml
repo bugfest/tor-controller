@@ -1,0 +1,123 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.7.0
+  creationTimestamp: null
+  name: onionservices.tor.k8s.torproject.org
+spec:
+  group: tor.k8s.torproject.org
+  names:
+    kind: OnionService
+    listKind: OnionServiceList
+    plural: onionservices
+    singular: onionservice
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.hostname
+      name: Hostname
+      type: string
+    - jsonPath: .status.targetClusterIP
+      name: TargetClusterIP
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: OnionService is the Schema for the onionservices API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: OnionServiceSpec defines the desired state of OnionService
+            properties:
+              extraConfig:
+                type: string
+              ports:
+                description: The list of ports that are exposed by this service.
+                items:
+                  properties:
+                    name:
+                      description: Optional if only one ServicePort is defined on
+                        this service.
+                      type: string
+                    publicPort:
+                      description: The port that will be exposed by this service.
+                      format: int32
+                      type: integer
+                    targetPort:
+                      description: 'Number or name of the port to access on the pods
+                        targeted by the service. Number must be in the range 1 to
+                        65535. Name must be an IANA_SVC_NAME. If this is a string,
+                        it will be looked up as a named port in the target Pod''s
+                        container ports. If this is not specified, the value of the
+                        ''port'' field is used (an identity map). This field is ignored
+                        for services with clusterIP=None, and should be omitted or
+                        set equal to the ''port'' field. More info: https://kubernetes.io/docs/concepts/services-networking/service/#defining-a-service'
+                      format: int32
+                      type: integer
+                  required:
+                  - publicPort
+                  type: object
+                type: array
+              privateKeySecret:
+                description: SecretReference represents a Secret Reference
+                properties:
+                  key:
+                    type: string
+                  name:
+                    description: Name is unique within a namespace to reference a
+                      secret resource.
+                    type: string
+                type: object
+              selector:
+                additionalProperties:
+                  type: string
+                type: object
+              version:
+                enum:
+                - 0
+                - 2
+                - 3
+                format: int32
+                type: integer
+            required:
+            - version
+            type: object
+          status:
+            description: OnionServiceStatus defines the observed state of OnionService
+            properties:
+              hostname:
+                type: string
+              targetClusterIP:
+                type: string
+            required:
+            - hostname
+            - targetClusterIP
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

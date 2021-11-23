@@ -1,0 +1,25 @@
+domain: k8s.torproject.org
+layout:
+- go.kubebuilder.io/v3
+projectName: tor-controller
+repo: example.com/null/tor-controller
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: k8s.torproject.org
+  group: tor
+  kind: OnionService
+  path: example.com/null/tor-controller/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: k8s.torproject.org
+  group: tor
+  kind: OnionBalancedService
+  path: example.com/null/tor-controller/api/v1alpha1
+  version: v1alpha1
+version: "3"

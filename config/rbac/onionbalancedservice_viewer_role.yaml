@@ -1,0 +1,20 @@
+# permissions for end users to view onionbalancedservices.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: onionbalancedservice-viewer-role
+rules:
+- apiGroups:
+  - tor.k8s.torproject.org
+  resources:
+  - onionbalancedservices
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - tor.k8s.torproject.org
+  resources:
+  - onionbalancedservices/status
+  verbs:
+  - get
