@@ -7,6 +7,14 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - tor.k8s.torproject.org
   resources:
   - onionbalancedservices
@@ -33,7 +41,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - tor.tor.k8s.io
+  - tor.k8s.torproject.org
   resources:
   - onionservices
   verbs:
@@ -45,13 +53,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - tor.tor.k8s.io
+  - tor.k8s.torproject.org
   resources:
   - onionservices/finalizers
   verbs:
   - update
 - apiGroups:
-  - tor.tor.k8s.io
+  - tor.k8s.torproject.org
   resources:
   - onionservices/status
   verbs:

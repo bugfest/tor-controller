@@ -1,0 +1,6 @@
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionService
+metadata:
+  name: onionservice-sample
+spec:
+  # TODO(user): Add fields here

@@ -31,8 +31,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	torv1alpha1 "example.com/null/tor-controller/api/v1alpha1"
-	"example.com/null/tor-controller/controllers"
+	torv1alpha1 "example.com/null/tor-controller/apis/tor/v1alpha1"
+	torv1alpha2 "example.com/null/tor-controller/apis/tor/v1alpha2"
+	torcontrollers "example.com/null/tor-controller/controllers/tor"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -45,6 +46,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(torv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(torv1alpha2.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -78,14 +80,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.OnionServiceReconciler{
+	if err = (&torcontrollers.OnionServiceReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OnionService")
 		os.Exit(1)
 	}
-	if err = (&controllers.OnionBalancedServiceReconciler{
+
+	if err = (&torcontrollers.OnionBalancedServiceReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {

@@ -31,7 +31,7 @@ spec:
         - /manager
         args:
         - --leader-elect
-        image: controller:latest
+        image: onions:5000/controller:latest
         name: manager
         securityContext:
           allowPrivilegeEscalation: false

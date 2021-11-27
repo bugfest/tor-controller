@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package tor
 
 import (
 	"context"
@@ -23,8 +23,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	torv1alpha1 "example.com/null/tor-controller/api/v1alpha1"
+	torv1alpha2 "example.com/null/tor-controller/apis/tor/v1alpha2"
 )
 
 // OnionBalancedServiceReconciler reconciles a OnionBalancedService object
@@ -56,7 +57,9 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *OnionBalancedServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	pred := predicate.GenerationChangedPredicate{}
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&torv1alpha1.OnionBalancedService{}).
+		For(&torv1alpha2.OnionBalancedService{}).
+		WithEventFilter(pred).
 		Complete(r)
 }
