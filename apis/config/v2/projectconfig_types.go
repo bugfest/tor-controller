@@ -21,6 +21,7 @@ import (
 	cfg "sigs.k8s.io/controller-runtime/pkg/config/v1alpha1"
 )
 
+// +kubebuilder:storageversion
 // +kubebuilder:object:root=true
 
 // ProjectConfig is the Schema for the projectconfigs API

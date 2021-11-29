@@ -11,7 +11,7 @@
     kubebuilder edit --multigroup=true
 
     # Create ProjectConfig CRD
-    kubebuilder create api --group config --version v1 --kind ProjectConfig --resource --controller=false --make=false
+    kubebuilder create api --group config --version v2 --kind ProjectConfig --resource --controller=false --make=false
 
     # v1alpha1 (to convert from original's project tor-controller)
     kubebuilder create api --group tor --version v1alpha1 --kind OnionService --controller --namespaced --resource
