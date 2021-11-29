@@ -26,18 +26,6 @@ import (
 
 // OnionServiceSpec defines the desired state of OnionService
 type OnionServiceSpec struct {
-	// The list of ports that are exposed by this service.
-	// DEPRECATED: Use rules instead
-	// +patchMergeKey=publicPort
-	// +patchStrategy=merge
-	// +optional
-	Ports []ServicePort `json:"ports,omitempty" patchStrategy:"merge" patchMergeKey:"publicPort"`
-
-	// Pod selector.
-	// DEPRECATED: Use rules instead
-	// +optional
-	Selector map[string]string `json:"selector,omitempty"`
-
 	// +patchMergeKey=port
 	// +patchStrategy=merge
 	Rules []ServiceRule `json:"rules,omitempty" pathchStrategy:"merge" patchMergeKey:"port"`

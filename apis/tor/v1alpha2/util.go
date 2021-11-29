@@ -25,6 +25,18 @@ func (s *OnionService) ServiceName() string {
 	return fmt.Sprintf(serviceNameFmt, s.Name)
 }
 
+func (s *OnionService) ServiceSelector() map[string]string {
+	serviceSelector := map[string]string{
+		"app":        s.ServiceName(),
+		"controller": s.Name,
+	}
+	return serviceSelector
+}
+
+func (s *OnionService) DeploymentLabels() map[string]string {
+	return s.ServiceSelector()
+}
+
 func (s *OnionService) RoleName() string {
 	return fmt.Sprintf(roleNameFmt, s.Name)
 }

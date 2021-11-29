@@ -1,4 +1,4 @@
-apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
+apiVersion: config.k8s.torproject.org/v2
 kind: ControllerManagerConfig
 health:
   healthProbeBindAddress: :8081
@@ -9,3 +9,5 @@ webhook:
 leaderElection:
   leaderElect: true
   resourceName: 59806307.k8s.torproject.org
+torDaemonManager:
+  image: quay.io/kragniz/tor-daemon-manager:master

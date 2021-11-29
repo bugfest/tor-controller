@@ -1,0 +1,14 @@
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionService
+metadata:
+  name: example-onion-service
+spec:
+  version: 3
+  rules:
+    - port:
+        number: 8000
+      backend:
+        service:
+          name: http-app
+          port:
+            number: 80

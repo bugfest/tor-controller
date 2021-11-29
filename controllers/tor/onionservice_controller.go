@@ -31,15 +31,16 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
+	configv2 "example.com/null/tor-controller/apis/config/v2"
 	// torv1alpha1 "example.com/null/tor-controller/apis/tor/v1alpha1"
-
 	torv1alpha2 "example.com/null/tor-controller/apis/tor/v1alpha2"
 )
 
 // OnionServiceReconciler reconciles a OnionService object
 type OnionServiceReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme        *runtime.Scheme
+	ProjectConfig configv2.ProjectConfig
 }
 
 //+kubebuilder:rbac:groups=tor.k8s.torproject.org,resources=onionservices,verbs=get;list;watch;create;update;patch;delete
@@ -75,40 +76,6 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	// err = bc.reconcileServiceAccount(onionService)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// err = bc.reconcileRole(onionService)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// err = bc.reconcileRolebinding(onionService)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// err = bc.reconcileService(onionService)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// err = bc.reconcileDeployment(onionService)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// Finally, we update the status block of the OnionService resource to reflect the
-	// current state of the world
-	// err = bc.updateOnionServiceStatus(onionService)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// bc.recorder.Event(onionService, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
-
 	namespace := onionService.Namespace
 
 	for num, rule := range onionService.Spec.Rules {
@@ -123,37 +90,67 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			return ctrl.Result{}, err
 		}
 
-		if !portExists(
-			service.Spec.Ports,
-			corev1.ServicePort{
-				Name:     rule.Backend.Service.Port.Name,
-				Port:     rule.Backend.Service.Port.Number,
-				Protocol: "TCP",
-			}) {
-			log.Error(err, "port not in service")
+		rule_backend_service := corev1.ServicePort{
+			Name:     rule.Backend.Service.Port.Name,
+			Port:     rule.Backend.Service.Port.Number,
+			Protocol: "TCP",
+		}
+		if !portExists(service.Spec.Ports, rule_backend_service) {
+			log.Error(err, fmt.Sprintf("port in service rule %#v not found in target service", rule_backend_service))
 			return ctrl.Result{}, err
 		}
 		log.Info("port in service OK")
 	}
 
+	err = r.reconcileServiceAccount(ctx, &onionService)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.reconcileRole(ctx, &onionService)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.reconcileRolebinding(ctx, &onionService)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.reconcileService(ctx, &onionService)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.reconcileDeployment(ctx, &onionService)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// bc.recorder.Event(onionService, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
+
+	// Finally, we update the status block of the OnionService resource to reflect the
+	// current state of the world
+	onionServiceCopy := onionService.DeepCopy()
+	serviceName := onionService.ServiceName()
+
+	var service corev1.Service
+	err = r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
+
 	clusterIP := ""
 	if errors.IsNotFound(err) {
 		clusterIP = "0.0.0.0"
+	} else if err != nil {
+		return ctrl.Result{}, err
 	} else {
-		// clusterIP = service.Spec.ClusterIP
-		clusterIP = "1.2.3.5"
+		clusterIP = service.Spec.ClusterIP
 	}
 
-	if onionService.Status.TargetClusterIP != clusterIP {
-		onionService.Status.TargetClusterIP = clusterIP
-	}
+	onionServiceCopy.Status.TargetClusterIP = clusterIP
+	// hostname := "test.onion"
+	// onionService.Status.Hostname = hostname
 
-	hostname := "test.onion"
-	if onionService.Status.TargetClusterIP != hostname {
-		onionService.Status.Hostname = hostname
-	}
-
-	if err := r.Status().Update(ctx, &onionService); err != nil {
+	if err := r.Status().Update(ctx, onionServiceCopy); err != nil {
 		log.Error(err, "unable to update OnionService status")
 		return ctrl.Result{}, err
 	}
@@ -198,7 +195,7 @@ func portExists(slice []corev1.ServicePort, item corev1.ServicePort) bool {
 			if p.Port == item.Port {
 				return true
 			}
-			if p.Name == item.Name {
+			if p.Name != "" && p.Name == item.Name {
 				return true
 			}
 		}

@@ -5,10 +5,13 @@
 # init
 
     # boilerplates
-    kubebuilder init --domain k8s.torproject.org --project-name tor-controller --repo example.com/null/tor-controller
+    kubebuilder init --domain k8s.torproject.org --project-name tor-controller --repo example.com/null/tor-controller --component-config
 
     # We might need to support multiple groups
     kubebuilder edit --multigroup=true
+
+    # Create ProjectConfig CRD
+    kubebuilder create api --group config --version v1 --kind ProjectConfig --resource --controller=false --make=false
 
     # v1alpha1 (to convert from original's project tor-controller)
     kubebuilder create api --group tor --version v1alpha1 --kind OnionService --controller --namespaced --resource
