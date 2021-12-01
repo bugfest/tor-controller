@@ -3,4 +3,14 @@ kind: ProjectConfig
 metadata:
   name: projectconfig-sample
 spec:
-  # TODO(user): Add fields here
+  health:
+    healthProbeBindAddress: :8081
+  metrics:
+    bindAddress: 127.0.0.1:8080
+  webhook:
+    port: 9443
+  leaderElection:
+    leaderElect: true
+    resourceName: 59806307.k8s.torproject.org
+  torDaemonManager:
+    image: quay.io/kragniz/tor-daemon-manager:master

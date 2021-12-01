@@ -1,5 +1,5 @@
 apiVersion: config.k8s.torproject.org/v2
-kind: ControllerManagerConfig
+kind: ProjectConfig
 health:
   healthProbeBindAddress: :8081
 metrics:

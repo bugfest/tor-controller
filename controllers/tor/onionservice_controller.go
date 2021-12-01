@@ -46,7 +46,12 @@ type OnionServiceReconciler struct {
 //+kubebuilder:rbac:groups=tor.k8s.torproject.org,resources=onionservices,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=tor.k8s.torproject.org,resources=onionservices/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=tor.k8s.torproject.org,resources=onionservices/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",resources=serviceaccounts,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="rbac.authorization.k8s.io",resources=roles,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="rbac.authorization.k8s.io",resources=rolebindings,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="apps",resources=deployments,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",resources=events,verbs=create;update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

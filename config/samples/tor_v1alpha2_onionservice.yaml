@@ -3,4 +3,12 @@ kind: OnionService
 metadata:
   name: onionservice-sample
 spec:
-  # TODO(user): Add fields here
+  version: 3
+  rules:
+    - port:
+        number: 8000
+      backend:
+        service:
+          name: http-app
+          port:
+            number: 80

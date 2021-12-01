@@ -1,6 +1,0 @@
-apiVersion: tor.k8s.torproject.org/v1alpha1
-kind: OnionBalancedService
-metadata:
-  name: onionbalancedservice-sample
-spec:
-  # TODO(user): Add fields here
