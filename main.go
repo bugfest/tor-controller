@@ -55,10 +55,13 @@ func init() {
 
 func main() {
 	var configFile string
+	var disableLeaderElection bool
 	flag.StringVar(&configFile, "config", "",
 		"The controller will load its initial configuration from this file. "+
 			"Omit this flag to use the default configuration values. "+
 			"Command-line flags override configuration from this file.")
+	flag.BoolVar(&disableLeaderElection, "no-leader-elect", false,
+		"Disable leader election for controller manager. ")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -77,6 +80,11 @@ func main() {
 			setupLog.Error(err, "unable to load the config file")
 			os.Exit(1)
 		}
+	}
+
+	if disableLeaderElection && options.LeaderElection {
+		options.LeaderElection = false
+		setupLog.Info("Overriding LeaderElection (no-leader-elect)")
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)

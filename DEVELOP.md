@@ -2,6 +2,10 @@
 
     brew install kubebuilder
 
+optional:
+
+    brew install k3d
+
 # init
 
     # boilerplates
@@ -39,8 +43,22 @@
     # install sample manifest(s)
     # kubectl apply -f hack/samples/onionservice.yaml
 
-    # ron controller against the current cluster
+    # run controller against the current cluster
     make run ENABLE_WEBHOOKS=false
+
+To deploy in a test cluster
+
+    echo "127.0.0.1 onions" | sudo tee -a /etc/hosts
+    k3d cluster create onions --registry-create onions:5000
+
+    export IMG=onions:5000/tor-controller:latest
+    make docker-build
+    make docker-push
+    make deploy
+
+    # deploy some examples
+    kubectl apply -f hack/sample/full-example.yaml
+    kubectl apply -f hack/sample/onionservice-new-v1alpha2.yaml
 
 # changes
 
