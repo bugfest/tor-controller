@@ -10,4 +10,5 @@ leaderElection:
   leaderElect: true
   resourceName: 59806307.k8s.torproject.org
 torDaemonManager:
-  image: quay.io/kragniz/tor-daemon-manager:master
+  # image: quay.io/kragniz/tor-daemon-manager:master
+  image: onions:5000/tor-daemon-manager:latest

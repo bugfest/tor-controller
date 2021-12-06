@@ -26,6 +26,8 @@ optional:
     kubebuilder create api --group tor --version v1alpha2 --kind OnionBalancedService --controller --namespaced --resource
     kubebuilder create webhook --group tor --version v1alpha2 --kind OnionService --conversion
 
+    kubebuilder create config --name=tor --controller-image=quay.io/kragniz/tor-controller-manager:master --output=hack/install.yaml
+    
     # edit 
     # apis/tor/v1alpha1/onionservice_types.go
     # apis/tor/v1alpha2/onionservice_types.go
@@ -45,6 +47,10 @@ optional:
 
     # run controller against the current cluster
     make run ENABLE_WEBHOOKS=false
+
+To test tor-local-controller (agent)
+
+    go run agents/tor/main.go -namespace default -name example-onion-service
 
 To deploy in a test cluster
 
@@ -68,6 +74,8 @@ Changes vs https://github.com/kragniz/tor-controller version
 - Code ported to kubebuilder version `3`
 - Domain updated moved from protected `tor.k8s.io` to `k8s.torproject.org` (see https://github.com/kubernetes/enhancements/pull/1111)
 - Added `OnionBalancedService` type
+- New OnionService version v1alpha2
+- Migrate clientset to controller-runtime
 
 # refs
 
@@ -100,3 +108,6 @@ rules:
         port:
             name: http
             # number: 80
+
+Use controller-set instead clientsets
+https://hackernoon.com/platforms-on-k8s-with-golang-watch-any-crd-0v2o3z1q (from https://github.com/kubernetes-sigs/kubebuilder/issues/1152)
