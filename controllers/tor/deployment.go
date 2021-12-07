@@ -165,9 +165,8 @@ func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.Proje
 								"-namespace",
 								onion.Namespace,
 							},
-							ImagePullPolicy: "IfNotPresent",
-
-							VolumeMounts: volumeMounts,
+							ImagePullPolicy: "Always",
+							VolumeMounts:    volumeMounts,
 						},
 					},
 					Volumes: volumes,

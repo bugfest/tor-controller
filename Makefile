@@ -1,6 +1,8 @@
 
 # Image URL to use all building/pushing image targets
 IMG ?= tor-controller:latest
+IMG_DAEMON ?= tor-daemon-manager:latest
+
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.22
 
@@ -71,11 +73,19 @@ run: manifests generate fmt vet ## Run a controller from your host.
 
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
-	docker build -t ${IMG} .
+	docker build -t ${IMG} -f Dockerfile .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
+
+.PHONY: docker-build-daemon
+docker-build-daemon:
+	docker build -t ${IMG_DAEMON} -f Dockerfile.tor-daemon-manager .
+
+.PHONY: docker-push-daemon
+ docker-push-daemon:
+	docker push ${IMG_DAEMON}
 
 ##@ Deployment
 

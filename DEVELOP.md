@@ -57,10 +57,17 @@ To deploy in a test cluster
     echo "127.0.0.1 onions" | sudo tee -a /etc/hosts
     k3d cluster create onions --registry-create onions:5000
 
-    export IMG=onions:5000/tor-controller:latest
-    make docker-build
-    make docker-push
+    export REGISTRY=onions:5000
+    export IMG=$REGISTRY/tor-controller:latest
+    export IMG_DAEMON=$REGISTRY/tor-daemon-manager:latest
+
+    make docker-build && make docker-push
+    make docker-build-daemon && make docker-push-daemon
+
     make deploy
+
+    docker build -f docker.out/Dockerfile.tor-daemon-manager . -t $REGISTRY/tor-daemon-manager
+    docker push $REGISTRY/tor-daemon-manager
 
     # deploy some examples
     kubectl apply -f hack/sample/full-example.yaml

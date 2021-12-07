@@ -160,7 +160,6 @@ func GetDynamicInformer(resourceType string, namespace string) (informers.Generi
 		func(x *metav1.ListOptions) {
 			x.FieldSelector = fmt.Sprintf("metadata.name=%s", onionServiceName)
 		})
-		
 
 	// "GroupVersionResource" to say what to watch e.g. "deployments.v1.apps" or "seldondeployments.v1.machinelearning.seldon.io"
 	gvr, _ := schema.ParseResourceArg(resourceType)

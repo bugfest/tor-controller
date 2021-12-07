@@ -1,14 +1,14 @@
-apiVersion: tor.k8s.io/v1alpha1
+apiVersion: tor.k8s.torproject.org/v1alpha2
 kind: OnionService
 metadata:
   name: example-onion-service
 spec:
-  version: 2
-  selector:
-    app: http-app
-  ports:
-    - targetPort: 8080
-      publicPort: 80
-  privateKeySecret:
-    name: example-onion-key
-    key: private_key
+  version: 3
+  rules:
+    - port:
+        number: 80
+      backend:
+        service:
+          name: http-app
+          port:
+            number: 8080

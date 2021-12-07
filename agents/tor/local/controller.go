@@ -53,23 +53,23 @@ func (c *Controller) sync(key string) error {
 	log.Info(fmt.Sprintf("Getting key %s", key))
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
-		log.Info(fmt.Sprintf("Fetching object with key %s from store failed with %v\n", key, err))
+		log.Error(fmt.Sprintf("Fetching object with key %s from store failed with %v", key, err))
 		return err
 	}
 
 	if !exists {
-		log.Info(fmt.Sprintf("OnionService %s does not exist anymore\n", key))
+		log.Warn(fmt.Sprintf("OnionService %s does not exist anymore", key))
 	} else {
 		log.Debug(fmt.Sprintf("%v", obj))
-		// onionService := obj.(*v1alpha2.OnionService)
 		onionService, err := parseOnionService(obj)
 		if err != nil {
+			log.Error(fmt.Sprintf("Error in parseOnionService: %s", err))
 			return err
 		}
 
 		torConfig, err := config.TorConfigForService(&onionService)
 		if err != nil {
-			log.Info(fmt.Sprintf("Generating config failed with %v\n", err))
+			log.Error(fmt.Sprintf("Generating config failed with %v", err))
 			return err
 		}
 
@@ -87,11 +87,11 @@ func (c *Controller) sync(key string) error {
 		}
 
 		if reload {
-			log.Info(fmt.Sprintf("updating onion config for %s/%s\n", onionService.Namespace, onionService.Name))
+			log.Info(fmt.Sprintf("Updating onion config for %s/%s", onionService.Namespace, onionService.Name))
 
 			err = ioutil.WriteFile("/run/tor/torfile", []byte(torConfig), 0644)
 			if err != nil {
-				log.Error(fmt.Sprintf("Writing config failed with %v\n", err))
+				log.Error(fmt.Sprintf("Writing config failed with %v", err))
 				return err
 			}
 
@@ -100,7 +100,7 @@ func (c *Controller) sync(key string) error {
 
 		err = c.updateOnionServiceStatus(&onionService)
 		if err != nil {
-			log.Error(fmt.Sprintf("Updating status failed with %v\n", err))
+			log.Error(fmt.Sprintf("Updating status failed with %v", err))
 			return err
 		}
 	}
@@ -111,18 +111,21 @@ func (c *Controller) updateOnionServiceStatus(onionService *v1alpha2.OnionServic
 	hostname, err := ioutil.ReadFile("/run/tor/service/hostname")
 	if err != nil {
 		log.Error(fmt.Sprintf("Got this error when trying to find hostname: %v", err))
-		hostname = []byte("")
+		return err
 	}
 
 	newHostname := strings.TrimSpace(string(hostname))
 
 	if newHostname != onionService.Status.Hostname {
-		onionServiceCopy := onionService.DeepCopy()
-		onionServiceCopy.Status.Hostname = newHostname
+		log.Info(fmt.Sprintf("Got new hostname: %s", newHostname))
+		onionService.Status.Hostname = newHostname
 
-		err = c.localManager.kclient.Update(context.TODO(), onionServiceCopy, nil)
-		// _, err = c.localManager.kclient.TorV1alpha1().OnionServices(onionService.Namespace).Update(onionServiceCopy)
-		return err
+		log.Debug(fmt.Sprintf("Updating onionService to: %v", onionService))
+		err = c.localManager.kclient.Status().Update(context.Background(), onionService)
+		if err != nil {
+			log.Error(fmt.Sprintf("Error updating onionService: %s", err))
+			return err
+		}
 	}
 	return nil
 }
@@ -136,18 +139,19 @@ func (c *Controller) handleErr(err error, key interface{}) {
 
 	// This controller retries 5 times if something goes wrong. After that, it stops trying.
 	if c.queue.NumRequeues(key) < 5 {
-		log.Error(fmt.Sprintf("Error syncing onionservice %v: %v\n", key, err))
+		log.Error(fmt.Sprintf("Error syncing onionservice %v: %v", key, err))
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.
-		c.queue.AddRateLimited(key)
+		// c.queue.AddRateLimited(key)
+		c.queue.AddAfter(key, 3*time.Second)
 		return
 	}
 
 	c.queue.Forget(key)
 	// Report to an external entity that, even after several retries, we could not successfully process this key
 	runtime.HandleError(err)
-	log.Info(fmt.Sprintf("Dropping onionservice %q out of the queue: %v\n", key, err))
+	log.Info(fmt.Sprintf("Dropping onionservice %q out of the queue: %v", key, err))
 }
 
 func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
@@ -174,7 +178,6 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 }
 
 func (c *Controller) runWorker() {
-	log.Info("processNextItem")
 	for c.processNextItem() {
 	}
 }

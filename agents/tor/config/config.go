@@ -12,7 +12,7 @@ SocksPort 0
 HiddenServiceDir {{ .ServiceDir }}
 HiddenServiceVersion {{ .Version }}
 {{ range .Ports }}
-HiddenServicePort {{ .PublicPort }} {{ $.ServiceClusterIP }}:{{ .ServicePort }}
+HiddenServicePort {{ .PublicPort }} {{ .ServiceClusterIP }}:{{ .ServicePort }}
 {{ end }}
 `
 
@@ -21,23 +21,24 @@ var configTemplate = template.Must(template.New("config").Parse(configFormat))
 type onionService struct {
 	ServiceName      string
 	ServiceNamespace string
-	ServiceClusterIP string
 	ServiceDir       string
 	Version          int
-	Ports            []portPair
+	Ports            []portTuple
 }
 
-type portPair struct {
-	ServicePort int32
-	PublicPort  int32
+type portTuple struct {
+	ServicePort      int32
+	PublicPort       int32
+	ServiceClusterIP string
 }
 
 func TorConfigForService(onion *v1alpha2.OnionService) (string, error) {
-	ports := []portPair{}
+	ports := []portTuple{}
 	for _, rule := range onion.Spec.Rules {
-		port := portPair{
-			ServicePort: rule.Port.Number,
-			PublicPort:  rule.Port.Number,
+		port := portTuple{
+			ServicePort:      rule.Backend.Service.Port.Number,
+			PublicPort:       rule.Port.Number,
+			ServiceClusterIP: rule.Backend.Service.Name,
 		}
 		ports = append(ports, port)
 	}
@@ -45,7 +46,6 @@ func TorConfigForService(onion *v1alpha2.OnionService) (string, error) {
 	s := onionService{
 		ServiceName:      onion.ServiceName(),
 		ServiceNamespace: onion.Namespace,
-		ServiceClusterIP: onion.Status.TargetClusterIP,
 		ServiceDir:       "/run/tor/service",
 		Ports:            ports,
 		Version:          onion.Spec.GetVersion(),

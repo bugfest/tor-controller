@@ -99,9 +99,16 @@ func torRole(onion *torv1alpha2.OnionService) *rbacv1.Role {
 		Rules: []rbacv1.PolicyRule{
 			{
 				APIGroups: []string{torv1alpha2.GroupVersion.Group},
-				Verbs:     []string{"get", "list", "watch", "update", "patch"},
+				Verbs:     []string{"get", "list", "watch"},
 				Resources: []string{
 					"onionservices",
+				},
+			},
+			{
+				APIGroups: []string{torv1alpha2.GroupVersion.Group},
+				Verbs:     []string{"update", "patch"},
+				Resources: []string{
+					"onionservices/status",
 				},
 			},
 			{

@@ -6,9 +6,9 @@ spec:
   version: 3
   rules:
     - port:
-        number: 8000
+        number: 80
       backend:
         service:
           name: http-app
           port:
-            number: 80
+            number: 8080
