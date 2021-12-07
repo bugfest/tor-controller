@@ -116,5 +116,8 @@ rules:
             name: http
             # number: 80
 
-Use controller-set instead clientsets
+Use controller-runtime instead clientsets
 https://hackernoon.com/platforms-on-k8s-with-golang-watch-any-crd-0v2o3z1q (from https://github.com/kubernetes-sigs/kubebuilder/issues/1152)
+
+controller-runtime update/create/... objects examples:
+https://github.com/kubernetes-sigs/controller-runtime/blob/master/pkg/client/example_test.go
