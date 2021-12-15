@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	configv2 "example.com/null/tor-controller/apis/config/v2"
 	torv1alpha2 "example.com/null/tor-controller/apis/tor/v1alpha2"
@@ -38,6 +39,8 @@ const (
 )
 
 func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+	log := log.FromContext(ctx)
+
 	deploymentName := onionService.DeploymentName()
 	namespace := onionService.Namespace
 	if deploymentName == "" {
@@ -59,23 +62,19 @@ func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionS
 		if err != nil {
 			return err
 		}
-	}
-
-	// If an error occurs during Get/Create, we'll requeue the item so we can
-	// attempt processing again later. This could have been caused by a
-	// temporary network failure, or any other transient reason.
-	if err != nil {
+		deployment = *newDeployment
+	} else if err != nil {
+		// If an error occurs during Get/Create, we'll requeue the item so we can
+		// attempt processing again later. This could have been caused by a
+		// temporary network failure, or any other transient reason.
 		return err
 	}
 
 	// If the Deployment is not controlled by this Foo resource, we should log
 	// a warning to the event recorder and ret
 	if !metav1.IsControlledBy(&deployment.ObjectMeta, onionService) {
-		msg := fmt.Sprintf("Deployment %s slready exists", deployment.Name)
-		// TODO: generate MessageResourceExists event
-		// msg := fmt.Sprintf(MessageResourceExists, deployment.Name)
-		// bc.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
-		return fmt.Errorf(msg)
+		log.Info(fmt.Sprintf("Deployment %s already exists and not controlled by %s - skipping update", deployment.Name, onionService.Name))
+		return nil
 	}
 
 	// If the deployment specs don't match, update
@@ -84,13 +83,6 @@ func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionS
 		if err != nil {
 			return fmt.Errorf("Filed to update Deployment %#v", newDeployment)
 		}
-	}
-
-	// If an error occurs during Update, we'll requeue the item so we can
-	// attempt processing again later. THis could have been caused by a
-	// temporary network failure, or any other transient reason.
-	if err != nil {
-		return err
 	}
 
 	return nil

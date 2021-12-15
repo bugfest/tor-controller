@@ -25,75 +25,68 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "example.com/null/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileService(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+func (r *OnionServiceReconciler) reconcileSecret(ctx context.Context, onionService *torv1alpha2.OnionService) error {
 	log := log.FromContext(ctx)
 
-	serviceName := onionService.ServiceName()
+	secretName := onionService.SecretName()
 	namespace := onionService.Namespace
-	if serviceName == "" {
+	if secretName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("service name must be specified"))
+		runtime.HandleError(fmt.Errorf("secret name must be specified"))
 		return nil
 	}
 
-	var service corev1.Service
-	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
+	var secret corev1.Secret
+	err := r.Get(ctx, types.NamespacedName{Name: secretName, Namespace: namespace}, &secret)
 
-	newService := torService(onionService)
+	newSecret := torSecret(onionService)
 	if errors.IsNotFound(err) {
-		err := r.Create(ctx, newService)
+		err := r.Create(ctx, newSecret)
 		if err != nil {
 			return err
 		}
-		service = *newService
+		secret = *newSecret
 	} else if err != nil {
 		return err
 	}
 
-	if !metav1.IsControlledBy(&service.ObjectMeta, onionService) {
-		log.Info(fmt.Sprintf("Service %s already exists and is not controller by %s", service.Name, onionService.Name))
+	if !metav1.IsControlledBy(&secret.ObjectMeta, onionService) {
+		// msg := fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, onionService.Name)
+		// TODO: generate MessageResourceExists event
+		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
+		// bc.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
+		// return fmt.Errorf(msg)
+		log.Info(fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, onionService.Name))
 		return nil
-	}
-
-	// If the service specs don't match, update
-	if !serviceEqual(&service, newService) {
-		err := r.Update(ctx, newService)
-		if err != nil {
-			return fmt.Errorf("Filed to update Service %#v", newService)
-		}
 	}
 
 	return nil
 }
 
-func serviceEqual(a, b *corev1.Service) bool {
+func secretEqual(a, b *corev1.Service) bool {
 	// TODO: actually detect differences
 	return true
 }
 
-func torService(onion *torv1alpha2.OnionService) *corev1.Service {
-	ports := []corev1.ServicePort{}
-	for _, r := range onion.Spec.Rules {
-		port := corev1.ServicePort{
-			Name:       r.Port.Name,
-			TargetPort: intstr.FromInt(int(r.Port.Number)),
-			Port:       r.Port.Number,
-		}
-		ports = append(ports, port)
+func torSecret(onion *torv1alpha2.OnionService) *corev1.Secret {
+
+	onionv3, err := GenerateOnionV3()
+	if err != nil {
+		log.Log.Error(err, fmt.Sprintf("Error generating Onion keys"))
+		return nil
 	}
 
-	return &corev1.Service{
+	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      onion.ServiceName(),
+			Name:      onion.SecretName(),
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
@@ -103,9 +96,13 @@ func torService(onion *torv1alpha2.OnionService) *corev1.Service {
 				}),
 			},
 		},
-		Spec: corev1.ServiceSpec{
-			Selector: onion.ServiceSelector(),
-			Ports:    ports,
+		Type: "tor.k8s.torproject.org/onion-v3",
+		Data: map[string][]byte{
+			"onionAddress":   []byte(onionv3.onionAddress),
+			"publicKey":      onionv3.publicKey,
+			"privateKey":     onionv3.privateKey,
+			"publicKeyFile":  onionv3.publicKeyFile,
+			"privateKeyFile": onionv3.privateKeyFile,
 		},
 	}
 }

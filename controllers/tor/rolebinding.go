@@ -26,11 +26,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "example.com/null/tor-controller/apis/tor/v1alpha2"
 )
 
 func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+	log := log.FromContext(ctx)
+
 	roleName := onionService.RoleName()
 	namespace := onionService.Namespace
 	if roleName == "" {
@@ -41,8 +44,8 @@ func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onion
 		return nil
 	}
 
-	var rolebinding rbacv1.RoleBinding
-	err := r.Get(ctx, types.NamespacedName{Name: roleName, Namespace: namespace}, &rolebinding)
+	var roleBinding rbacv1.RoleBinding
+	err := r.Get(ctx, types.NamespacedName{Name: roleName, Namespace: namespace}, &roleBinding)
 
 	newRolebinding := torRolebinding(onionService)
 	if errors.IsNotFound(err) {
@@ -50,31 +53,24 @@ func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onion
 		if err != nil {
 			return err
 		}
-	}
-
-	if err != nil {
+		roleBinding = *newRolebinding
+	} else if err != nil {
 		return err
 	}
 
-	if !metav1.IsControlledBy(&rolebinding.ObjectMeta, onionService) {
-		msg := fmt.Sprintf("Rolebinding %s slready exists", rolebinding.Name)
-		// TODO: generate MessageResourceExists event
-		// msg := fmt.Sprintf(MessageResourceExists, rolebinding.Name)
-		// bc.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
-		return fmt.Errorf(msg)
+	if !metav1.IsControlledBy(&roleBinding.ObjectMeta, onionService) {
+		log.Info(fmt.Sprintf("RoleBinding %s already exists and is not controlled by %s", roleBinding.Name, onionService.Name))
+		return nil
 	}
 
 	// If the rolebinding specs don't match, update
-	if !rolebindingEqual(&rolebinding, newRolebinding) {
+	if !rolebindingEqual(&roleBinding, newRolebinding) {
 		err := r.Update(ctx, newRolebinding)
 		if err != nil {
 			return fmt.Errorf("Filed to update Rolebinding %#v", newRolebinding)
 		}
 	}
 
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

@@ -46,6 +46,7 @@ type OnionServiceReconciler struct {
 //+kubebuilder:rbac:groups=tor.k8s.torproject.org,resources=onionservices,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=tor.k8s.torproject.org,resources=onionservices/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=tor.k8s.torproject.org,resources=onionservices/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=serviceaccounts,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="rbac.authorization.k8s.io",resources=roles,verbs=get;list;watch;create;update;patch;delete
@@ -83,9 +84,9 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	namespace := onionService.Namespace
 
-	for num, rule := range onionService.Spec.Rules {
-
-		log.Info(fmt.Sprintf("rule %d: %#v", num, rule))
+	for _, rule := range onionService.Spec.Rules {
+		// for num, rule := range onionService.Spec.Rules {
+		// log.Info(fmt.Sprintf("rule %d: %#v", num, rule))
 
 		serviceName := rule.Backend.Service.Name
 		var service corev1.Service
@@ -104,7 +105,11 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			log.Error(err, fmt.Sprintf("port in service rule %#v not found in target service", rule_backend_service))
 			return ctrl.Result{}, err
 		}
-		log.Info("port in service OK")
+	}
+
+	err = r.reconcileSecret(ctx, &onionService)
+	if err != nil {
+		return ctrl.Result{}, err
 	}
 
 	err = r.reconcileServiceAccount(ctx, &onionService)

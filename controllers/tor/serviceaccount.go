@@ -26,11 +26,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "example.com/null/tor-controller/apis/tor/v1alpha2"
 )
 
 func (r *OnionServiceReconciler) reconcileServiceAccount(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+	log := log.FromContext(ctx)
+
 	serviceAccountName := onionService.ServiceAccountName()
 	namespace := onionService.Namespace
 	if serviceAccountName == "" {
@@ -50,18 +53,14 @@ func (r *OnionServiceReconciler) reconcileServiceAccount(ctx context.Context, on
 		if err != nil {
 			return err
 		}
-	}
-
-	if err != nil {
+		serviceAccount = *newServiceAccount
+	} else if err != nil {
 		return err
 	}
 
 	if !metav1.IsControlledBy(&serviceAccount.ObjectMeta, onionService) {
-		msg := fmt.Sprintf("ServiceAccount %s slready exists", serviceAccount.Name)
-		// TODO: generate MessageResourceExists event
-		// msg := fmt.Sprintf(MessageResourceExists, serviceAccount.Name)
-		// bc.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
-		return fmt.Errorf(msg)
+		log.Info(fmt.Sprintf("ServiceAccount %s already exists and is not controller by %s", serviceAccount.Name, onionService.Name))
+		return nil
 	}
 
 	// If the serviceAccount specs don't match, update
@@ -72,9 +71,6 @@ func (r *OnionServiceReconciler) reconcileServiceAccount(ctx context.Context, on
 		}
 	}
 
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

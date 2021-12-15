@@ -77,7 +77,7 @@ To deploy in a test cluster
 
 Changes vs https://github.com/kragniz/tor-controller version
 
-- Go updated to `1.16`
+- Go updated to `1.17`
 - Code ported to kubebuilder version `3`
 - Domain updated moved from protected `tor.k8s.io` to `k8s.torproject.org` (see https://github.com/kubernetes/enhancements/pull/1111)
 - Added `OnionBalancedService` type
@@ -101,20 +101,20 @@ k3s docker-compose: https://github.com/k3s-io/k3s/blob/master/docker-compose.yml
 
 v1alpha2 draft onionservice:
 
-rules:
-- port:
-    name: "http"
-    number: 80
-  backend:
-    # resource: (mutually exclusive setting with "service")
-    #   apiGroup:
-    #   kind: (required)
-    #   name: (required)
-    service:
-        name: "myservice"
-        port:
-            name: http
-            # number: 80
+    rules:
+    - port:
+        name: "http"
+        number: 80
+    backend:
+        # resource: (mutually exclusive setting with "service")
+        #   apiGroup:
+        #   kind: (required)
+        #   name: (required)
+        service:
+            name: "myservice"
+            port:
+                name: http
+                # number: 80
 
 Use controller-runtime instead clientsets
 https://hackernoon.com/platforms-on-k8s-with-golang-watch-any-crd-0v2o3z1q (from https://github.com/kubernetes-sigs/kubebuilder/issues/1152)

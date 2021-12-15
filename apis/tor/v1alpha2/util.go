@@ -4,6 +4,7 @@ import "fmt"
 
 const (
 	deploymentNameFmt     = "%s-tor-daemon"
+	secretNameFmt         = "%s-tor-secret"
 	serviceNameFmt        = "%s-tor-svc"
 	roleNameFmt           = "%s-tor-role"
 	serviceAccountNameFmt = "%s-tor-serviceaccount"
@@ -23,6 +24,13 @@ func (s *OnionService) DeploymentName() string {
 
 func (s *OnionService) ServiceName() string {
 	return fmt.Sprintf(serviceNameFmt, s.Name)
+}
+
+func (s *OnionService) SecretName() string {
+	if len(s.Spec.PrivateKeySecret.Name) > 0 {
+		return s.Spec.PrivateKeySecret.Name
+	}
+	return fmt.Sprintf(secretNameFmt, s.Name)
 }
 
 func (s *OnionService) ServiceSelector() map[string]string {

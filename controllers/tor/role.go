@@ -26,11 +26,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "example.com/null/tor-controller/apis/tor/v1alpha2"
 )
 
 func (r *OnionServiceReconciler) reconcileRole(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+	log := log.FromContext(ctx)
+
 	roleName := onionService.RoleName()
 	namespace := onionService.Namespace
 	if roleName == "" {
@@ -50,18 +53,14 @@ func (r *OnionServiceReconciler) reconcileRole(ctx context.Context, onionService
 		if err != nil {
 			return err
 		}
-	}
-
-	if err != nil {
+		role = *newRole
+	} else if err != nil {
 		return err
 	}
 
 	if !metav1.IsControlledBy(&role.ObjectMeta, onionService) {
-		msg := fmt.Sprintf("Role %s slready exists", role.Name)
-		// TODO: generate MessageResourceExists event
-		// msg := fmt.Sprintf(MessageResourceExists, role.Name)
-		// bc.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
-		return fmt.Errorf(msg)
+		log.Info(fmt.Sprintf("Role %s already exists and is not controlled by %s", role.Name, onionService.Name))
+		return nil
 	}
 
 	// If the role specs don't match, update
@@ -72,9 +71,6 @@ func (r *OnionServiceReconciler) reconcileRole(ctx context.Context, onionService
 		}
 	}
 
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
