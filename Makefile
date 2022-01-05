@@ -20,7 +20,7 @@ SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
 .PHONY: all
-all: build
+all: build installer
 
 ##@ General
 
@@ -138,3 +138,9 @@ GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
 rm -rf $$TMP_DIR ;\
 }
 endef
+
+##@ Installer
+
+.PHONY: installer
+installer: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/crd > hack/install.yml
