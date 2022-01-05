@@ -32,10 +32,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	configv2 "example.com/null/tor-controller/apis/config/v2"
-	torv1alpha1 "example.com/null/tor-controller/apis/tor/v1alpha1"
-	torv1alpha2 "example.com/null/tor-controller/apis/tor/v1alpha2"
-	torcontrollers "example.com/null/tor-controller/controllers/tor"
+	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
+	torv1alpha1 "github.com/bugfest/tor-controller/apis/tor/v1alpha1"
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	torcontrollers "github.com/bugfest/tor-controller/controllers/tor"
 	//+kubebuilder:scaffold:imports
 )
 

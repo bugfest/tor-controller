@@ -3,7 +3,7 @@ layout:
 - go.kubebuilder.io/v3
 multigroup: true
 projectName: tor-controller
-repo: example.com/null/tor-controller
+repo: github.com/bugfest/tor-controller
 resources:
 - api:
     crdVersion: v1
@@ -12,7 +12,7 @@ resources:
   domain: k8s.torproject.org
   group: tor
   kind: OnionService
-  path: example.com/null/tor-controller/apis/tor/v1alpha1
+  path: github.com/bugfest/tor-controller/apis/tor/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -21,7 +21,7 @@ resources:
   domain: k8s.torproject.org
   group: tor
   kind: OnionService
-  path: example.com/null/tor-controller/apis/tor/v1alpha2
+  path: github.com/bugfest/tor-controller/apis/tor/v1alpha2
   version: v1alpha2
 - api:
     crdVersion: v1
@@ -30,7 +30,7 @@ resources:
   domain: k8s.torproject.org
   group: tor
   kind: OnionBalancedService
-  path: example.com/null/tor-controller/apis/tor/v1alpha2
+  path: github.com/bugfest/tor-controller/apis/tor/v1alpha2
   version: v1alpha2
 - api:
     crdVersion: v1
@@ -38,6 +38,6 @@ resources:
   domain: k8s.torproject.org
   group: config
   kind: ProjectConfig
-  path: example.com/null/tor-controller/apis/config/v2
+  path: github.com/bugfest/tor-controller/apis/config/v2
   version: v2
 version: "3"

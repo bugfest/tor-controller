@@ -27,9 +27,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	tordaemon "example.com/null/tor-controller/agents/tor/tordaemon"
+	tordaemon "github.com/bugfest/tor-controller/agents/tor/tordaemon"
 
-	torv1alpha2 "example.com/null/tor-controller/apis/tor/v1alpha2"
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
 var (

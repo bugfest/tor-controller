@@ -15,8 +15,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
-	config "example.com/null/tor-controller/agents/tor/config"
-	v1alpha2 "example.com/null/tor-controller/apis/tor/v1alpha2"
+	config "github.com/bugfest/tor-controller/agents/tor/config"
+	v1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
 type Controller struct {

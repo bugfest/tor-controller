@@ -9,7 +9,7 @@ optional:
 # init
 
     # boilerplates
-    kubebuilder init --domain k8s.torproject.org --project-name tor-controller --repo example.com/null/tor-controller --component-config
+    kubebuilder init --domain k8s.torproject.org --project-name tor-controller --repo github.com/bugfest/tor-controller --component-config
 
     # We might need to support multiple groups
     kubebuilder edit --multigroup=true

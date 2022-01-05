@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"text/template"
 
-	v1alpha2 "example.com/null/tor-controller/apis/tor/v1alpha2"
+	v1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
 const configFormat = `

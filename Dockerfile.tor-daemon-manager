@@ -16,7 +16,7 @@ ENTRYPOINT ["/usr/local/bin/tor"]
 
 FROM golang:1.17 as controller-builder
 
-WORKDIR /go/src/example.com/null/tor-controller
+WORKDIR /go/src/github.com/bugfest/tor-controller
 COPY agents/ agents/
 COPY apis/ apis/
 COPY go.mod go.mod
@@ -44,6 +44,6 @@ COPY --from=tor-builder /tor/src/config/geoip6 /usr/local/share/tor/.
 
 # install tor-local-manager
 RUN mkdir -p /run/tor/service
-COPY --from=controller-builder /go/src/example.com/null/tor-controller/tor-local-manager .
+COPY --from=controller-builder /go/src/github.com/bugfest/tor-controller/tor-local-manager .
 
 ENTRYPOINT ["./tor-local-manager"]

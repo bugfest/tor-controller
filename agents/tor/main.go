@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	local "example.com/null/tor-controller/agents/tor/local"
+	local "github.com/bugfest/tor-controller/agents/tor/local"
 )
 
 // tor-manager main.

@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	torv1alpha2 "example.com/null/tor-controller/apis/tor/v1alpha2"
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
 // OnionBalancedServiceReconciler reconciles a OnionBalancedService object

@@ -1,4 +1,4 @@
-module example.com/null/tor-controller
+module github.com/bugfest/tor-controller
 
 go 1.17
 
