@@ -1,10 +1,10 @@
 # requirements
 
-    brew install kubebuilder
+    - kubebuilder
 
 optional:
 
-    brew install k3d
+    - k3d
 
 # init
 
@@ -71,18 +71,7 @@ To deploy in a test cluster
 
     # deploy some examples
     kubectl apply -f hack/sample/full-example.yaml
-    kubectl apply -f hack/sample/onionservice-new-v1alpha2.yaml
-
-# changes
-
-Changes vs https://github.com/kragniz/tor-controller version
-
-- Go updated to `1.17`
-- Code ported to kubebuilder version `3`
-- Domain updated moved from protected `tor.k8s.io` to `k8s.torproject.org` (see https://github.com/kubernetes/enhancements/pull/1111)
-- Added `OnionBalancedService` type
-- New OnionService version v1alpha2
-- Migrate clientset to controller-runtime
+    kubectl apply -f hack/sample/onionservice.yaml
 
 # refs
 
