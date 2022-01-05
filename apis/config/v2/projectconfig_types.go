@@ -46,7 +46,7 @@ type ProjectConfig struct {
 
 type TorDaemonManagerType struct {
 	// +optional
-	// +kubebuilder:default:="quay.io/kragniz/tor-daemon-manager:master"
+	// +kubebuilder:default:="quay.io/bugfest/tor-daemon-manager:latest"
 	Image string `json:"image,omitempty"`
 }
 

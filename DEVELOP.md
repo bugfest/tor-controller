@@ -26,7 +26,7 @@ optional:
     kubebuilder create api --group tor --version v1alpha2 --kind OnionBalancedService --controller --namespaced --resource
     kubebuilder create webhook --group tor --version v1alpha2 --kind OnionService --conversion
 
-    kubebuilder create config --name=tor --controller-image=quay.io/kragniz/tor-controller-manager:master --output=hack/install.yaml
+    kubebuilder create config --name=tor --controller-image=quay.io/bugfest/tor-controller-manager:latest --output=hack/install.yaml
     
     # edit 
     # apis/tor/v1alpha1/onionservice_types.go

@@ -152,7 +152,7 @@ spec:
           torDaemonManager:
             properties:
               image:
-                default: quay.io/kragniz/tor-daemon-manager:master
+                default: quay.io/bugfest/tor-daemon-manager:latest
                 type: string
             type: object
           webhook:
