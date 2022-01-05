@@ -143,4 +143,7 @@ endef
 
 .PHONY: installer
 installer: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd > hack/install.yml
+	$(KUSTOMIZE) build config/crd > hack/install.yaml
+	@echo "---" >> hack/install.yaml
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default >> hack/install.yaml

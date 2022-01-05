@@ -31,7 +31,8 @@ spec:
         - /manager
         args:
         - --leader-elect
-        image: onions:5000/tor-controller:latest
+        # image: onions:5000/tor-controller:latest
+        image: quay.io/bugfest/tor-controller:latest
         imagePullPolicy: Always
         name: manager
         securityContext:

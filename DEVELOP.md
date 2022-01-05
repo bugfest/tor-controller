@@ -73,6 +73,15 @@ To deploy in a test cluster
     kubectl apply -f hack/sample/full-example.yaml
     kubectl apply -f hack/sample/onionservice.yaml
 
+# Build & publish images
+
+    IMG=quay.io/bugfest/tor-controller:latest \
+    IMG_DAEMON=quay.io/bugfest/tor-daemon-manager:latest \
+    sh -c '
+        make docker-build && make push $IMG
+        make docker-build-daemon && make push $IMG_DAEMON
+    '
+
 # refs
 
 https://book.kubebuilder.io/cronjob-tutorial/running.html
