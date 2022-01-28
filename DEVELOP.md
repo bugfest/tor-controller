@@ -82,6 +82,25 @@ To deploy in a test cluster
         make docker-build-daemon && make push $IMG_DAEMON
     '
 
+# Helm
+
+    # Update CRDs
+    make helm
+
+    # Install local chart with latest images
+    helm upgrade --install \
+        --create-namespace --namespace tor-controller \
+        --set image.tag=latest --set manager.image.tag=latest \
+        tor-controller ./helm/tor-controller
+
+    # Update helm chart README
+    docker run --rm --volume "$(pwd)/helm:/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
+
+# Changelog
+
+    # Update changelog
+    docker run -it --rm -v "$(pwd)":/usr/local/src/your-app githubchangeloggenerator/github-changelog-generator -u bugfest -p tor-controller
+
 # refs
 
 https://book.kubebuilder.io/cronjob-tutorial/running.html
