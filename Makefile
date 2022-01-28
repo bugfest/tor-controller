@@ -118,7 +118,13 @@ controller-gen: ## Download controller-gen locally if necessary.
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 .PHONY: kustomize
 kustomize: ## Download kustomize locally if necessary.
-	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.4.1)
+
+YQ = $(shell pwd)/bin/yq
+.PHONY: yq
+yq: ## Download yq locally if necessary.
+	$(call go-get-tool,$(YQ),github.com/mikefarah/yq/v4@v4.18.1)
+
 
 ENVTEST = $(shell pwd)/bin/setup-envtest
 .PHONY: envtest
@@ -142,8 +148,22 @@ endef
 ##@ Installer
 
 .PHONY: installer
+INSTALLER = hack/install.yaml
 installer: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd > hack/install.yaml
-	@echo "---" >> hack/install.yaml
+## $(KUSTOMIZE) build config/crd > $(INSTALLER)
+## @echo "---" >> $(INSTALLER)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default >> hack/install.yaml
+	$(KUSTOMIZE) build config/default --output $(INSTALLER)
+
+.PHONY: helm
+helm: installer yq
+	$(YQ) '. | select(.kind == "CustomResourceDefinition")' $(INSTALLER) > helm/tor-controller/templates/customresourcedefinition.yaml
+##@ $(YQ) '. | select(.kind == "Namespace")' $(INSTALLER) > helm/tor-controller/templates/namespace.yaml
+##@ $(YQ) '. | select(.kind == "ServiceAccount")' $(INSTALLER) > helm/tor-controller/templates/serviceaccount.yaml
+##@ $(YQ) '. | select(.kind == "Role")' $(INSTALLER) > helm/tor-controller/templates/role.yaml
+##@ $(YQ) '. | select(.kind == "RoleBinding")' $(INSTALLER) > helm/tor-controller/templates/rolebinding.yaml
+##@ $(YQ) '. | select(.kind == "ClusterRole")' $(INSTALLER) > helm/tor-controller/templates/clusterrole.yaml
+##@ $(YQ) '. | select(.kind == "ClusterRoleBinding")' $(INSTALLER) > helm/tor-controller/templates/clusterrolebinding.yaml
+##@ $(YQ) '. | select(.kind == "ConfigMap")' $(INSTALLER) > helm/tor-controller/templates/configmap.yaml
+##@ $(YQ) '. | select(.kind == "Service")' $(INSTALLER) > helm/tor-controller/templates/service.yaml
+##@ $(YQ) '. | select(.kind == "Deployment")' $(INSTALLER) > helm/tor-controller/templates/deployment.yaml

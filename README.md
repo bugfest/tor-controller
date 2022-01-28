@@ -16,6 +16,7 @@ This project started as an exercise to update `kragniz`'s https://github.com/kra
 - Added `OnionBalancedService` type
 - New OnionService version v1alpha2
 - Migrate clientset code to controller-runtime
+- Helm chart
 
 # Roadmap / TODO list
 
@@ -54,7 +55,13 @@ tor-controller creates the following resources for each OnionService:
 Install
 -------
 
-Install tor-controller:
+Using helm (recommended):
+
+    $ helm upgrade --install \
+      --create-namespace --namespace tor-controller \
+      tor-controller ./helm/tor-controller
+
+Install tor-controller directly using the manifest:
 
     $ kubectl apply -f hack/install.yaml
 
@@ -150,6 +157,10 @@ spec:
 
 This can then be used in the same way any other ingress is. You can find a full
 example, with a default backend at [hack/sample/full-example.yaml](hack/sample/full-example.yaml)
+
+# Utils
+- Helm docs updated with https://github.com/norwoodj/helm-docs
+
 
 # Other projects
 - https://github.com/rdkr/oniongen-go
