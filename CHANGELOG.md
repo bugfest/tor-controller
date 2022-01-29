@@ -1,8 +1,25 @@
 # Changelog
 
-## [Unreleased](https://github.com/bugfest/tor-controller/tree/HEAD)
+## [tor-controller-0.1.1](https://github.com/bugfest/tor-controller/tree/tor-controller-0.1.1) (2022-01-29)
 
-[Full Changelog](https://github.com/bugfest/tor-controller/compare/0.3.1...HEAD)
+[Full Changelog](https://github.com/bugfest/tor-controller/compare/0.3.2...tor-controller-0.1.1)
+
+**Implemented enhancements:**
+
+- No arm64 containers [\#3](https://github.com/bugfest/tor-controller/issues/3)
+
+## [0.3.2](https://github.com/bugfest/tor-controller/tree/0.3.2) (2022-01-29)
+
+[Full Changelog](https://github.com/bugfest/tor-controller/compare/tor-controller-0.1.0...0.3.2)
+
+**Merged pull requests:**
+
+- Fixing tags typo [\#6](https://github.com/bugfest/tor-controller/pull/6) ([bugfest](https://github.com/bugfest))
+- Update action branch: master [\#4](https://github.com/bugfest/tor-controller/pull/4) ([bugfest](https://github.com/bugfest))
+
+## [tor-controller-0.1.0](https://github.com/bugfest/tor-controller/tree/tor-controller-0.1.0) (2022-01-29)
+
+[Full Changelog](https://github.com/bugfest/tor-controller/compare/0.3.1...tor-controller-0.1.0)
 
 **Implemented enhancements:**
 
