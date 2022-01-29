@@ -1,14 +1,31 @@
 <p align="center">
-  <img height="300" src="https://sr.ht/2mc0.png">
+  <img height="100" src="https://sr.ht/2mc0.png">
 </p>
 
 <h1 align="center">tor-controller</h1>
 
-This project started as an exercise to update `kragniz`'s https://github.com/kragniz/tor-controller version
+| **NOTICE** |
+| --- |
+| This project started as an exercise to update `kragniz`'s https://github.com/kragniz/tor-controller version. If you want to migrate to this implementation, update your OnionService manifests |
 
-***Important!!*** This project is not backward compatible with kragniz's OnionService definitions. You will need to update your OnionService manifests
+# Table of Contents
+1. [Changes](#changes)
+1. [Roadmap](#roadmap)
+1. [Install](#install)
+1. [How to](#how-to)
+   1. [Quickstart with random address](#quickstart-with-random-address)
+   1. [Random service names](#random-service-names)
+   1. [Using with nginx-ingress](#using-with-nginx-ingress)
+1. [TOR](#tor)
+1. [How it works](#how-it-works)
+1. [Builds](#builds)
+1. [References](#references)
+   1. [TOR Documentation](#tor-documentation)
+   1. [Utils](#utils)
+   1. [Other projects](#other-projects)
 
-# Changes
+Changes
+-------
 
 - Go updated to `1.17`
 - Code ported to kubebuilder version `3`
@@ -18,39 +35,14 @@ This project started as an exercise to update `kragniz`'s https://github.com/kra
 - Migrate clientset code to controller-runtime
 - Helm chart
 
-# Roadmap / TODO list
+Changelog: [CHANGELOG](CHANGELOG.md)
+
+Roadmap
+-------
 
 - Implement `OnionBalancedService` resource (HA Onion Services)
 - Metrics exporters
 - TOR daemon management via socket (e.g: config reload)
-
-# TOR
-
-Tor is an anonymity network that provides:
-
-- privacy
-- enhanced tamperproofing
-- freedom from network surveillance
-- NAT traversal
-
-tor-controller allows you to create `OnionService` resources in kubernetes.
-These services are used similarly to standard kubernetes services, but they
-only serve traffic on the tor network (available on `.onion` addresses).
-
-See [this page](https://www.torproject.org/docs/onion-services.html.en) for
-more information about onion services.
-
-tor-controller creates the following resources for each OnionService:
-
-- a service, which is used to send traffic to application pods
-- tor pod, which contains a tor daemon to serve incoming traffic from the tor
-  network, and a management process that watches the kubernetes API and
-  generates tor config, signaling the tor daemon when it changes
-- rbac rules
-
-<p align="center">
-  <img src="https://sr.ht/6WbX.png">
-</p>
 
 Install
 -------
@@ -64,6 +56,11 @@ Using helm (recommended):
 Install tor-controller directly using the manifest:
 
     $ kubectl apply -f hack/install.yaml
+
+How to
+------
+
+Some examples you can use to start using tor-controller in your cluster 
 
 Quickstart with random address
 ------------------------------
@@ -158,13 +155,48 @@ spec:
 This can then be used in the same way any other ingress is. You can find a full
 example, with a default backend at [hack/sample/full-example.yaml](hack/sample/full-example.yaml)
 
-# Utils
+# TOR
+
+Tor is an anonymity network that provides:
+
+- privacy
+- enhanced tamperproofing
+- freedom from network surveillance
+- NAT traversal
+
+tor-controller allows you to create `OnionService` resources in kubernetes.
+These services are used similarly to standard kubernetes services, but they
+only serve traffic on the tor network (available on `.onion` addresses).
+
+See [this page](https://www.torproject.org/docs/onion-services.html.en) for
+more information about onion services.
+
+# How it works
+
+tor-controller creates the following resources for each OnionService:
+
+- tor pod, which contains a tor daemon to serve incoming traffic from the tor
+  network, and a management process that watches the kubernetes API and
+  generates tor config, signaling the tor daemon when it changes
+- rbac rules
+
+Builds
+------
+
+| Image | URL  | Build Status |
+| ----- | ---- | ------------ |
+| tor-controller | https://quay.io/repository/bugfest/tor-controller | [![Docker Repository on Quay](https://quay.io/repository/bugfest/tor-controller/status "Docker Repository on Quay")](https://quay.io/repository/bugfest/tor-controller) | 
+| tor-daemon-manager | https://quay.io/repository/bugfest/tor-daemon-manager | [![Docker Repository on Quay](https://quay.io/repository/bugfest/tor-daemon-manager/status "Docker Repository on Quay")](https://quay.io/repository/bugfest/tor-daemon-manager) |
+
+References
+----------
+
+## TOR Documentation
+- https://tor.void.gr/docs/tor-manual.html.en
+
+## Utils
 - Helm docs updated with https://github.com/norwoodj/helm-docs
 
-
-# Other projects
+## Other projects
 - https://github.com/rdkr/oniongen-go
 - https://github.com/ajvb/awesome-tor
-
-# References:
-- https://tor.void.gr/docs/tor-manual.html.en
