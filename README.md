@@ -38,6 +38,7 @@ Changes
 - New OnionService version v1alpha2
 - Migrate clientset code to controller-runtime
 - Helm chart
+- MultiArch images. Supported architectures: amd64, arm, arm64
 
 Changelog: [CHANGELOG](CHANGELOG.md)
 

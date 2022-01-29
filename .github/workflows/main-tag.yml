@@ -1,10 +1,9 @@
-name: Build multiarch image - latest
+name: Build multiarch image - tag
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
     
   workflow_dispatch:
   
@@ -14,14 +13,14 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[ci-skip]')"
     steps:
 
-      - name: Set latest tag
+      - name: Get latest tag
         id: vars
-        run: echo ::set-output name=tag::latest
+        run: echo ::set-output name=tag::${GITHUB_REF:10}
 
       - name: Checkout
         uses: actions/checkout@v2
-        # with:
-        #   ref: ${{ steps.vars.outputs.tag }}
+        with:
+          ref: ${{ steps.vars.outputs.tag }}
 
       - name: Prepare
         id: prep
