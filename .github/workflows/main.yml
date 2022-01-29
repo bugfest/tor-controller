@@ -20,14 +20,15 @@ jobs:
           BUILD_DATE=$(date --rfc-3339=seconds --utc)
           echo ::set-output name=build_date::${BUILD_DATE}
           PLATFORMS=amd64,arm,arm64
-          TAGS="quay.io/${{ github.repository_owner }}/tor-controller:latest"
-          TAG2="quay.io/${{ github.repository_owner }}/tor-daemon:latest"
+          TAGS1="quay.io/${{ github.repository_owner }}/tor-controller:latest"
+          TAGS2="quay.io/${{ github.repository_owner }}/tor-daemon-manager:latest"
           
           if [ "${{github.event_name}}" == "pull_request" ]; then
                 echo ::set-output name=push::false
               else
                 echo ::set-output name=push::true
-                echo ::set-output name=tags::${TAGS}
+                echo ::set-output name=tags1::${TAGS1}
+                echo ::set-output name=tags2::${TAGS2}
                 echo ::set-output name=branch::${GIT_BRANCH}
           fi
           echo ::set-output name=platforms::${PLATFORMS}
@@ -63,7 +64,7 @@ jobs:
           file: Dockerfile
           platforms: ${{ steps.prep.outputs.platforms }}
           push: ${{ steps.prep.outputs.push }}
-          tags: ${{ steps.prep.outputs.tags }}
+          tags: ${{ steps.prep.outputs.tags1 }}
           
       - name: Build and push (tor-daemon-manager)
         uses: docker/build-push-action@v2
