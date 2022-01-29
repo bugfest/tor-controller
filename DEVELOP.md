@@ -94,7 +94,7 @@ To deploy in a test cluster
         tor-controller ./helm/tor-controller
 
     # Update helm chart README
-    docker run --rm --volume "$(pwd)/helm:/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
+    docker run --rm --volume "$(pwd)/charts:/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
 
 # Changelog
 
