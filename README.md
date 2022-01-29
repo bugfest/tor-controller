@@ -4,6 +4,10 @@
 
 <h1 align="center">tor-controller</h1>
 
+[![Release Charts](https://github.com/bugfest/tor-controller/actions/workflows/release.yml/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/release.yml)
+[![Docker Repository on Quay](https://quay.io/repository/bugfest/tor-controller/status "Docker Repository on Quay")](https://quay.io/repository/bugfest/tor-controller)
+[![Docker Repository on Quay](https://quay.io/repository/bugfest/tor-daemon-manager/status "Docker Repository on Quay")](https://quay.io/repository/bugfest/tor-daemon-manager)
+
 | **NOTICE** |
 | --- |
 | This project started as an exercise to update `kragniz`'s https://github.com/kragniz/tor-controller version. If you want to migrate to this implementation, update your OnionService manifests |
@@ -49,9 +53,10 @@ Install
 
 Using helm (recommended):
 
+    $ helm repo add bugfest https://bugfest.github.io/tor-controller
     $ helm upgrade --install \
       --create-namespace --namespace tor-controller \
-      tor-controller ./helm/tor-controller
+      tor-controller bugfest/tor-controller
 
 Install tor-controller directly using the manifest:
 
@@ -185,6 +190,7 @@ Builds
 
 | Image | URL  | Build Status |
 | ----- | ---- | ------------ |
+| helm release | https://bugfest.github.io/tor-controller | [![Release Charts](https://github.com/bugfest/tor-controller/actions/workflows/release.yml/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/release.yml) | 
 | tor-controller | https://quay.io/repository/bugfest/tor-controller | [![Docker Repository on Quay](https://quay.io/repository/bugfest/tor-controller/status "Docker Repository on Quay")](https://quay.io/repository/bugfest/tor-controller) | 
 | tor-daemon-manager | https://quay.io/repository/bugfest/tor-daemon-manager | [![Docker Repository on Quay](https://quay.io/repository/bugfest/tor-daemon-manager/status "Docker Repository on Quay")](https://quay.io/repository/bugfest/tor-daemon-manager) |
 
