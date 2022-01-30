@@ -4,9 +4,10 @@
 
 <h1 align="center">tor-controller</h1>
 
+[![Build multiarch image - latest](https://github.com/bugfest/tor-controller/actions/workflows/main.yml/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/main.yml)
+[![Build multiarch image - tag](https://github.com/bugfest/tor-controller/actions/workflows/main-tag.yml/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/main-tag.yml)
 [![Release Charts](https://github.com/bugfest/tor-controller/actions/workflows/release.yml/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/release.yml)
-[![Docker Repository on Quay](https://quay.io/repository/bugfest/tor-controller/status "Docker Repository on Quay")](https://quay.io/repository/bugfest/tor-controller)
-[![Docker Repository on Quay](https://quay.io/repository/bugfest/tor-daemon-manager/status "Docker Repository on Quay")](https://quay.io/repository/bugfest/tor-daemon-manager)
+[![pages-build-deployment](https://github.com/bugfest/tor-controller/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/pages/pages-build-deployment)
 
 | **NOTICE** |
 | --- |
@@ -23,6 +24,7 @@
 1. [TOR](#tor)
 1. [How it works](#how-it-works)
 1. [Builds](#builds)
+1. [Versions](#versions)
 1. [References](#references)
    1. [TOR Documentation](#tor-documentation)
    1. [Utils](#utils)
@@ -189,11 +191,19 @@ tor-controller creates the following resources for each OnionService:
 Builds
 ------
 
-| Image | URL  | Build Status |
-| ----- | ---- | ------------ |
-| helm release | https://bugfest.github.io/tor-controller | [![Release Charts](https://github.com/bugfest/tor-controller/actions/workflows/release.yml/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/release.yml) | 
-| tor-controller | https://quay.io/repository/bugfest/tor-controller | [![Docker Repository on Quay](https://quay.io/repository/bugfest/tor-controller/status "Docker Repository on Quay")](https://quay.io/repository/bugfest/tor-controller) | 
-| tor-daemon-manager | https://quay.io/repository/bugfest/tor-daemon-manager | [![Docker Repository on Quay](https://quay.io/repository/bugfest/tor-daemon-manager/status "Docker Repository on Quay")](https://quay.io/repository/bugfest/tor-daemon-manager) |
+| Image              | URL                                                   |
+| ------------------ | ----------------------------------------------------- |
+| helm release       | https://bugfest.github.io/tor-controller              |
+| tor-controller     | https://quay.io/repository/bugfest/tor-controller     |
+| tor-daemon-manager | https://quay.io/repository/bugfest/tor-daemon-manager |
+
+Versions
+--------
+
+| Chart version | Tor-Controller version | Tor daemon |
+| ----- | ----- | ------- |
+| 0.1.0 | 0.3.1 | 0.4.6.8 |
+| 0.1.1 | 0.3.2 | 0.4.6.8 |
 
 References
 ----------
