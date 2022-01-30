@@ -157,13 +157,13 @@ installer: manifests kustomize ## Install CRDs into the K8s cluster specified in
 
 .PHONY: helm
 helm: installer yq
-	$(YQ) '. | select(.kind == "CustomResourceDefinition")' $(INSTALLER) > helm/tor-controller/templates/customresourcedefinition.yaml
-##@ $(YQ) '. | select(.kind == "Namespace")' $(INSTALLER) > helm/tor-controller/templates/namespace.yaml
-##@ $(YQ) '. | select(.kind == "ServiceAccount")' $(INSTALLER) > helm/tor-controller/templates/serviceaccount.yaml
-##@ $(YQ) '. | select(.kind == "Role")' $(INSTALLER) > helm/tor-controller/templates/role.yaml
-##@ $(YQ) '. | select(.kind == "RoleBinding")' $(INSTALLER) > helm/tor-controller/templates/rolebinding.yaml
-##@ $(YQ) '. | select(.kind == "ClusterRole")' $(INSTALLER) > helm/tor-controller/templates/clusterrole.yaml
-##@ $(YQ) '. | select(.kind == "ClusterRoleBinding")' $(INSTALLER) > helm/tor-controller/templates/clusterrolebinding.yaml
-##@ $(YQ) '. | select(.kind == "ConfigMap")' $(INSTALLER) > helm/tor-controller/templates/configmap.yaml
-##@ $(YQ) '. | select(.kind == "Service")' $(INSTALLER) > helm/tor-controller/templates/service.yaml
-##@ $(YQ) '. | select(.kind == "Deployment")' $(INSTALLER) > helm/tor-controller/templates/deployment.yaml
+	$(YQ) '. | select(.kind == "CustomResourceDefinition")' $(INSTALLER) > charts/tor-controller/templates/customresourcedefinition.yaml
+##@ $(YQ) '. | select(.kind == "Namespace")' $(INSTALLER) > charts/tor-controller/templates/namespace.yaml
+##@ $(YQ) '. | select(.kind == "ServiceAccount")' $(INSTALLER) > charts/tor-controller/templates/serviceaccount.yaml
+##@ $(YQ) '. | select(.kind == "Role")' $(INSTALLER) > charts/tor-controller/templates/role.yaml
+##@ $(YQ) '. | select(.kind == "RoleBinding")' $(INSTALLER) > charts/tor-controller/templates/rolebinding.yaml
+##@ $(YQ) '. | select(.kind == "ClusterRole")' $(INSTALLER) > charts/tor-controller/templates/clusterrole.yaml
+##@ $(YQ) '. | select(.kind == "ClusterRoleBinding")' $(INSTALLER) > charts/tor-controller/templates/clusterrolebinding.yaml
+##@ $(YQ) '. | select(.kind == "ConfigMap")' $(INSTALLER) > charts/tor-controller/templates/configmap.yaml
+##@ $(YQ) '. | select(.kind == "Service")' $(INSTALLER) > charts/tor-controller/templates/service.yaml
+##@ $(YQ) '. | select(.kind == "Deployment")' $(INSTALLER) > charts/tor-controller/templates/deployment.yaml
