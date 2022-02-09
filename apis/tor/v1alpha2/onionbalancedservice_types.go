@@ -62,6 +62,7 @@ type OnionBalancedServiceStatus struct {
 	Backends map[string]OnionServiceStatus `json:"backends,omitempty"`
 }
 
+// +kubebuilder:resource:shortName={"onionha","oha","obs"}
 // +kubebuilder:storageversion
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status

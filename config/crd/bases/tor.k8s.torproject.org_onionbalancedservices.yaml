@@ -13,6 +13,10 @@ spec:
     kind: OnionBalancedService
     listKind: OnionBalancedServiceList
     plural: onionbalancedservices
+    shortNames:
+    - onionha
+    - oha
+    - obs
     singular: onionbalancedservice
   scope: Namespaced
   versions:

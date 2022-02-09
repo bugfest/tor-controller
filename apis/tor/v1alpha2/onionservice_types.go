@@ -89,6 +89,7 @@ type OnionServiceStatus struct {
 	TargetClusterIP string `json:"targetClusterIP,omitempty"`
 }
 
+// +kubebuilder:resource:shortName={"onion","os"}
 // +kubebuilder:storageversion
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
