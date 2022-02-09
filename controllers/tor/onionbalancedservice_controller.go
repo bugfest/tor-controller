@@ -33,7 +33,6 @@ import (
 
 	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
 	// torv1alpha1 "github.com/bugfest/tor-controller/apis/tor/v1alpha1"
-	"github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
@@ -48,6 +47,7 @@ type OnionBalancedServiceReconciler struct {
 //+kubebuilder:rbac:groups=tor.k8s.torproject.org,resources=onionbalancedservices/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=tor.k8s.torproject.org,resources=onionbalancedservices/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=serviceaccounts,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="rbac.authorization.k8s.io",resources=roles,verbs=get;list;watch;create;update;patch;delete
@@ -151,7 +151,7 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 	// OnionBalancedService.Status.Hostname = hostname
 
 	// Update backends
-	var onionServiceList v1alpha2.OnionServiceList
+	var onionServiceList torv1alpha2.OnionServiceList
 	filter := []client.ListOption{
 		client.InNamespace(req.Namespace),
 		// client.MatchingLabels{"instance": req.NamespacedName.Name},
@@ -165,7 +165,7 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 		log.Error(err, "unable to list OnionServices")
 	}
 
-	backends := map[string]v1alpha2.OnionServiceStatus{}
+	backends := map[string]torv1alpha2.OnionServiceStatus{}
 	log.Info(fmt.Sprintf("Found %d backends", len(onionServiceList.Items)))
 
 	for _, onionService := range onionServiceList.Items {
