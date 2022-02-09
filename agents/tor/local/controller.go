@@ -1,14 +1,12 @@
 package local
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
-	"text/template"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -160,19 +158,6 @@ func (c *Controller) sync(key string) error {
 
 	}
 	return nil
-}
-
-// Generates ob_config file if this instance handles traffic on behalf of a master hidden service
-func (c *Controller) onionBalanceConfig(onionService *v1alpha2.OnionService) string {
-	const configFormat = `MasterOnionAddress {{.Spec.MasterOnionAddress}}`
-
-	var configTemplate = template.Must(template.New("config").Parse(configFormat))
-	var tmp bytes.Buffer
-	err := configTemplate.Execute(&tmp, onionService)
-	if err != nil {
-		return ""
-	}
-	return tmp.String()
 }
 
 func (c *Controller) updateOnionServiceStatus(onionService *v1alpha2.OnionService) error {

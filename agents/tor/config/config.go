@@ -76,6 +76,7 @@ func TorConfigForService(onion *v1alpha2.OnionService) (string, error) {
 	return tmp.String(), nil
 }
 
+// Generates ob_config file if this instance handles traffic on behalf of a master hidden service
 func ObConfigForService(onion *v1alpha2.OnionService) (string, error) {
 	s := OnionServiceInputData(onion)
 	var tmp bytes.Buffer
