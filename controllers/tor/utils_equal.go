@@ -17,16 +17,15 @@ limitations under the License.
 package tor
 
 import (
-	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 )
 
-func onionServiceEqual(a, b *torv1alpha2.OnionService) bool {
-	// TODO: actually detect differences
-	return false
-}
+// func onionServiceEqual(a, b *torv1alpha2.OnionService) bool {
+// 	// TODO: actually detect differences
+// 	return false
+// }
 
 func deploymentEqual(a, b *appsv1.Deployment) bool {
 	// TODO: actually detect differences

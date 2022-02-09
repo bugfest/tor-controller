@@ -31,7 +31,6 @@ import (
 
 // +kubebuilder:storageversion
 // +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
 
 // ProjectConfig is the Schema for the projectconfigs API
 type ProjectConfig struct {

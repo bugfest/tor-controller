@@ -36,7 +36,7 @@ func (r *OnionBalancedServiceReconciler) reconcileBackends(ctx context.Context, 
 
 	// Reconcile each backend
 	for idx := int32(1); idx <= OnionBalancedService.Spec.Replicas; idx++ {
-		err, _ := r.reconcileBackend(ctx, OnionBalancedService, idx)
+		_, err := r.reconcileBackend(ctx, OnionBalancedService, idx)
 		if err != nil {
 			log.Error(err, fmt.Sprintf("unable reconcile backend idx=%d", idx))
 		}
@@ -45,7 +45,7 @@ func (r *OnionBalancedServiceReconciler) reconcileBackends(ctx context.Context, 
 	return nil
 }
 
-func (r *OnionBalancedServiceReconciler) reconcileBackend(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService, idx int32) (error, *torv1alpha2.OnionService) {
+func (r *OnionBalancedServiceReconciler) reconcileBackend(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService, idx int32) (*torv1alpha2.OnionService, error) {
 	// log := log.FromContext(ctx)
 
 	onionServiceName := OnionBalancedService.OnionServiceBackendName(idx)
@@ -63,7 +63,7 @@ func (r *OnionBalancedServiceReconciler) reconcileBackend(ctx context.Context, O
 
 	// We need a master address
 	if len(OnionBalancedService.Status.Hostname) == 0 {
-		return fmt.Errorf("OnionBalancedService Hostname is not set"), nil
+		return nil, fmt.Errorf("OnionBalancedService Hostname is not set")
 	}
 
 	// If the onionService doesn't exist, we'll create it
@@ -72,16 +72,16 @@ func (r *OnionBalancedServiceReconciler) reconcileBackend(ctx context.Context, O
 	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newOnionServiceBackend)
 		if err != nil {
-			return err, nil
+			return nil, err
 		}
 		onionServiceBackend = *newOnionServiceBackend
 	} else if err != nil {
 		// If an error occurs during Get/Create, we'll requeue the item so we can
 		// attempt processing again later. This could have been caused by a
 		// temporary network failure, or any other transient reason.
-		return err, nil
+		return nil, err
 	}
-	return nil, &onionServiceBackend
+	return &onionServiceBackend, nil
 }
 
 func onionBalancedServiceBackend(onion *torv1alpha2.OnionBalancedService, projectConfig configv2.ProjectConfig, idx int32) *torv1alpha2.OnionService {
