@@ -8,7 +8,7 @@ replicaCount: 1
 # -- tor-controller image, it watches onionservices objects
 image:
   repository: quay.io/bugfest/tor-controller
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # -- Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
@@ -16,7 +16,15 @@ manager:
   # -- tor-controller-manager image, it runs Tor client
   image:
     repository: quay.io/bugfest/tor-daemon-manager
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
+    # -- Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
+onionbalance:
+  # -- tor-controller-manager image, it runs Tor client
+  image:
+    repository: quay.io/bugfest/tor-onionbalance-manager
+    pullPolicy: Always
     # -- Overrides the image tag whose default is the chart appVersion.
     tag: ""
 

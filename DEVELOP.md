@@ -78,8 +78,13 @@ To deploy in a test cluster
     # Install local chart with latest images
     helm upgrade --install \
         --create-namespace --namespace tor-controller \
-        --set image.tag=latest --set manager.image.tag=latest \
-        tor-controller ./helm/tor-controller
+        --set image.repository=onions:5000/tor-controller \
+        --set image.tag=latest \
+        --set manager.image.repository=onions:5000/tor-daemon-manager \
+        --set manager.image.tag=latest \
+        --set onionbalance.image.repository=onions:5000/tor-onionbalance-manager \
+        --set onionbalance.image.tag=latest \
+        tor-controller ./charts/tor-controller
 
     # Update helm chart README
     docker run --rm --volume "$(pwd)/charts:/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
