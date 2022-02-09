@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	rbacv1 "k8s.io/api/rbac/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -31,58 +31,57 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+func (r *OnionServiceReconciler) reconcileSecret(ctx context.Context, onionService *torv1alpha2.OnionService) error {
 	log := log.FromContext(ctx)
 
-	roleName := onionService.RoleName()
+	secretName := onionService.SecretName()
 	namespace := onionService.Namespace
-	if roleName == "" {
+	if secretName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("role name must be specified"))
+		runtime.HandleError(fmt.Errorf("secret name must be specified"))
 		return nil
 	}
 
-	var roleBinding rbacv1.RoleBinding
-	err := r.Get(ctx, types.NamespacedName{Name: roleName, Namespace: namespace}, &roleBinding)
+	var secret corev1.Secret
+	err := r.Get(ctx, types.NamespacedName{Name: secretName, Namespace: namespace}, &secret)
 
-	newRolebinding := torRolebinding(onionService)
+	newSecret := torSecret(onionService)
 	if errors.IsNotFound(err) {
-		err := r.Create(ctx, newRolebinding)
+		err := r.Create(ctx, newSecret)
 		if err != nil {
 			return err
 		}
-		roleBinding = *newRolebinding
+		secret = *newSecret
 	} else if err != nil {
 		return err
 	}
 
-	if !metav1.IsControlledBy(&roleBinding.ObjectMeta, onionService) {
-		log.Info(fmt.Sprintf("RoleBinding %s already exists and is not controlled by %s", roleBinding.Name, onionService.Name))
+	if !metav1.IsControlledBy(&secret.ObjectMeta, onionService) {
+		// msg := fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, onionService.Name)
+		// TODO: generate MessageResourceExists event
+		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
+		// bc.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
+		// return fmt.Errorf(msg)
+		log.Info(fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, onionService.Name))
 		return nil
-	}
-
-	// If the rolebinding specs don't match, update
-	if !rolebindingEqual(&roleBinding, newRolebinding) {
-		err := r.Update(ctx, newRolebinding)
-		if err != nil {
-			return fmt.Errorf("Filed to update Rolebinding %#v", newRolebinding)
-		}
 	}
 
 	return nil
 }
 
-func rolebindingEqual(a, b *rbacv1.RoleBinding) bool {
-	// TODO: actually detect differences
-	return true
-}
+func torSecret(onion *torv1alpha2.OnionService) *corev1.Secret {
 
-func torRolebinding(onion *torv1alpha2.OnionService) *rbacv1.RoleBinding {
-	return &rbacv1.RoleBinding{
+	onionv3, err := GenerateOnionV3()
+	if err != nil {
+		log.Log.Error(err, "error generating Onion keys")
+		return nil
+	}
+
+	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      onion.RoleName(),
+			Name:      onion.SecretName(),
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
@@ -92,16 +91,13 @@ func torRolebinding(onion *torv1alpha2.OnionService) *rbacv1.RoleBinding {
 				}),
 			},
 		},
-		Subjects: []rbacv1.Subject{
-			{
-				Kind: rbacv1.ServiceAccountKind,
-				Name: onion.ServiceAccountName(),
-			},
-		},
-		RoleRef: rbacv1.RoleRef{
-			Kind: "Role",
-			Name: onion.RoleName(),
+		Type: "tor.k8s.torproject.org/onion-v3",
+		Data: map[string][]byte{
+			"onionAddress":   []byte(onionv3.onionAddress),
+			"publicKey":      onionv3.publicKey,
+			"privateKey":     onionv3.privateKey,
+			"publicKeyFile":  onionv3.publicKeyFile,
+			"privateKeyFile": onionv3.privateKeyFile,
 		},
 	}
-
 }

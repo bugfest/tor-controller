@@ -20,8 +20,8 @@ spec:
     - jsonPath: .status.hostname
       name: Hostname
       type: string
-    - jsonPath: .status.backends
-      name: Backends
+    - jsonPath: .spec.replicas
+      name: Replicas
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
@@ -57,19 +57,127 @@ spec:
                       secret resource.
                     type: string
                 type: object
-              selector:
-                items:
-                  type: string
-                maxItems: 64
-                minItems: 0
-                type: array
+              replicas:
+                format: int32
+                maximum: 8
+                minimum: 1
+                type: integer
+              template:
+                properties:
+                  spec:
+                    description: OnionServiceSpec defines the desired state of OnionService
+                    properties:
+                      extraConfig:
+                        type: string
+                      masterOnionAddress:
+                        type: string
+                      privateKeySecret:
+                        description: SecretReference represents a Secret Reference
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            description: Name is unique within a namespace to reference
+                              a secret resource.
+                            type: string
+                        type: object
+                      rules:
+                        items:
+                          properties:
+                            backend:
+                              description: Backend selector
+                              properties:
+                                resource:
+                                  description: Resource is an ObjectRef to another
+                                    Kubernetes resource in the namespace of the Ingress
+                                    object. If resource is specified, a service.Name
+                                    and service.Port must not be specified. This is
+                                    a mutually exclusive setting with "Service".
+                                  properties:
+                                    apiGroup:
+                                      description: APIGroup is the group for the resource
+                                        being referenced. If APIGroup is not specified,
+                                        the specified Kind must be in the core API
+                                        group. For any other third-party types, APIGroup
+                                        is required.
+                                      type: string
+                                    kind:
+                                      description: Kind is the type of resource being
+                                        referenced
+                                      type: string
+                                    name:
+                                      description: Name is the name of resource being
+                                        referenced
+                                      type: string
+                                  required:
+                                  - kind
+                                  - name
+                                  type: object
+                                service:
+                                  description: Service references a Service as a Backend.
+                                    This is a mutually exclusive setting with "Resource".
+                                  properties:
+                                    name:
+                                      description: Name is the referenced service.
+                                        The service must exist in the same namespace
+                                        as the Ingress object.
+                                      type: string
+                                    port:
+                                      description: Port of the referenced service.
+                                        A port name or port number is required for
+                                        a IngressServiceBackend.
+                                      properties:
+                                        name:
+                                          description: Name is the name of the port
+                                            on the Service. This is a mutually exclusive
+                                            setting with "Number".
+                                          type: string
+                                        number:
+                                          description: Number is the numerical port
+                                            number (e.g. 80) on the Service. This
+                                            is a mutually exclusive setting with "Name".
+                                          format: int32
+                                          type: integer
+                                      type: object
+                                  required:
+                                  - name
+                                  type: object
+                              type: object
+                            port:
+                              description: Port publish as
+                              properties:
+                                name:
+                                  description: Name is the name of the port on the
+                                    Service. This is a mutually exclusive setting
+                                    with "Number".
+                                  type: string
+                                number:
+                                  description: Number is the numerical port number
+                                    (e.g. 80) on the Service. This is a mutually exclusive
+                                    setting with "Name".
+                                  format: int32
+                                  type: integer
+                              type: object
+                          type: object
+                        type: array
+                      version:
+                        default: 3
+                        enum:
+                        - 0
+                        - 2
+                        - 3
+                        format: int32
+                        type: integer
+                    type: object
+                type: object
               version:
+                default: 3
                 enum:
                 - 3
                 format: int32
                 type: integer
             required:
-            - version
+            - replicas
             type: object
           status:
             description: OnionBalancedServiceStatus defines the observed state of
@@ -77,13 +185,18 @@ spec:
             properties:
               backends:
                 additionalProperties:
-                  type: string
+                  description: OnionServiceStatus defines the observed state of OnionService
+                  properties:
+                    hostname:
+                      type: string
+                    targetClusterIP:
+                      type: string
+                  type: object
                 type: object
               hostname:
                 type: string
-            required:
-            - backends
-            - hostname
+              targetClusterIP:
+                type: string
             type: object
         type: object
     served: true

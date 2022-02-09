@@ -33,11 +33,6 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-const (
-	privateKeyVolume = "private-key"
-	torConfigVolume  = "tor-config"
-)
-
 func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionService *torv1alpha2.OnionService) error {
 	log := log.FromContext(ctx)
 
@@ -81,48 +76,55 @@ func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionS
 	if !deploymentEqual(&deployment, newDeployment) {
 		err := r.Update(ctx, newDeployment)
 		if err != nil {
-			return fmt.Errorf("Filed to update Deployment %#v", newDeployment)
+			return fmt.Errorf("filed to update Deployment %#v", newDeployment)
 		}
 	}
 
 	return nil
 }
 
-func deploymentEqual(a, b *appsv1.Deployment) bool {
-	// TODO: actually detect differences
-	return false
-}
-
 func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.ProjectConfig) *appsv1.Deployment {
 
-	privateKeyMountPath := "/run/tor/service/hs_ed25519_secret_key"
+	privateKeyMountPath := "/run/tor/service/key"
+
+	publicKeyFileName := "hs_ed25519_public_key"
+	privateKeyFileName := "hs_ed25519_secret_key"
 	if onion.Spec.GetVersion() == 2 {
-		privateKeyMountPath = "/run/tor/service/private_key"
+		publicKeyFileName = "public_key"
+		privateKeyFileName = "private_key"
 	}
 
-	// allow not specifying a private key
-	volumes := []corev1.Volume{}
-	volumeMounts := []corev1.VolumeMount{}
-
-	if onion.Spec.PrivateKeySecret != (torv1alpha2.SecretReference{}) {
-		volumes = []corev1.Volume{
-			{
-				Name: privateKeyVolume,
-				VolumeSource: corev1.VolumeSource{
-					Secret: &corev1.SecretVolumeSource{
-						SecretName: onion.Spec.PrivateKeySecret.Name,
+	volumes := []corev1.Volume{
+		{
+			Name: privateKeyVolume,
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: onion.SecretName(),
+					Items: []corev1.KeyToPath{
+						{
+							Key:  "privateKeyFile",
+							Path: privateKeyFileName,
+						},
+						{
+							Key:  "publicKeyFile",
+							Path: publicKeyFileName,
+						},
+						{
+							Key:  "onionAddress",
+							Path: "hostname",
+						},
 					},
 				},
 			},
-		}
+		},
+	}
 
-		volumeMounts = []corev1.VolumeMount{
-			{
-				Name:      privateKeyVolume,
-				MountPath: privateKeyMountPath,
-				SubPath:   onion.Spec.PrivateKeySecret.Key,
-			},
-		}
+	volumeMounts := []corev1.VolumeMount{
+		{
+			Name:      privateKeyVolume,
+			MountPath: privateKeyMountPath,
+			SubPath:   onion.Spec.PrivateKeySecret.Key,
+		},
 	}
 
 	return &appsv1.Deployment{
@@ -150,14 +152,14 @@ func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.Proje
 					Containers: []corev1.Container{
 						{
 							Name:  "tor",
-							Image: fmt.Sprintf("%s", projectConfig.TorDaemonManager.Image),
+							Image: projectConfig.TorDaemonManager.Image,
 							Args: []string{
 								"-name",
 								onion.Name,
 								"-namespace",
 								onion.Namespace,
 							},
-							ImagePullPolicy: "Always",
+							ImagePullPolicy: corev1.PullAlways,
 							VolumeMounts:    volumeMounts,
 						},
 					},

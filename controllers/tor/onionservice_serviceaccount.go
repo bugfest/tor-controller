@@ -31,62 +31,53 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileSecret(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+func (r *OnionServiceReconciler) reconcileServiceAccount(ctx context.Context, onionService *torv1alpha2.OnionService) error {
 	log := log.FromContext(ctx)
 
-	secretName := onionService.SecretName()
+	serviceAccountName := onionService.ServiceAccountName()
 	namespace := onionService.Namespace
-	if secretName == "" {
+	if serviceAccountName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("secret name must be specified"))
+		runtime.HandleError(fmt.Errorf("serviceAccount name must be specified"))
 		return nil
 	}
 
-	var secret corev1.Secret
-	err := r.Get(ctx, types.NamespacedName{Name: secretName, Namespace: namespace}, &secret)
+	var serviceAccount corev1.ServiceAccount
+	err := r.Get(ctx, types.NamespacedName{Name: serviceAccountName, Namespace: namespace}, &serviceAccount)
 
-	newSecret := torSecret(onionService)
+	newServiceAccount := torServiceAccount(onionService)
 	if errors.IsNotFound(err) {
-		err := r.Create(ctx, newSecret)
+		err := r.Create(ctx, newServiceAccount)
 		if err != nil {
 			return err
 		}
-		secret = *newSecret
+		serviceAccount = *newServiceAccount
 	} else if err != nil {
 		return err
 	}
 
-	if !metav1.IsControlledBy(&secret.ObjectMeta, onionService) {
-		// msg := fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, onionService.Name)
-		// TODO: generate MessageResourceExists event
-		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
-		// bc.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
-		// return fmt.Errorf(msg)
-		log.Info(fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, onionService.Name))
+	if !metav1.IsControlledBy(&serviceAccount.ObjectMeta, onionService) {
+		log.Info(fmt.Sprintf("ServiceAccount %s already exists and is not controller by %s", serviceAccount.Name, onionService.Name))
 		return nil
+	}
+
+	// If the serviceAccount specs don't match, update
+	if !serviceAccountEqual(&serviceAccount, newServiceAccount) {
+		err := r.Update(ctx, newServiceAccount)
+		if err != nil {
+			return fmt.Errorf("filed to update ServiceAccount %#v", newServiceAccount)
+		}
 	}
 
 	return nil
 }
 
-func secretEqual(a, b *corev1.Service) bool {
-	// TODO: actually detect differences
-	return true
-}
-
-func torSecret(onion *torv1alpha2.OnionService) *corev1.Secret {
-
-	onionv3, err := GenerateOnionV3()
-	if err != nil {
-		log.Log.Error(err, fmt.Sprintf("Error generating Onion keys"))
-		return nil
-	}
-
-	return &corev1.Secret{
+func torServiceAccount(onion *torv1alpha2.OnionService) *corev1.ServiceAccount {
+	return &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      onion.SecretName(),
+			Name:      onion.ServiceAccountName(),
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
@@ -95,14 +86,6 @@ func torSecret(onion *torv1alpha2.OnionService) *corev1.Secret {
 					Kind:    "OnionService",
 				}),
 			},
-		},
-		Type: "tor.k8s.torproject.org/onion-v3",
-		Data: map[string][]byte{
-			"onionAddress":   []byte(onionv3.onionAddress),
-			"publicKey":      onionv3.publicKey,
-			"privateKey":     onionv3.privateKey,
-			"publicKeyFile":  onionv3.publicKeyFile,
-			"privateKeyFile": onionv3.privateKeyFile,
 		},
 	}
 }

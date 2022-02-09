@@ -17,10 +17,13 @@ ENTRYPOINT ["/usr/local/bin/tor"]
 FROM golang:1.17 as controller-builder
 
 WORKDIR /go/src/github.com/bugfest/tor-controller
-COPY agents/ agents/
-COPY apis/ apis/
+
 COPY go.mod go.mod
 COPY go.sum go.sum
+RUN go mod download
+
+COPY agents/ agents/
+COPY apis/ apis/
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o tor-local-manager ./agents/tor/main.go
 

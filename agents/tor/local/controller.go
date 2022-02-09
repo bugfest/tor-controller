@@ -1,11 +1,14 @@
 package local
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
+	"text/template"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -67,6 +70,7 @@ func (c *Controller) sync(key string) error {
 			return err
 		}
 
+		// torfile
 		torConfig, err := config.TorConfigForService(&onionService)
 		if err != nil {
 			log.Error(fmt.Sprintf("Generating config failed with %v", err))
@@ -80,14 +84,12 @@ func (c *Controller) sync(key string) error {
 			reload = true
 		} else if err != nil {
 			return err
-		}
-
-		if string(torfile) != torConfig {
+		} else if string(torfile) != torConfig {
 			reload = true
 		}
 
 		if reload {
-			log.Info(fmt.Sprintf("Updating onion config for %s/%s", onionService.Namespace, onionService.Name))
+			log.Info(fmt.Sprintf("Updating tor config for %s/%s", onionService.Namespace, onionService.Name))
 
 			err = ioutil.WriteFile("/run/tor/torfile", []byte(torConfig), 0644)
 			if err != nil {
@@ -98,6 +100,60 @@ func (c *Controller) sync(key string) error {
 			c.localManager.daemon.Reload()
 		}
 
+		// update hostname
+		copyIfNotExist(
+			"/run/tor/service/key/hostname",
+			"/run/tor/service/hostname",
+		)
+
+		// update private and public keys
+		publicKeyFileName := "hs_ed25519_public_key"
+		privateKeyFileName := "hs_ed25519_secret_key"
+		if onionService.Spec.GetVersion() == 2 {
+			publicKeyFileName = "public_key"
+			privateKeyFileName = "private_key"
+		}
+		copyIfNotExist(
+			fmt.Sprintf("/run/tor/service/key/%s", publicKeyFileName),
+			fmt.Sprintf("/run/tor/service/%s", publicKeyFileName),
+		)
+		copyIfNotExist(
+			fmt.Sprintf("/run/tor/service/key/%s", privateKeyFileName),
+			fmt.Sprintf("/run/tor/service/%s", privateKeyFileName),
+		)
+
+		// ob_config needs to be created if this Hidden Service have a Master one in front
+		if len(onionService.Spec.MasterOnionAddress) > 0 {
+			obConfig, err := config.ObConfigForService(&onionService)
+			if err != nil {
+				log.Error(fmt.Sprintf("Generating ob_config failed with %v", err))
+				return err
+			}
+
+			reload = false
+
+			obfile, err := ioutil.ReadFile("/run/tor/service/ob_config")
+			if os.IsNotExist(err) {
+				reload = true
+			} else if err != nil {
+				return err
+			} else if string(obfile) != obConfig {
+				reload = true
+			}
+
+			if reload {
+				log.Info(fmt.Sprintf("Updating onionbalance config for %s/%s", onionService.Namespace, onionService.Name))
+
+				err = ioutil.WriteFile("/run/tor/service/ob_config", []byte(obConfig), 0644)
+				if err != nil {
+					log.Error(fmt.Sprintf("Writing config failed with %v", err))
+					return err
+				}
+
+				c.localManager.daemon.Reload()
+			}
+		}
+
 		err = c.updateOnionServiceStatus(&onionService)
 		if err != nil {
 			log.Error(fmt.Sprintf("Updating status failed with %v", err))
@@ -105,6 +161,19 @@ func (c *Controller) sync(key string) error {
 		}
 	}
 	return nil
+}
+
+// Generates ob_config file if this instance handles traffic on behalf of a master hidden service
+func (c *Controller) onionBalanceConfig(onionService *v1alpha2.OnionService) string {
+	const configFormat = `MasterOnionAddress {{.Spec.MasterOnionAddress}}`
+
+	var configTemplate = template.Must(template.New("config").Parse(configFormat))
+	var tmp bytes.Buffer
+	err := configTemplate.Execute(&tmp, onionService)
+	if err != nil {
+		return ""
+	}
+	return tmp.String()
 }
 
 func (c *Controller) updateOnionServiceStatus(onionService *v1alpha2.OnionService) error {
@@ -165,7 +234,7 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 
 	// Wait for all involved caches to be synced, before processing items from the queue is started
 	if !cache.WaitForCacheSync(stopCh, c.informer.HasSynced) {
-		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
+		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
 		return
 	}
 
@@ -180,4 +249,35 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 func (c *Controller) runWorker() {
 	for c.processNextItem() {
 	}
+}
+
+func copyIfNotExist(src string, dst string) error {
+	_, err := ioutil.ReadFile(dst)
+	if os.IsNotExist(err) {
+		log.Info(fmt.Sprintf("Creating copy of %s at %s", src, dst))
+
+		var err error
+		var srcfd *os.File
+		var dstfd *os.File
+		var srcinfo os.FileInfo
+
+		if srcfd, err = os.Open(src); err != nil {
+			return err
+		}
+		defer srcfd.Close()
+
+		if dstfd, err = os.Create(dst); err != nil {
+			return err
+		}
+		defer dstfd.Close()
+
+		if _, err = io.Copy(dstfd, srcfd); err != nil {
+			return err
+		}
+		if srcinfo, err = os.Stat(src); err != nil {
+			return err
+		}
+		return os.Chmod(dst, srcinfo.Mode())
+	}
+	return nil
 }

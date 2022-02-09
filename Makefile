@@ -2,6 +2,7 @@
 # Image URL to use all building/pushing image targets
 IMG ?= tor-controller:latest
 IMG_DAEMON ?= tor-daemon-manager:latest
+IMG_ONIONBALANCE ?= tor-onionbalance:latest
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.22
@@ -71,6 +72,10 @@ build: generate fmt vet ## Build manager binary.
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go -no-leader-elect --config config/manager/controller_manager_config.yaml
 
+.PHONY: rundev
+rundev: manifests generate fmt vet ## Run a controller from your host.
+	go run ./main.go -no-leader-elect --config config/manager/controller_manager_config_dev.yaml
+
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
 	docker build -t ${IMG} -f Dockerfile .
@@ -86,6 +91,14 @@ docker-build-daemon:
 .PHONY: docker-push-daemon
  docker-push-daemon:
 	docker push ${IMG_DAEMON}
+
+.PHONY: docker-build-onionbalance
+docker-build-onionbalance:
+	docker build -t ${IMG_ONIONBALANCE} -f Dockerfile.tor-onionbalance-manager .
+
+.PHONY: docker-push-onionbalance
+docker-push-onionbalance:
+	docker push ${IMG_ONIONBALANCE}
 
 ##@ Deployment
 

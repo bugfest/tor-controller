@@ -25,64 +25,70 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileServiceAccount(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+func (r *OnionServiceReconciler) reconcileService(ctx context.Context, onionService *torv1alpha2.OnionService) error {
 	log := log.FromContext(ctx)
 
-	serviceAccountName := onionService.ServiceAccountName()
+	serviceName := onionService.ServiceName()
 	namespace := onionService.Namespace
-	if serviceAccountName == "" {
+	if serviceName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("serviceAccount name must be specified"))
+		runtime.HandleError(fmt.Errorf("service name must be specified"))
 		return nil
 	}
 
-	var serviceAccount corev1.ServiceAccount
-	err := r.Get(ctx, types.NamespacedName{Name: serviceAccountName, Namespace: namespace}, &serviceAccount)
+	var service corev1.Service
+	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
-	newServiceAccount := torServiceAccount(onionService)
+	newService := torService(onionService)
 	if errors.IsNotFound(err) {
-		err := r.Create(ctx, newServiceAccount)
+		err := r.Create(ctx, newService)
 		if err != nil {
 			return err
 		}
-		serviceAccount = *newServiceAccount
+		service = *newService
 	} else if err != nil {
 		return err
 	}
 
-	if !metav1.IsControlledBy(&serviceAccount.ObjectMeta, onionService) {
-		log.Info(fmt.Sprintf("ServiceAccount %s already exists and is not controller by %s", serviceAccount.Name, onionService.Name))
+	if !metav1.IsControlledBy(&service.ObjectMeta, onionService) {
+		log.Info(fmt.Sprintf("Service %s already exists and is not controller by %s", service.Name, onionService.Name))
 		return nil
 	}
 
-	// If the serviceAccount specs don't match, update
-	if !serviceAccountEqual(&serviceAccount, newServiceAccount) {
-		err := r.Update(ctx, newServiceAccount)
+	// If the service specs don't match, update
+	if !serviceEqual(&service, newService) {
+		err := r.Update(ctx, newService)
 		if err != nil {
-			return fmt.Errorf("Filed to update ServiceAccount %#v", newServiceAccount)
+			return fmt.Errorf("filed to update Service %#v", newService)
 		}
 	}
 
 	return nil
 }
 
-func serviceAccountEqual(a, b *corev1.ServiceAccount) bool {
-	// TODO: actually detect differences
-	return true
-}
+func torService(onion *torv1alpha2.OnionService) *corev1.Service {
+	ports := []corev1.ServicePort{}
+	for _, r := range onion.Spec.Rules {
+		port := corev1.ServicePort{
+			Name:       r.Port.Name,
+			TargetPort: intstr.FromInt(int(r.Port.Number)),
+			Port:       r.Port.Number,
+		}
+		ports = append(ports, port)
+	}
 
-func torServiceAccount(onion *torv1alpha2.OnionService) *corev1.ServiceAccount {
-	return &corev1.ServiceAccount{
+	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      onion.ServiceAccountName(),
+			Name:      onion.ServiceName(),
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
@@ -91,6 +97,10 @@ func torServiceAccount(onion *torv1alpha2.OnionService) *corev1.ServiceAccount {
 					Kind:    "OnionService",
 				}),
 			},
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: onion.ServiceSelector(),
+			Ports:    ports,
 		},
 	}
 }

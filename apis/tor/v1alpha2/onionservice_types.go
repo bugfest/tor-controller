@@ -33,8 +33,13 @@ type OnionServiceSpec struct {
 	// +optional
 	PrivateKeySecret SecretReference `json:"privateKeySecret,omitempty"`
 
+	// +optional
 	// +kubebuilder:validation:Enum=0;2;3
+	// +kubebuilder:default:=3
 	Version int32 `json:"version"`
+
+	// +optional
+	MasterOnionAddress string `json:"masterOnionAddress,omitempty"`
 
 	// +optional
 	ExtraConfig string `json:"extraConfig,omitempty"`
@@ -78,10 +83,10 @@ type SecretReference struct {
 // OnionServiceStatus defines the observed state of OnionService
 type OnionServiceStatus struct {
 	// +optional
-	Hostname string `json:"hostname"`
+	Hostname string `json:"hostname,omitempty"`
 
 	// +optional
-	TargetClusterIP string `json:"targetClusterIP"`
+	TargetClusterIP string `json:"targetClusterIP,omitempty"`
 }
 
 // +kubebuilder:storageversion
