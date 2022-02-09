@@ -96,8 +96,6 @@ func (c *Controller) sync(key string) error {
 				log.Error(fmt.Sprintf("Writing config failed with %v", err))
 				return err
 			}
-
-			c.localManager.daemon.Reload()
 		}
 
 		// update hostname
@@ -130,8 +128,6 @@ func (c *Controller) sync(key string) error {
 				return err
 			}
 
-			reload = false
-
 			obfile, err := ioutil.ReadFile("/run/tor/service/ob_config")
 			if os.IsNotExist(err) {
 				reload = true
@@ -149,9 +145,11 @@ func (c *Controller) sync(key string) error {
 					log.Error(fmt.Sprintf("Writing config failed with %v", err))
 					return err
 				}
-
-				c.localManager.daemon.Reload()
 			}
+		}
+
+		if reload {
+			c.localManager.daemon.Reload()
 		}
 
 		err = c.updateOnionServiceStatus(&onionService)
@@ -159,6 +157,7 @@ func (c *Controller) sync(key string) error {
 			log.Error(fmt.Sprintf("Updating status failed with %v", err))
 			return err
 		}
+
 	}
 	return nil
 }

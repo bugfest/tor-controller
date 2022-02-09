@@ -25,7 +25,7 @@ func (t *Tor) Start() {
 			t.cmd = exec.CommandContext(t.ctx,
 				"tor",
 				"-f", "/run/tor/torfile",
-				"--allow-missing-torrc",
+				// "--allow-missing-torrc",
 			)
 			t.cmd.Stdout = os.Stdout
 			t.cmd.Stderr = os.Stderr
@@ -35,18 +35,22 @@ func (t *Tor) Start() {
 				fmt.Print(err)
 			}
 			t.cmd.Wait()
-			time.Sleep(time.Second * 1)
+			time.Sleep(time.Second * 3)
 		}
 	}()
 }
 
 func (t *Tor) Reload() {
-	fmt.Println("reloading tor...")
 
-	// start if not already running
 	if t.cmd == nil || (t.cmd.ProcessState != nil && t.cmd.ProcessState.Exited()) {
+		// tor is not running
 		t.Start()
 	} else {
+
+		// restart if already running
+		fmt.Println("reloading tor...")
+		// https://manpages.debian.org/testing/tor/tor.1.en.html#SIGNALS
+		// SIGHUP tells tor to reload the config
 		t.cmd.Process.Signal(syscall.SIGHUP)
 	}
 }
