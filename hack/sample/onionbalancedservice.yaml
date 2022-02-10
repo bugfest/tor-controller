@@ -1,0 +1,17 @@
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionBalancedService
+metadata:
+  name: example-onionbalanced-service
+spec:
+  replicas: 2
+  template:
+    spec:
+      version: 3
+      rules:
+        - port:
+            number: 80
+          backend:
+            service:
+              name: http-app
+              port:
+                number: 8080

@@ -155,6 +155,12 @@ spec:
                 default: quay.io/bugfest/tor-daemon-manager:latest
                 type: string
             type: object
+          torOnionbalanceManager:
+            properties:
+              image:
+                default: quay.io/bugfest/tor-onionbalance-manager:latest
+                type: string
+            type: object
           webhook:
             description: Webhook contains the controllers webhook configuration
             properties:

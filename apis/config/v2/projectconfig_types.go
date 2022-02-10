@@ -31,7 +31,6 @@ import (
 
 // +kubebuilder:storageversion
 // +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
 
 // ProjectConfig is the Schema for the projectconfigs API
 type ProjectConfig struct {
@@ -42,11 +41,20 @@ type ProjectConfig struct {
 
 	// +optional
 	TorDaemonManager TorDaemonManagerType `json:"torDaemonManager,omitempty"`
+
+	// +optional
+	TorOnionbalanceManager TorOnionbalanceManagerType `json:"torOnionbalanceManager,omitempty"`
 }
 
 type TorDaemonManagerType struct {
 	// +optional
 	// +kubebuilder:default:="quay.io/bugfest/tor-daemon-manager:latest"
+	Image string `json:"image,omitempty"`
+}
+
+type TorOnionbalanceManagerType struct {
+	// +optional
+	// +kubebuilder:default:="quay.io/bugfest/tor-onionbalance-manager:latest"
 	Image string `json:"image,omitempty"`
 }
 

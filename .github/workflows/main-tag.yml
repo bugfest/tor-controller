@@ -30,13 +30,14 @@ jobs:
           PLATFORMS=amd64,arm,arm64
           TAGS1="quay.io/${{ github.repository_owner }}/tor-controller:${{ steps.vars.outputs.tag }}"
           TAGS2="quay.io/${{ github.repository_owner }}/tor-daemon-manager:${{ steps.vars.outputs.tag }}"
-          
+          TAGS3="quay.io/${{ github.repository_owner }}/tor-onionbalance-manager:${{ steps.vars.outputs.tag }}"
           if [ "${{github.event_name}}" == "pull_request" ]; then
                 echo ::set-output name=push::false
               else
                 echo ::set-output name=push::true
                 echo ::set-output name=tags1::${TAGS1}
                 echo ::set-output name=tags2::${TAGS2}
+                echo ::set-output name=tags3::${TAGS3}
                 echo ::set-output name=branch::${GIT_BRANCH}
           fi
           echo ::set-output name=platforms::${PLATFORMS}
@@ -86,3 +87,14 @@ jobs:
           push: ${{ steps.prep.outputs.push }}
           tags: ${{ steps.prep.outputs.tags2 }}
 
+      - name: Build and push (tor-onionbalance-manager)
+        uses: docker/build-push-action@v2
+        with:
+          labels: |
+            org.opencontainers.image.created=${{ steps.prep.outputs.build_date }}
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: Dockerfile.tor-onionbalance-manager
+          platforms: ${{ steps.prep.outputs.platforms }}
+          push: ${{ steps.prep.outputs.push }}
+          tags: ${{ steps.prep.outputs.tags3 }}

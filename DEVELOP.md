@@ -35,10 +35,7 @@ optional:
 
     # generate manifests
     make manifests
-
-    # start k8s
-    # cd docker; docker-compose -f docker-compose.k3s.yaml up -d; export KUBECONFIG=$(pwd)/kubeconfig.yaml
-
+    
     # install CRDs
     make install
 
@@ -60,27 +57,18 @@ To deploy in a test cluster
     export REGISTRY=onions:5000
     export IMG=$REGISTRY/tor-controller:latest
     export IMG_DAEMON=$REGISTRY/tor-daemon-manager:latest
+    export IMG_ONIONBALANCE=$REGISTRY/tor-onionbalance-manager:latest
 
     make docker-build && make docker-push
     make docker-build-daemon && make docker-push-daemon
+    make docker-build-onionbalance && make docker-push-onionbalance
 
-    make deploy
-
-    docker build -f docker.out/Dockerfile.tor-daemon-manager . -t $REGISTRY/tor-daemon-manager
-    docker push $REGISTRY/tor-daemon-manager
+    # make deploy
+    make rundev ENABLE_WEBHOOKS=false
 
     # deploy some examples
     kubectl apply -f hack/sample/full-example.yaml
     kubectl apply -f hack/sample/onionservice.yaml
-
-# Build & publish images
-
-    IMG=quay.io/bugfest/tor-controller:latest \
-    IMG_DAEMON=quay.io/bugfest/tor-daemon-manager:latest \
-    sh -c '
-        make docker-build && make push $IMG
-        make docker-build-daemon && make push $IMG_DAEMON
-    '
 
 # Helm
 
@@ -90,8 +78,13 @@ To deploy in a test cluster
     # Install local chart with latest images
     helm upgrade --install \
         --create-namespace --namespace tor-controller \
-        --set image.tag=latest --set manager.image.tag=latest \
-        tor-controller ./helm/tor-controller
+        --set image.repository=onions:5000/tor-controller \
+        --set image.tag=latest \
+        --set manager.image.repository=onions:5000/tor-daemon-manager \
+        --set manager.image.tag=latest \
+        --set onionbalance.image.repository=onions:5000/tor-onionbalance-manager \
+        --set onionbalance.image.tag=latest \
+        tor-controller ./charts/tor-controller
 
     # Update helm chart README
     docker run --rm --volume "$(pwd)/charts:/helm-docs" -u $(id -u) jnorwood/helm-docs:latest

@@ -1,0 +1,24 @@
+FROM golang:1.17 as controller-builder
+
+WORKDIR /go/src/github.com/bugfest/tor-controller
+
+COPY go.mod go.mod
+COPY go.sum go.sum
+RUN go mod download
+
+COPY agents/ agents/
+COPY apis/ apis/
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o onionbalance-local-manager ./agents/onionbalance/main.go
+
+FROM alpine:latest
+
+ARG VERSION=0.2.2
+
+RUN apk add --update git python3 py3-pip py3-wheel py3-cryptography py3-setproctitle py3-pycryptodomex
+RUN python3 -m pip install git+https://gitlab.torproject.org/tpo/core/onionbalance.git@${VERSION}
+
+COPY --from=controller-builder /go/src/github.com/bugfest/tor-controller/onionbalance-local-manager .
+
+# ENTRYPOINT ["/usr/bin/onionbalance"]
+ENTRYPOINT ["./onionbalance-local-manager"]

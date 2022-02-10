@@ -13,6 +13,9 @@ spec:
     kind: OnionService
     listKind: OnionServiceList
     plural: onionservices
+    shortNames:
+    - onion
+    - os
     singular: onionservice
   scope: Namespaced
   versions:
@@ -147,6 +150,8 @@ spec:
             properties:
               extraConfig:
                 type: string
+              masterOnionAddress:
+                type: string
               privateKeySecret:
                 description: SecretReference represents a Secret Reference
                 properties:
@@ -231,14 +236,13 @@ spec:
                   type: object
                 type: array
               version:
+                default: 3
                 enum:
                 - 0
                 - 2
                 - 3
                 format: int32
                 type: integer
-            required:
-            - version
             type: object
           status:
             description: OnionServiceStatus defines the observed state of OnionService

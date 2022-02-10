@@ -18,3 +18,5 @@ data:
       resourceName: 59806307.k8s.torproject.org
     torDaemonManager:
       image: "{{ .Values.manager.image.repository }}:{{ .Values.manager.image.tag | default .Chart.AppVersion }}"
+    torOnionbalanceManager:
+      image: "{{ .Values.onionbalance.image.repository }}:{{ .Values.onionbalance.image.tag | default .Chart.AppVersion }}"

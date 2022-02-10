@@ -1,4 +1,4 @@
-package tordaemon
+package onionbalancedaemon
 
 import (
 	"context"
@@ -9,23 +9,26 @@ import (
 	"time"
 )
 
-type Tor struct {
+type OnionBalance struct {
 	cmd *exec.Cmd
 	ctx context.Context
 }
 
-func (t *Tor) SetContext(ctx context.Context) {
+func (t *OnionBalance) SetContext(ctx context.Context) {
 	t.ctx = ctx
 }
 
-func (t *Tor) Start() {
+func (t *OnionBalance) Start() {
 	go func() {
 		for {
-			fmt.Println("starting tor...")
+			fmt.Println("starting onionbalance...")
 			t.cmd = exec.CommandContext(t.ctx,
-				"tor",
-				"-f", "/run/tor/torfile",
-				// "--allow-missing-torrc",
+				"onionbalance",
+				"--config", "/run/onionbalance/config.yaml",
+				// "--verbosity", "debug",
+				"--ip", "127.0.0.1",
+				"--port", "6666",
+				"--hs-version", "v3",
 			)
 			t.cmd.Stdout = os.Stdout
 			t.cmd.Stderr = os.Stderr
@@ -40,17 +43,13 @@ func (t *Tor) Start() {
 	}()
 }
 
-func (t *Tor) Reload() {
+func (t *OnionBalance) Reload() {
+	fmt.Println("reloading onionbalance...")
 
+	// start if not already running
 	if t.cmd == nil || (t.cmd.ProcessState != nil && t.cmd.ProcessState.Exited()) {
-		// tor is not running
 		t.Start()
 	} else {
-
-		// restart if already running
-		fmt.Println("reloading tor...")
-		// https://manpages.debian.org/testing/tor/tor.1.en.html#SIGNALS
-		// SIGHUP tells tor to reload the config
 		t.cmd.Process.Signal(syscall.SIGHUP)
 	}
 }

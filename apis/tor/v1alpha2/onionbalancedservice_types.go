@@ -24,28 +24,50 @@ import (
 
 // OnionBalancedServiceSpec defines the desired state of OnionBalancedService
 type OnionBalancedServiceSpec struct {
+
+	// "Tor onion service descriptors can include a maximum of 10 introduction points."
+	// https://gitlab.torproject.org/tpo/core/onionbalance/-/blob/main/docs/v2/design.rst#L127
+	// We set max to 8 to match onionbalance maximum allowed value
+
+	// +kubebuilder:validation:Minimum:=1
+	// +kubebuilder:validation:Maximum:=8
+	Replicas int32 `json:"replicas"`
+
 	// +optional
 	PrivateKeySecret SecretReference `json:"privateKeySecret,omitempty"`
 
+	// +optional
 	// +kubebuilder:validation:Enum=3
+	// +kubebuilder:default:=3
 	Version int32 `json:"version"`
 
-	// +kubebuilder:validation:MaxItems=64
-	// +kubebuilder:validation:MinItems=0
-	Selector []string `json:"selector,omitempty"`
+	// +optional
+	Template TemplateReference `json:"template,omitempty"`
+}
+
+type TemplateReference struct {
+	// +optional
+	Spec OnionServiceSpec `json:"spec,omitempty"`
 }
 
 // OnionBalancedServiceStatus defines the observed state of OnionBalancedService
 type OnionBalancedServiceStatus struct {
-	Hostname string            `json:"hostname"`
-	Backends map[string]string `json:"backends"`
+	// +optional
+	Hostname string `json:"hostname,omitempty"`
+
+	// +optional
+	TargetClusterIP string `json:"targetClusterIP,omitempty"`
+
+	// +optional
+	Backends map[string]OnionServiceStatus `json:"backends,omitempty"`
 }
 
+// +kubebuilder:resource:shortName={"onionha","oha","obs"}
 // +kubebuilder:storageversion
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Hostname",type=string,JSONPath=`.status.hostname`
-// +kubebuilder:printcolumn:name="Backends",type=string,JSONPath=`.status.backends`
+// +kubebuilder:printcolumn:name="Replicas",type=string,JSONPath=`.spec.replicas`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // OnionBalancedService is the Schema for the onionbalancedservices API

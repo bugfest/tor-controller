@@ -19,7 +19,6 @@ package tor
 import (
 	"context"
 	"fmt"
-	"reflect"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -175,41 +174,4 @@ func (r *OnionServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&torv1alpha2.OnionService{}).
 		WithEventFilter(pred).
 		Complete(r)
-}
-
-func itemExists(slice interface{}, item interface{}) bool {
-	s := reflect.ValueOf(slice)
-
-	if s.Kind() != reflect.Slice {
-		panic("Invalid data-type")
-	}
-
-	for i := 0; i < s.Len(); i++ {
-		if s.Index(i).Interface() == item {
-			return true
-		}
-	}
-
-	return false
-}
-
-func portExists(slice []corev1.ServicePort, item corev1.ServicePort) bool {
-	s := reflect.ValueOf(slice)
-
-	if s.Kind() != reflect.Slice {
-		panic("Invalid data-type")
-	}
-
-	for _, p := range slice {
-		if p.Protocol == item.Protocol {
-			if p.Port == item.Port {
-				return true
-			}
-			if p.Name != "" && p.Name == item.Name {
-				return true
-			}
-		}
-	}
-
-	return false
 }
