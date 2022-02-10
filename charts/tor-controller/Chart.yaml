@@ -1,6 +1,6 @@
 apiVersion: v2
 name: tor-controller
-description: TOR hidden services controller for kubernetes
+description: Tor hidden services controller for kubernetes
 
 # A chart can be either an 'application' or a 'library' chart.
 #

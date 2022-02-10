@@ -21,12 +21,12 @@
    1. [Quickstart with random address](#quickstart-with-random-address)
    1. [Random service names](#random-service-names)
    1. [Using with nginx-ingress](#using-with-nginx-ingress)
-1. [TOR](#tor)
+1. [Tor](#tor)
 1. [How it works](#how-it-works)
 1. [Builds](#builds)
 1. [Versions](#versions)
 1. [References](#references)
-   1. [TOR Documentation](#tor-documentation)
+   1. [Tor Documentation](#tor-documentation)
    1. [Utils](#utils)
    1. [Other projects](#other-projects)
 
@@ -41,15 +41,20 @@ Changes
 - **(v0.0.0)** Migrate clientset code to controller-runtime
 - **(v0.3.1)** Helm chart
 - **(v0.3.2)** MultiArch images. Supported architectures: amd64, arm, arm64
+- **(v0.4.0)** Implement `OnionBalancedService` resource (HA Onion Services)
 
 Changelog: [CHANGELOG](CHANGELOG.md)
 
-Roadmap
--------
+Roadmap / TODO
+--------------
 
-- **DONE (v0.4.0)** Implement `OnionBalancedService` resource (HA Onion Services)
 - Metrics exporters
-- TOR daemon management via socket (e.g: config reload)
+- Tor daemon management via socket (e.g: config reload)
+- Tor proxy resource: expose socks and http k8s's svc
+- Tor relays:
+  - Non exit: Bridge, Sbowflake, Middle/Guard
+  - Exit relay: Tor Exit
+- Tor-Istio plugin/extension to route pod egress traffic thru Tor
 
 Install
 -------
@@ -205,7 +210,7 @@ Apply it:
 List the frontend onion:
 
 ```bash
-$ kubectl get onion
+$ kubectl get onionha
 NAME                            HOSTNAME                                                         REPLICAS   AGE
 example-onionbalanced-service   gyqyiovslcdv3dawfjpewit4vrobf2r4mcmirxqhwrvviv3wd7zn6sqd.onion   2          1m
 ```
@@ -221,7 +226,7 @@ example-onionbalanced-service-obb-2   4r4n25aewayyupxby34bckljr5rn7j4xynagvqqgde
 
 **Note**: you can also the alias `onionha` or `obs` to interact with OnionBalancedServices resources. Example: `kubectl get onionha`
 
-# TOR
+# Tor
 
 Tor is an anonymity network that provides:
 
