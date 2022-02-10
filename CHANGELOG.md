@@ -1,5 +1,21 @@
 # Changelog
 
+## [tor-controller-0.1.2](https://github.com/bugfest/tor-controller/tree/tor-controller-0.1.2) (2022-02-10)
+
+[Full Changelog](https://github.com/bugfest/tor-controller/compare/0.4.0...tor-controller-0.1.2)
+
+## [0.4.0](https://github.com/bugfest/tor-controller/tree/0.4.0) (2022-02-10)
+
+[Full Changelog](https://github.com/bugfest/tor-controller/compare/tor-controller-0.1.1...0.4.0)
+
+**Implemented enhancements:**
+
+- \[REQUEST\] OnionBalancedService [\#8](https://github.com/bugfest/tor-controller/issues/8)
+
+**Merged pull requests:**
+
+- Onionbalancedservice [\#9](https://github.com/bugfest/tor-controller/pull/9) ([bugfest](https://github.com/bugfest))
+
 ## [tor-controller-0.1.1](https://github.com/bugfest/tor-controller/tree/tor-controller-0.1.1) (2022-01-29)
 
 [Full Changelog](https://github.com/bugfest/tor-controller/compare/0.3.2...tor-controller-0.1.1)
