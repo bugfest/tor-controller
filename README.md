@@ -252,11 +252,12 @@ tor-controller creates the following resources for each OnionService:
 Builds
 ------
 
-| Image              | URL                                                   |
-| ------------------ | ----------------------------------------------------- |
-| helm release       | https://bugfest.github.io/tor-controller              |
-| tor-controller     | https://quay.io/repository/bugfest/tor-controller     |
-| tor-daemon-manager | https://quay.io/repository/bugfest/tor-daemon-manager |
+| Name                     | Type  | URL                                                         |
+| -------------------------| ----- | ----------------------------------------------------------- |
+| helm release             | helm  | https://bugfest.github.io/tor-controller                    |
+| tor-controller           | image | https://quay.io/repository/bugfest/tor-controller           |
+| tor-daemon-manager       | image | https://quay.io/repository/bugfest/tor-daemon-manager       |
+| tor-onionbalance-manager | image | https://quay.io/repository/bugfest/tor-onionbalance-manager |
 
 Versions
 --------
