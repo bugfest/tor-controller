@@ -127,6 +127,8 @@ NAME                    HOSTNAME                                                
 example-onion-service   cfoj4552cvq7fbge6k22qmkun3jl37oz273hndr7ktvoahnqg5kdnzqd.onion   10.43.252.41      1m
 ```
 
+**Note**: you can also the alias `onion` or `os` to interact with these resources. Example: `kubectl get onion`
+
 This service should now be accessable from any tor client,
 for example [Tor Browser](https://www.torproject.org/projects/torbrowser.html.en):
 
@@ -177,6 +179,48 @@ spec:
 This can then be used in the same way any other ingress is. You can find a full
 example, with a default backend at [hack/sample/full-example.yaml](hack/sample/full-example.yaml)
 
+HA Onionbalance Hidden Services
+-------------------------------
+
+(Available since v0.4.0)
+
+Create an onion balanced service, e.g: [hack/sample/onionbalancedservice.yaml](hack/sample/onionbalancedservice.yaml). `spec.replicas` is the number of backends that will be deployed. An additional `onionbalance` pod will be created to act as frontend. The `spec.template.spec` follows the definition of `OnionService` type.
+
+```
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionBalancedService
+metadata:
+  name: example-onionbalanced-service
+spec:
+  replicas: 2
+  template:
+    spec:
+      ...
+```
+
+Apply it:
+
+    $ kubectl apply -f hack/sample/onionbalancedservice.yaml
+
+List the frontend onion:
+
+```bash
+$ kubectl get onion
+NAME                            HOSTNAME                                                         REPLICAS   AGE
+example-onionbalanced-service   gyqyiovslcdv3dawfjpewit4vrobf2r4mcmirxqhwrvviv3wd7zn6sqd.onion   2          1m
+```
+
+List the backends:
+
+```bash
+$ kubectl get onion
+NAME                                  HOSTNAME                                                         TARGETCLUSTERIP   AGE
+example-onionbalanced-service-obb-1   dpyjx4jv7apmaxy6fl5kbwwhr7sfxmowfi7nydyyuz6npjksmzycimyd.onion   10.43.81.229      1m
+example-onionbalanced-service-obb-2   4r4n25aewayyupxby34bckljr5rn7j4xynagvqqgde5xehe4ls7s5qqd.onion   10.43.105.32      1m
+```
+
+**Note**: you can also the alias `onionha` or `obs` to interact with OnionBalancedServices resources. Example: `kubectl get onionha`
+
 # TOR
 
 Tor is an anonymity network that provides:
@@ -217,7 +261,7 @@ Builds
 Versions
 --------
 
-| Chart version | Tor-Controller version | Tor daemon |
+| Helm Chart version | Tor-Controller version | Tor daemon |
 | ----- | ----- | ------- |
 | 0.1.0 | 0.3.1 | 0.4.6.8 |
 | 0.1.1 | 0.3.2 | 0.4.6.8 |
