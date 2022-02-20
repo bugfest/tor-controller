@@ -1,12 +1,24 @@
 # Changelog
 
-## [tor-controller-0.1.2](https://github.com/bugfest/tor-controller/tree/tor-controller-0.1.2) (2022-02-10)
+## [tor-controller-0.1.3](https://github.com/bugfest/tor-controller/tree/tor-controller-0.1.3) (2022-02-20)
 
-[Full Changelog](https://github.com/bugfest/tor-controller/compare/0.4.0...tor-controller-0.1.2)
+[Full Changelog](https://github.com/bugfest/tor-controller/compare/0.5.0...tor-controller-0.1.3)
+
+## [0.5.0](https://github.com/bugfest/tor-controller/tree/0.5.0) (2022-02-20)
+
+[Full Changelog](https://github.com/bugfest/tor-controller/compare/0.4.0...0.5.0)
+
+**Implemented enhancements:**
+
+- Metrics exporters and service monitors [\#10](https://github.com/bugfest/tor-controller/pull/10) ([bugfest](https://github.com/bugfest))
 
 ## [0.4.0](https://github.com/bugfest/tor-controller/tree/0.4.0) (2022-02-10)
 
-[Full Changelog](https://github.com/bugfest/tor-controller/compare/tor-controller-0.1.1...0.4.0)
+[Full Changelog](https://github.com/bugfest/tor-controller/compare/tor-controller-0.1.2...0.4.0)
+
+## [tor-controller-0.1.2](https://github.com/bugfest/tor-controller/tree/tor-controller-0.1.2) (2022-02-10)
+
+[Full Changelog](https://github.com/bugfest/tor-controller/compare/tor-controller-0.1.1...tor-controller-0.1.2)
 
 **Implemented enhancements:**
 
