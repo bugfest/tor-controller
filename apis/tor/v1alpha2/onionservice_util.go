@@ -3,12 +3,13 @@ package v1alpha2
 import "fmt"
 
 const (
-	torDeploymentNameFmt               = "%s-tor-daemon"
-	torSecretNameFmt                   = "%s-tor-secret"
-	torServiceNameFmt                  = "%s-tor-svc"
-	torRoleNameFmt                     = "%s-tor-role"
-	torServiceAccountNameFmt           = "%s-tor-serviceaccount"
-	onionBalancedServiceBackendNameFmt = "%s-obb-%d"
+	torDeploymentNameFmt       = "%s-tor-daemon"
+	torSecretNameFmt           = "%s-tor-secret"
+	torServiceNameFmt          = "%s-tor-svc"
+	torMetricsServiceNameFmt   = "%s-tor-metrics-svc"
+	torRoleNameFmt             = "%s-tor-role"
+	torServiceAccountNameFmt   = "%s-tor-sa"
+	onionServiceBackendNameFmt = "%s-tor-obb-%d"
 )
 
 func (s *OnionServiceSpec) GetVersion() int {
@@ -20,7 +21,7 @@ func (s *OnionServiceSpec) GetVersion() int {
 }
 
 func (s *OnionBalancedService) OnionServiceBackendName(n int32) string {
-	return fmt.Sprintf(onionBalancedServiceBackendNameFmt, s.Name, n)
+	return fmt.Sprintf(onionServiceBackendNameFmt, s.Name, n)
 }
 
 func (s *OnionService) DeploymentName() string {
@@ -29,6 +30,17 @@ func (s *OnionService) DeploymentName() string {
 
 func (s *OnionService) ServiceName() string {
 	return fmt.Sprintf(torServiceNameFmt, s.Name)
+}
+
+func (s *OnionService) ServiceMetricsName() string {
+	return fmt.Sprintf(torMetricsServiceNameFmt, s.Name)
+}
+
+func (s *OnionService) ServiceMetricsSelector() map[string]string {
+	return map[string]string{
+		"app":        s.ServiceMetricsName(),
+		"controller": s.Name,
+	}
 }
 
 func (s *OnionService) SecretName() string {

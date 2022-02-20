@@ -35,7 +35,7 @@ func (r *OnionBalancedServiceReconciler) reconcileBackends(ctx context.Context, 
 	log := log.FromContext(ctx)
 
 	// Reconcile each backend
-	for idx := int32(1); idx <= OnionBalancedService.Spec.Replicas; idx++ {
+	for idx := int32(1); idx <= OnionBalancedService.Spec.Backends; idx++ {
 		_, err := r.reconcileBackend(ctx, OnionBalancedService, idx)
 		if err != nil {
 			log.Error(err, fmt.Sprintf("unable reconcile backend idx=%d", idx))
@@ -101,6 +101,7 @@ func onionBalancedServiceBackend(onion *torv1alpha2.OnionBalancedService, projec
 			Rules:              onion.Spec.Template.Spec.Rules,
 			Version:            onion.Spec.Version,
 			MasterOnionAddress: onion.Status.Hostname,
+			ServiceMonitor:     onion.Spec.Template.Spec.ServiceMonitor,
 		},
 	}
 }

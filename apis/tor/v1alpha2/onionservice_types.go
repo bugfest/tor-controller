@@ -36,10 +36,14 @@ type OnionServiceSpec struct {
 	// +optional
 	// +kubebuilder:validation:Enum=0;2;3
 	// +kubebuilder:default:=3
-	Version int32 `json:"version"`
+	Version int32 `json:"version,omitempty"`
 
 	// +optional
 	MasterOnionAddress string `json:"masterOnionAddress,omitempty"`
+
+	// +optional
+	// +kubebuilder:default:=false
+	ServiceMonitor bool `json:"serviceMonitor,omitempty"`
 
 	// +optional
 	ExtraConfig string `json:"extraConfig,omitempty"`
@@ -94,7 +98,6 @@ type OnionServiceStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Hostname",type=string,JSONPath=`.status.hostname`
-// +kubebuilder:printcolumn:name="TargetClusterIP",type=string,JSONPath=`.status.targetClusterIP`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // OnionService is the Schema for the onionservices API

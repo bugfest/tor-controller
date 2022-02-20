@@ -77,7 +77,6 @@ To deploy in a test cluster
 
     # Install local chart with latest images
     helm upgrade --install \
-        --create-namespace --namespace tor-controller \
         --set image.repository=onions:5000/tor-controller \
         --set image.tag=latest \
         --set manager.image.repository=onions:5000/tor-daemon-manager \
@@ -88,6 +87,26 @@ To deploy in a test cluster
 
     # Update helm chart README
     docker run --rm --volume "$(pwd)/charts:/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
+
+# Prometheus/Grafana
+
+    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+    --set grafana.enabled=false \
+    --set alertmanager.enabled=false \
+    --set kubeApiServer.enabled=false \
+    --set kubelet.enabled=false \
+    --set kubeControllerManager.enabled=false \
+    --set coreDns.enabled=false \
+    --set kubeEtcd.enabled=false \
+    --set kubeScheduler.enabled=false \
+    --set kubeProxy.enabled=false \
+    --set kubeStateMetrics.enabled=false \
+    --set nodeExporter.enabled=false \
+    --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+
+    kubectl port-forward svc/kube-prometheus-stack-prometheus 9090
+    # browse http://localhost:9090/targets to check the metrics are scraped
 
 # Changelog
 

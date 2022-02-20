@@ -27,7 +27,7 @@ func (t *OnionBalance) Start() {
 				"--config", "/run/onionbalance/config.yaml",
 				// "--verbosity", "debug",
 				"--ip", "127.0.0.1",
-				"--port", "6666",
+				"--port", "9051",
 				"--hs-version", "v3",
 			)
 			t.cmd.Stdout = os.Stdout

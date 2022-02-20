@@ -122,9 +122,6 @@ spec:
     - jsonPath: .status.hostname
       name: Hostname
       type: string
-    - jsonPath: .status.targetClusterIP
-      name: TargetClusterIP
-      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
@@ -235,6 +232,9 @@ spec:
                       type: object
                   type: object
                 type: array
+              serviceMonitor:
+                default: false
+                type: boolean
               version:
                 default: 3
                 enum:

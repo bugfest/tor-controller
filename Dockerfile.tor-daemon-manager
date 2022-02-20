@@ -2,7 +2,7 @@ FROM alpine:edge as tor-builder
 RUN apk update
 RUN apk add --no-cache git build-base automake autoconf make build-base openssl-dev libevent-dev zlib-dev
 
-ENV TOR_VERSION="tor-0.4.6.8"
+ENV TOR_VERSION="tor-0.4.6.10"
 
 # Install Tor from source
 RUN git clone https://gitlab.torproject.org/tpo/core/tor.git --depth 1 --branch $TOR_VERSION /tor
