@@ -33,6 +33,20 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
+const configFormat = `# Config automatically generated
+SocksPort {{ .SocksPort }}
+ControlPort {{ .ControlPort }}
+MetricsPort {{ .MetricsPort }}
+MetricsPortPolicy {{ .MetricsPortPolicy }}
+`
+
+type torConfig struct {
+	SocksPort         string
+	ControlPort       string
+	MetricsPort       string
+	MetricsPortPolicy string
+}
+
 func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
 	log := log.FromContext(ctx)
 
@@ -74,14 +88,17 @@ func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context,
 }
 
 func onionbalanceTorConfig(onion *torv1alpha2.OnionBalancedService) string {
-	const configFormat = `# Config automatically generated
-SocksPort 0
-ControlPort 127.0.0.1:6666
-`
+
+	s := torConfig{
+		SocksPort:         "0",
+		ControlPort:       "127.0.0.1:9051",
+		MetricsPort:       "0.0.0.0:9035",
+		MetricsPortPolicy: "accept 0.0.0.0/0",
+	}
 
 	var configTemplate = template.Must(template.New("config").Parse(configFormat))
 	var tmp bytes.Buffer
-	err := configTemplate.Execute(&tmp, onion)
+	err := configTemplate.Execute(&tmp, s)
 	if err != nil {
 		return ""
 	}

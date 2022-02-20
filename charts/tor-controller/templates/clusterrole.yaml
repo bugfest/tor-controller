@@ -61,6 +61,14 @@ rules:
       - update
       - watch
   - apiGroups:
+    - apiextensions.k8s.io
+    resources:
+    - customresourcedefinitions
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
       - apps
     resources:
       - deployments
@@ -72,6 +80,18 @@ rules:
       - patch
       - update
       - watch
+  - apiGroups:
+    - monitoring.coreos.com
+    resources:
+    - servicemonitors
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - watch
+    - patch
+    - update
   - apiGroups:
       - rbac.authorization.k8s.io
     resources:

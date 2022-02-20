@@ -36,6 +36,8 @@ import (
 	torv1alpha1 "github.com/bugfest/tor-controller/apis/tor/v1alpha1"
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 	torcontrollers "github.com/bugfest/tor-controller/controllers/tor"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -50,6 +52,8 @@ func init() {
 	utilruntime.Must(torv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(torv1alpha2.AddToScheme(scheme))
 	utilruntime.Must(configv2.AddToScheme(scheme))
+	utilruntime.Must(monitoringv1.AddToScheme(scheme))
+	utilruntime.Must(apiextensionsv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 

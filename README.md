@@ -21,6 +21,8 @@
    1. [Quickstart with random address](#quickstart-with-random-address)
    1. [Random service names](#random-service-names)
    1. [Using with nginx-ingress](#using-with-nginx-ingress)
+   1. [HA Onionbalance Hidden Services](#ha-onionbalance-hidden-services)
+   1. [Service Monitors](#service-monitors)
 1. [Tor](#tor)
 1. [How it works](#how-it-works)
 1. [Builds](#builds)
@@ -42,13 +44,13 @@ Changes
 - **(v0.3.1)** Helm chart
 - **(v0.3.2)** MultiArch images. Supported architectures: amd64, arm, arm64
 - **(v0.4.0)** Implement `OnionBalancedService` resource (HA Onion Services)
+- **(v0.5.0)** Tor & OnionBalance metric exporters. Prometheus ServiceMonitor integration
 
 Changelog: [CHANGELOG](CHANGELOG.md)
 
 Roadmap / TODO
 --------------
 
-- Metrics exporters
 - Tor daemon management via socket (e.g: config reload)
 - Tor proxy resource: expose socks and http k8s's svc
 - Tor relays:
@@ -226,6 +228,16 @@ example-onionbalanced-service-obb-2   4r4n25aewayyupxby34bckljr5rn7j4xynagvqqgde
 
 **Note**: you can also the alias `onionha` or `obs` to interact with OnionBalancedServices resources. Example: `kubectl get onionha`
 
+Service Monitors
+----------------
+
+You can get Service Monitors created automatically for `OnionService` and `OnionBalancedService` objects setting `serviceMonitor` to `true`. It will be used by prometheus to scrape metrics.
+
+Examples:
+
+- `OnionService`: [onionservice-monitored.yaml](hack/sample/onionservice-monitored.yaml)
+- `OnionBalancedService`: [onionbalancedservice-monitored.yaml](hack/sample/onionbalancedservice-monitored.yaml)
+
 # Tor
 
 Tor is an anonymity network that provides:
@@ -272,6 +284,7 @@ Versions
 | 0.1.0 | 0.3.1 | 0.4.6.8 |
 | 0.1.1 | 0.3.2 | 0.4.6.8 |
 | 0.1.2 | 0.4.0 | 0.4.6.8 |
+| 0.1.3 | 0.5.0 | 0.4.6.10 |
 
 References
 ----------

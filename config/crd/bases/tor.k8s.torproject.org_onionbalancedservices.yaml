@@ -24,8 +24,8 @@ spec:
     - jsonPath: .status.hostname
       name: Hostname
       type: string
-    - jsonPath: .spec.replicas
-      name: Replicas
+    - jsonPath: .spec.backends
+      name: Backends
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
@@ -51,6 +51,11 @@ spec:
           spec:
             description: OnionBalancedServiceSpec defines the desired state of OnionBalancedService
             properties:
+              backends:
+                format: int32
+                maximum: 8
+                minimum: 1
+                type: integer
               privateKeySecret:
                 description: SecretReference represents a Secret Reference
                 properties:
@@ -61,11 +66,9 @@ spec:
                       secret resource.
                     type: string
                 type: object
-              replicas:
-                format: int32
-                maximum: 8
-                minimum: 1
-                type: integer
+              serviceMonitor:
+                default: false
+                type: boolean
               template:
                 properties:
                   spec:
@@ -164,6 +167,9 @@ spec:
                               type: object
                           type: object
                         type: array
+                      serviceMonitor:
+                        default: false
+                        type: boolean
                       version:
                         default: 3
                         enum:
@@ -181,7 +187,7 @@ spec:
                 format: int32
                 type: integer
             required:
-            - replicas
+            - backends
             type: object
           status:
             description: OnionBalancedServiceStatus defines the observed state of

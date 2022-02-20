@@ -8,7 +8,10 @@ import (
 )
 
 const configFormat = `
-SocksPort 0
+SocksPort {{ .SocksPort }}
+ControlPort {{ .ControlPort }}
+MetricsPort {{ .MetricsPort }}
+MetricsPortPolicy {{ .MetricsPortPolicy }}
 HiddenServiceDir {{ .ServiceDir }}
 {{ if .HiddenServiceOnionbalanceInstance }}
 HiddenServiceOnionbalanceInstance 1
@@ -28,7 +31,11 @@ MasterOnionAddress {{.MasterOnionAddress}}
 var configTemplate = template.Must(template.New("config").Parse(configFormat))
 var oBconfigTemplate = template.Must(template.New("config").Parse(oBconfigFormat))
 
-type onionService struct {
+type torConfig struct {
+	SocksPort                         string
+	ControlPort                       string
+	MetricsPort                       string
+	MetricsPortPolicy                 string
 	ServiceName                       string
 	ServiceNamespace                  string
 	ServiceDir                        string
@@ -44,7 +51,7 @@ type portTuple struct {
 	ServiceClusterIP string
 }
 
-func OnionServiceInputData(onion *v1alpha2.OnionService) onionService {
+func OnionServiceInputData(onion *v1alpha2.OnionService) torConfig {
 	ports := []portTuple{}
 	for _, rule := range onion.Spec.Rules {
 		port := portTuple{
@@ -55,7 +62,11 @@ func OnionServiceInputData(onion *v1alpha2.OnionService) onionService {
 		ports = append(ports, port)
 	}
 
-	return onionService{
+	return torConfig{
+		SocksPort:                         "0",
+		ControlPort:                       "0",
+		MetricsPort:                       "0.0.0.0:9035",
+		MetricsPortPolicy:                 "accept 0.0.0.0/0",
 		ServiceName:                       onion.ServiceName(),
 		ServiceNamespace:                  onion.Namespace,
 		ServiceDir:                        "/run/tor/service",

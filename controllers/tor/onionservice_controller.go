@@ -52,6 +52,8 @@ type OnionServiceReconciler struct {
 //+kubebuilder:rbac:groups="rbac.authorization.k8s.io",resources=rolebindings,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="apps",resources=deployments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=events,verbs=create;update;patch
+//+kubebuilder:rbac:groups="monitoring.coreos.com",resources=servicemonitors,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="apiextensions.k8s.io",resources=customresourcedefinitions,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -132,6 +134,16 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	err = r.reconcileDeployment(ctx, &onionService)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.reconcileMetricsService(ctx, &onionService)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.reconcileServiceMonitor(ctx, &onionService)
 	if err != nil {
 		return ctrl.Result{}, err
 	}

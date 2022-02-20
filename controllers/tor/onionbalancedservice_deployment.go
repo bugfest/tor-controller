@@ -207,6 +207,18 @@ func onionbalanceDeployment(onion *torv1alpha2.OnionBalancedService, projectConf
 							},
 							ImagePullPolicy: "Always",
 							VolumeMounts:    torVolumeMounts,
+							Ports: []corev1.ContainerPort{
+								// {
+								// 	Name: "control",
+								// 	Protocol: "TCP",
+								// 	ContainerPort: 9051,
+								// },
+								{
+									Name:          "metrics",
+									Protocol:      "TCP",
+									ContainerPort: 9035,
+								},
+							},
 						},
 					},
 					Volumes: volumes,

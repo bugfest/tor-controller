@@ -29,8 +29,8 @@ spec:
     - jsonPath: .status.hostname
       name: Hostname
       type: string
-    - jsonPath: .spec.replicas
-      name: Replicas
+    - jsonPath: .spec.backends
+      name: Backends
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
@@ -56,6 +56,11 @@ spec:
           spec:
             description: OnionBalancedServiceSpec defines the desired state of OnionBalancedService
             properties:
+              backends:
+                format: int32
+                maximum: 8
+                minimum: 1
+                type: integer
               privateKeySecret:
                 description: SecretReference represents a Secret Reference
                 properties:
@@ -66,11 +71,9 @@ spec:
                       secret resource.
                     type: string
                 type: object
-              replicas:
-                format: int32
-                maximum: 8
-                minimum: 1
-                type: integer
+              serviceMonitor:
+                default: false
+                type: boolean
               template:
                 properties:
                   spec:
@@ -169,6 +172,9 @@ spec:
                               type: object
                           type: object
                         type: array
+                      serviceMonitor:
+                        default: false
+                        type: boolean
                       version:
                         default: 3
                         enum:
@@ -186,7 +192,7 @@ spec:
                 format: int32
                 type: integer
             required:
-            - replicas
+            - backends
             type: object
           status:
             description: OnionBalancedServiceStatus defines the observed state of
@@ -341,9 +347,6 @@ spec:
     - jsonPath: .status.hostname
       name: Hostname
       type: string
-    - jsonPath: .status.targetClusterIP
-      name: TargetClusterIP
-      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
@@ -454,6 +457,9 @@ spec:
                       type: object
                   type: object
                 type: array
+              serviceMonitor:
+                default: false
+                type: boolean
               version:
                 default: 3
                 enum:
@@ -780,9 +786,29 @@ rules:
   - update
   - watch
 - apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - apps
   resources:
   - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
   verbs:
   - create
   - delete

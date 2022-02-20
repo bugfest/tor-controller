@@ -31,7 +31,7 @@ type OnionBalancedServiceSpec struct {
 
 	// +kubebuilder:validation:Minimum:=1
 	// +kubebuilder:validation:Maximum:=8
-	Replicas int32 `json:"replicas"`
+	Backends int32 `json:"backends"`
 
 	// +optional
 	PrivateKeySecret SecretReference `json:"privateKeySecret,omitempty"`
@@ -40,6 +40,10 @@ type OnionBalancedServiceSpec struct {
 	// +kubebuilder:validation:Enum=3
 	// +kubebuilder:default:=3
 	Version int32 `json:"version"`
+
+	// +optional
+	// +kubebuilder:default:=false
+	ServiceMonitor bool `json:"serviceMonitor,omitempty"`
 
 	// +optional
 	Template TemplateReference `json:"template,omitempty"`
@@ -67,7 +71,7 @@ type OnionBalancedServiceStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Hostname",type=string,JSONPath=`.status.hostname`
-// +kubebuilder:printcolumn:name="Replicas",type=string,JSONPath=`.spec.replicas`
+// +kubebuilder:printcolumn:name="Backends",type=string,JSONPath=`.spec.backends`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // OnionBalancedService is the Schema for the onionbalancedservices API

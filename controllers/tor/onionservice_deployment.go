@@ -161,6 +161,18 @@ func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.Proje
 							},
 							ImagePullPolicy: corev1.PullAlways,
 							VolumeMounts:    volumeMounts,
+							Ports: []corev1.ContainerPort{
+								// {
+								// 	Name: "control",
+								// 	Protocol: "TCP",
+								// 	ContainerPort: 9051,
+								// },
+								{
+									Name:          "metrics",
+									Protocol:      "TCP",
+									ContainerPort: 9035,
+								},
+							},
 						},
 					},
 					Volumes: volumes,
