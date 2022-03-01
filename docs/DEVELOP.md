@@ -22,6 +22,7 @@ optional:
     kubebuilder create api --group tor --version v1alpha1 --kind OnionBalancedService --controller --namespaced --resource
 
     # v1alpha2 (to implement new OnionService and OnionBalancedService)
+    kubebuilder create api --group tor --version v1alpha2 --kind Tor --controller --namespaced --resource
     kubebuilder create api --group tor --version v1alpha2 --kind OnionService --controller --namespaced --resource
     kubebuilder create api --group tor --version v1alpha2 --kind OnionBalancedService --controller --namespaced --resource
     kubebuilder create webhook --group tor --version v1alpha2 --kind OnionService --conversion

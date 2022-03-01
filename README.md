@@ -54,7 +54,7 @@ Roadmap / TODO
 - Tor daemon management via socket (e.g: config reload)
 - Tor proxy resource: expose socks and http k8s's svc
 - Tor relays:
-  - Non exit: Bridge, Sbowflake, Middle/Guard
+  - Non exit: Bridge, Snowflake, Middle/Guard
   - Exit relay: Tor Exit
 - Tor-Istio plugin/extension to route pod egress traffic thru Tor
 

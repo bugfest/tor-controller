@@ -40,4 +40,13 @@ resources:
   kind: ProjectConfig
   path: github.com/bugfest/tor-controller/apis/config/v2
   version: v2
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: k8s.torproject.org
+  group: tor
+  kind: Tor
+  path: github.com/bugfest/tor-controller/apis/tor/v1alpha2
+  version: v1alpha2
 version: "3"
