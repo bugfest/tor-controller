@@ -70,6 +70,12 @@ To deploy in a test cluster
     kubectl apply -f hack/sample/full-example.yaml
     kubectl apply -f hack/sample/onionservice.yaml
 
+# Docker Buildx
+
+    docker buildx build --platform=linux/amd64,linux/arm64,linux/arm -f Dockerfile --tag quay.io/bugfest/tor-controller:latest .
+    docker buildx build --platform=linux/amd64,linux/arm64,linux/arm -f Dockerfile.tor-daemon-manager --tag quay.io/bugfest/tor-daemon-manager:latest .
+    docker buildx build --platform=linux/amd64,linux/arm64,linux/arm -f Dockerfile.tor-onionbalance-manager --tag quay.io/bugfest/tor-onionbalance-manager:latest .
+    
 # Helm
 
     # Update CRDs
@@ -112,6 +118,10 @@ To deploy in a test cluster
 
     # Update changelog
     docker run -it --rm -v "$(pwd)":/usr/local/src/your-app githubchangeloggenerator/github-changelog-generator -u bugfest -p tor-controller
+
+# Arm64 emulation with QEMU
+
+Check out [QEMU.md](QEMU.md)
 
 # refs
 

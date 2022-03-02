@@ -269,12 +269,16 @@ tor-controller creates the following resources for each OnionService:
 Builds
 ------
 
-| Name                     | Type  | URL                                                         |
-| -------------------------| ----- | ----------------------------------------------------------- |
-| helm release             | helm  | https://bugfest.github.io/tor-controller                    |
-| tor-controller           | image | https://quay.io/repository/bugfest/tor-controller           |
-| tor-daemon-manager       | image | https://quay.io/repository/bugfest/tor-daemon-manager       |
-| tor-onionbalance-manager | image | https://quay.io/repository/bugfest/tor-onionbalance-manager |
+| Name                     | Type  | URL                                                         | Comment     |
+| -------------------------| ----- | ----------------------------------------------------------- | ----------- |
+| helm release             | helm  | https://bugfest.github.io/tor-controller                    |             |
+| tor-controller           | image | https://quay.io/repository/bugfest/tor-controller           |             |
+| tor-daemon-manager       | image | https://quay.io/repository/bugfest/tor-daemon-manager       | Build requires bugfest/tor |
+| tor-onionbalance-manager | image | https://quay.io/repository/bugfest/tor-onionbalance-manager |             |
+| tor                      | image | https://quay.io/repository/bugfest/tor                      |             |
+
+Dependencies:
+- tor-daemon-manager Dockerfile uses bugfest/tor image (built from source). It is built in a separate project to speed up the compilation: [https://github.com/bugfest/tor-docker](https://github.com/bugfest/tor-docker)
 
 Versions
 --------
