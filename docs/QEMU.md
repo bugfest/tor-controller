@@ -2,6 +2,7 @@
 
 Locate your QEMU's shares directory in your system and set `QEMU_SHARES` accordingly 
 ```shell script
+$ qemu-img create alpine.qcow 5G
 $ QEMU_SHARES=/path/to/qemu/shares
 $ qemu-system-aarch64 \
   -bios QEMU_SHARES/edk2-aarch64-code.fd \
@@ -10,6 +11,8 @@ $ qemu-system-aarch64 \
   -boot d \
   -nic user,ipv6=off,model=e1000 \
   -smp 4 \
+  -hda alpine.qcow \
+  -rtc base=localtime \
   -nographic
 ```
 
@@ -52,6 +55,51 @@ podman run --rm -ti quay.io/bugfest/tor-controller:latest --help
 file /var/lib/containers/storage/overlay/c450f82aba630e856a394ce33b4b09f02db5522aa930f1f163b8e9c8e02146f7/diff/manager
 # /var/lib/containers/storage/overlay/c450f82aba630e856a394ce33b4b09f02db5522aa930f1f163b8e9c8e02146f7/diff/manager: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, Go BuildID=1fZSGYRhNaI79hhbTcgx/4Ek_ZM6bIpAdo2fuYCcf/maZ7Wemhq3FVhv5pbZFB/fgXWOJPsDeddc3FrBWWB, not stripped
 ````
+
+(optional) persistent installation
+```shell script
+setup-alpine
+setup-ntp -c chrony
+
+vi /etc/default/grub
+# GRUB_CMDLINE_LINUX_DEFAULT="modules=sd-mod,usb-storage,ext4 quiet rootfstype=ext4 cgroup_memory=1 cgroup_enable=memory cgroup_enable=cpuset"
+
+grub-mkconfig > /boot/grub/grub.cfg
+
+poweroff
+```
+
+Boot from disk
+```shell script
+$ qemu-system-aarch64 \
+  -bios QEMU_SHARES/edk2-aarch64-code.fd \
+  -cpu cortex-a72 -m 1024 -M virt,highmem=no \
+  -boot c \
+  -nic user,ipv6=off,model=e1000 \
+  -smp 4 \
+  -hda alpine.qcow \
+  -rtc base=localtime \
+  -nographic
+```
+
+Install k3s
+```shell script
+apk add curl
+curl -sfL https://get.k3s.io | sh -
+
+apk add bash
+curl -k https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+cp /etc/rancher/k3s/k3s.yaml /root/.kube/config
+helm repo add bugfest https://bugfest.github.io/tor-controller
+helm upgrade --install tor-controller bugfest/tor-controller
+
+kubectl -n default get po -l app.kubernetes.io/name=tor-controller
+kubectl apply -f https://raw.githubusercontent.com/bugfest/tor-controller/master/hack/sample/echoserver.yaml
+kubectl apply -f https://raw.githubusercontent.com/bugfest/tor-controller/master/hack/sample/onionservice.yaml
+kubectl get onionservice/example-onion-service -o template='{{printf "%s\n" .status.hostname}}'
+
+```
 
 Docs
 ----

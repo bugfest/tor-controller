@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: http-app
-        image: gcr.io/google_containers/echoserver:1.8
+        image: quay.io/bugfest/echoserver:2.5
         ports:
         - containerPort: 8080
 ---
