@@ -170,3 +170,29 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - tor.k8s.torproject.org
+  resources:
+  - tors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tor.k8s.torproject.org
+  resources:
+  - tors/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - tor.k8s.torproject.org
+  resources:
+  - tors/status
+  verbs:
+  - get
+  - patch
+  - update
