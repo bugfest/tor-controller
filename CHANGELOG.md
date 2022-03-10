@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.1](https://github.com/bugfest/tor-controller/tree/0.5.1) (2022-03-10)
+
+[Full Changelog](https://github.com/bugfest/tor-controller/compare/tor-controller-0.1.3...0.5.1)
+
+**Fixed bugs:**
+
+- \[BUG\] trying to consume secret for private key fails [\#13](https://github.com/bugfest/tor-controller/issues/13)
+- \[BUG\] echoserver is not multiarch [\#12](https://github.com/bugfest/tor-controller/issues/12)
+- \[BUG\] Manager pod failing to start for arm64 install [\#11](https://github.com/bugfest/tor-controller/issues/11)
+
+**Merged pull requests:**
+
+- Fixes \#13 - Bring your own key [\#14](https://github.com/bugfest/tor-controller/pull/14) ([bugfest](https://github.com/bugfest))
+
 ## [tor-controller-0.1.3](https://github.com/bugfest/tor-controller/tree/tor-controller-0.1.3) (2022-02-20)
 
 [Full Changelog](https://github.com/bugfest/tor-controller/compare/0.5.0...tor-controller-0.1.3)

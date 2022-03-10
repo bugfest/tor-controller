@@ -65,6 +65,7 @@ Install
 Using helm (recommended):
 
     $ helm repo add bugfest https://bugfest.github.io/tor-controller
+    $ helm repo update
     $ helm upgrade --install \
       --create-namespace --namespace tor-controller \
       tor-controller bugfest/tor-controller
@@ -354,6 +355,7 @@ Versions
 | 0.1.1 | 0.3.2 | 0.4.6.8 |
 | 0.1.2 | 0.4.0 | 0.4.6.8 |
 | 0.1.3 | 0.5.0 | 0.4.6.10 |
+| 0.1.4 | 0.5.1 | 0.4.6.10 |
 
 References
 ----------
