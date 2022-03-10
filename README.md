@@ -20,6 +20,7 @@
 1. [How to](#how-to)
    1. [Quickstart with random address](#quickstart-with-random-address)
    1. [Random service names](#random-service-names)
+   1. [Bring your own secret](#bring-your-own-secret)
    1. [Using with nginx-ingress](#using-with-nginx-ingress)
    1. [HA Onionbalance Hidden Services](#ha-onionbalance-hidden-services)
    1. [Service Monitors](#service-monitors)
@@ -144,6 +145,73 @@ Random service names
 
 If `spec.privateKeySecret` is not specified, tor-controller will start a service with a random name. The key-pair is stored in the same namespace as the tor-daemon, with the name `ONIONSERVICENAME-tor-secret`
 
+The created secret has the following format:
+
+```yaml
+apiVersion: v1
+kind: Secret
+type: tor.k8s.torproject.org/onion-v3
+metadata:
+  name: example-tor-secret
+data:
+  onionAddress: ZWxqZGU2a...
+  privateKey: oMLf2tSS2...
+  privateKeyFile: PT0gZW...
+  publicKey: ItIyeT+kH...
+  publicKeyFile: PT0gZWQyNT...
+...
+```
+
+Bring your own secret
+---------------------
+
+Set `spec.privateKeySecret.name` to specify an existing secret. If you don't set `spec.privateKeySecret.key`, the controller expects it to have the following keys:
+
+* `onionAddress` (corresponds to is the `hostname` file usually created by Tor)
+* `privateKeyFile` (corresponds to `hs_ed25519_secret_key` file in v3 onion addresses or `private_key` in v2 ones)
+* `publicKeyFile` (corresponds to `hs_ed25519_public_key` file in v3 onion addresses or `public_key` in v2 ones)
+
+You can create such a secret with the following command:
+```bash
+$ kubectl create secret generic my-full-onion-secret \
+  --from-file=privateKeyFile=hs_ed25519_secret_key \
+  --from-file=publicKeyFile=hs_ed25519_public_key \
+  --from-file=onionAddress=hostname
+```
+
+Onion Service example referencing a Secret only by name:
+```yaml
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionService
+metadata:
+  name: example-onion-service
+spec:
+  ...
+  privateKeySecret:
+    name: my-full-onion-secret
+```
+
+If you set `spec.privateKeySecret.key`, the controller expects it to point to a valid `hs_ed25519_secret_key` content.
+
+Secret example:
+```bash
+$ kubectl create secret generic my-private-onion-secret \
+  --from-file=mykeyname=hs_ed25519_secret_key
+```
+
+Onion Service example referencing a Secret only by name:
+```yaml
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionService
+metadata:
+  name: example-onion-service
+spec:
+  ...
+  privateKeySecret:
+    name: my-private-onion-secret
+    key: mykeyname
+```
+
 Onion service versions
 ----------------------
 
@@ -178,9 +246,6 @@ spec:
           name: http-app
           port:
             number: 8080
-  privateKeySecret:
-    name: nginx-onion-key
-    key: private_key
 ```
 
 This can then be used in the same way any other ingress is. You can find a full
