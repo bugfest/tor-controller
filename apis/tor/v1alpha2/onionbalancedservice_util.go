@@ -24,7 +24,7 @@ func (s *OnionBalancedServiceSpec) GetBackends() int {
 }
 
 func (s *OnionBalancedService) DeploymentName() string {
-	return fmt.Sprintf(torDeploymentNameFmt, s.Name)
+	return fmt.Sprintf(osDeploymentNameFmt, s.Name)
 }
 
 func (s *OnionBalancedService) ConfigMapName() string {
@@ -32,11 +32,11 @@ func (s *OnionBalancedService) ConfigMapName() string {
 }
 
 func (s *OnionBalancedService) ServiceName() string {
-	return fmt.Sprintf(torServiceNameFmt, s.Name)
+	return fmt.Sprintf(osServiceNameFmt, s.Name)
 }
 
 func (s *OnionBalancedService) ServiceMetricsName() string {
-	return fmt.Sprintf(torMetricsServiceNameFmt, s.Name)
+	return fmt.Sprintf(osMetricsServiceNameFmt, s.Name)
 }
 
 func (s *OnionBalancedService) SecretName() string {
@@ -45,7 +45,7 @@ func (s *OnionBalancedService) SecretName() string {
 			return s.Spec.PrivateKeySecret.Name
 		}
 	}
-	return fmt.Sprintf(torSecretNameFmt, s.Name)
+	return fmt.Sprintf(osSecretNameFmt, s.Name)
 }
 
 func (s *OnionBalancedService) ServiceSelector() map[string]string {
@@ -67,11 +67,11 @@ func (s *OnionBalancedService) DeploymentLabels() map[string]string {
 }
 
 func (s *OnionBalancedService) RoleName() string {
-	return fmt.Sprintf(torRoleNameFmt, s.Name)
+	return fmt.Sprintf(osRoleNameFmt, s.Name)
 }
 
 func (s *OnionBalancedService) ServiceAccountName() string {
-	return fmt.Sprintf(torServiceAccountNameFmt, s.Name)
+	return fmt.Sprintf(osServiceAccountNameFmt, s.Name)
 }
 
 func (s *OnionBalancedService) IsSynced() bool {

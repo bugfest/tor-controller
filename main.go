@@ -115,6 +115,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "OnionBalancedService")
 		os.Exit(1)
 	}
+
 	if err = (&torcontrollers.TorReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),

@@ -3,13 +3,13 @@ package v1alpha2
 import "fmt"
 
 const (
-	torDeploymentNameFmt       = "%s-tor-daemon"
-	torSecretNameFmt           = "%s-tor-secret"
-	torServiceNameFmt          = "%s-tor-svc"
-	torMetricsServiceNameFmt   = "%s-tor-metrics-svc"
-	torRoleNameFmt             = "%s-tor-role"
-	torServiceAccountNameFmt   = "%s-tor-sa"
-	onionServiceBackendNameFmt = "%s-tor-obb-%d"
+	osDeploymentNameFmt     = "%s-tor-daemon"
+	osSecretNameFmt         = "%s-tor-secret"
+	osServiceNameFmt        = "%s-tor-svc"
+	osMetricsServiceNameFmt = "%s-tor-metrics-svc"
+	osRoleNameFmt           = "%s-tor-role"
+	osServiceAccountNameFmt = "%s-tor-sa"
+	osServiceBackendNameFmt = "%s-tor-obb-%d"
 )
 
 func (s *OnionServiceSpec) GetVersion() int {
@@ -21,19 +21,19 @@ func (s *OnionServiceSpec) GetVersion() int {
 }
 
 func (s *OnionBalancedService) OnionServiceBackendName(n int32) string {
-	return fmt.Sprintf(onionServiceBackendNameFmt, s.Name, n)
+	return fmt.Sprintf(osServiceBackendNameFmt, s.Name, n)
 }
 
 func (s *OnionService) DeploymentName() string {
-	return fmt.Sprintf(torDeploymentNameFmt, s.Name)
+	return fmt.Sprintf(osDeploymentNameFmt, s.Name)
 }
 
 func (s *OnionService) ServiceName() string {
-	return fmt.Sprintf(torServiceNameFmt, s.Name)
+	return fmt.Sprintf(osServiceNameFmt, s.Name)
 }
 
 func (s *OnionService) ServiceMetricsName() string {
-	return fmt.Sprintf(torMetricsServiceNameFmt, s.Name)
+	return fmt.Sprintf(osMetricsServiceNameFmt, s.Name)
 }
 
 func (s *OnionService) ServiceMetricsSelector() map[string]string {
@@ -47,7 +47,7 @@ func (s *OnionService) SecretName() string {
 	if len(s.Spec.PrivateKeySecret.Name) > 0 {
 		return s.Spec.PrivateKeySecret.Name
 	}
-	return fmt.Sprintf(torSecretNameFmt, s.Name)
+	return fmt.Sprintf(osSecretNameFmt, s.Name)
 }
 
 func (s *OnionService) ServiceSelector() map[string]string {
@@ -63,9 +63,9 @@ func (s *OnionService) DeploymentLabels() map[string]string {
 }
 
 func (s *OnionService) RoleName() string {
-	return fmt.Sprintf(torRoleNameFmt, s.Name)
+	return fmt.Sprintf(osRoleNameFmt, s.Name)
 }
 
 func (s *OnionService) ServiceAccountName() string {
-	return fmt.Sprintf(torServiceAccountNameFmt, s.Name)
+	return fmt.Sprintf(osServiceAccountNameFmt, s.Name)
 }

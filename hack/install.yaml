@@ -679,6 +679,167 @@ status:
   conditions: []
   storedVersions: []
 ---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.7.0
+  creationTimestamp: null
+  name: tors.tor.k8s.torproject.org
+spec:
+  group: tor.k8s.torproject.org
+  names:
+    kind: Tor
+    listKind: TorList
+    plural: tors
+    singular: tor
+  scope: Namespaced
+  versions:
+  - name: v1alpha2
+    schema:
+      openAPIV3Schema:
+        description: Tor is the Schema for the tors API
+        properties:
+          Metadata:
+            type: object
+          Spec:
+            description: TorSpec defines the desired state of Tor
+            properties:
+              address:
+                default: 0.0.0.0
+                type: string
+              config:
+                description: 'Other options Tor latest man page (asciidoc): https://gitlab.torproject.org/tpo/core/tor/-/blob/main/doc/man/tor.1.txt'
+                type: string
+              dns:
+                description: DNSPort [address:]port|auto [isolation flags]
+                properties:
+                  address:
+                    default: 0.0.0.0
+                    type: string
+                  enabled:
+                    type: boolean
+                  flags:
+                    items:
+                      type: string
+                    type: array
+                  port:
+                    type: integer
+                type: object
+              enabled:
+                type: boolean
+              flags:
+                allOf:
+                - items:
+                    type: string
+                - items:
+                    type: string
+                type: array
+              httptunnel:
+                description: HTTPTunnelPort [address:]port|auto [isolation flags]
+                properties:
+                  address:
+                    default: 0.0.0.0
+                    type: string
+                  enabled:
+                    type: boolean
+                  flags:
+                    items:
+                      type: string
+                    type: array
+                  port:
+                    type: integer
+                type: object
+              image:
+                description: Image
+                type: string
+              natd:
+                description: NATDPort [address:]port|auto [isolation flags]
+                properties:
+                  address:
+                    default: 0.0.0.0
+                    type: string
+                  enabled:
+                    type: boolean
+                  flags:
+                    items:
+                      type: string
+                    type: array
+                  port:
+                    type: integer
+                type: object
+              policy:
+                default: accept 0.0.0.0/0
+                description: MetricsPortPolicy [address:]port|unix:path|auto [flags]
+                type: string
+              port:
+                type: integer
+              socks:
+                description: SocksPort [address:]port|unix:path|auto [flags] [isolation
+                  flags]
+                properties:
+                  address:
+                    default: 0.0.0.0
+                    type: string
+                  enabled:
+                    type: boolean
+                  flags:
+                    items:
+                      type: string
+                    type: array
+                  port:
+                    type: integer
+                type: object
+              trans:
+                description: TransPort [address:]port|auto [isolation flags]
+                properties:
+                  address:
+                    default: 0.0.0.0
+                    type: string
+                  enabled:
+                    type: boolean
+                  flags:
+                    items:
+                      type: string
+                    type: array
+                  port:
+                    type: integer
+                type: object
+              transproxytype:
+                description: TransProxyType default|TPROXY|ipfw|pf-divert
+                type: string
+            type: object
+          Status:
+            description: TorStatus defines the observed state of Tor
+            properties:
+              config:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                type: string
+            type: object
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -889,6 +1050,32 @@ rules:
   - tor.k8s.torproject.org
   resources:
   - onionservices/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - tor.k8s.torproject.org
+  resources:
+  - tors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tor.k8s.torproject.org
+  resources:
+  - tors/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - tor.k8s.torproject.org
+  resources:
+  - tors/status
   verbs:
   - get
   - patch
