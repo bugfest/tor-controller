@@ -20,17 +20,23 @@ import (
 	"context"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
+	corev1 "k8s.io/api/core/v1"
+
+	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
 // TorReconciler reconciles a Tor object
 type TorReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme        *runtime.Scheme
+	ProjectConfig configv2.ProjectConfig
 }
 
 //+kubebuilder:rbac:groups=tor.k8s.torproject.org,resources=tors,verbs=get;list;watch;create;update;patch;delete
@@ -47,16 +53,83 @@ type TorReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
+	//namespace, name := req.Namespace, req.Name
+	var tor torv1alpha2.Tor
 
-	// TODO(user): your logic here
+	err := r.Get(ctx, req.NamespacedName, &tor)
+	if err != nil {
+		// The Tor resource may no longer exist, in which case we stop
+		// processing.
+
+		log.Error(err, "unable to fetch Tor")
+
+		// we'll ignore not-found errors, since they can't be fixed by an immediate
+		// requeue (we'll need to wait for a new notification), and we can get them
+		// on deleted requests.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	namespace := tor.Namespace
+
+	// err = r.reconcileServiceAccount(ctx, &tor)
+	// if err != nil {
+	// 	return ctrl.Result{}, err
+	// }
+
+	// err = r.reconcileRole(ctx, &tor)
+	// if err != nil {
+	// 	return ctrl.Result{}, err
+	// }
+
+	// err = r.reconcileRolebinding(ctx, &tor)
+	// if err != nil {
+	// 	return ctrl.Result{}, err
+	// }
+
+	// err = r.reconcileService(ctx, &tor)
+	// if err != nil {
+	// 	return ctrl.Result{}, err
+	// }
+
+	// err = r.reconcileDeployment(ctx, &tor)
+	// if err != nil {
+	// 	return ctrl.Result{}, err
+	// }
+
+	// err = r.reconcileMetricsService(ctx, &tor)
+	// if err != nil {
+	// 	return ctrl.Result{}, err
+	// }
+
+	// err = r.reconcileServiceMonitor(ctx, &tor)
+	// if err != nil {
+	// 	return ctrl.Result{}, err
+	// }
+
+	// Finally, we update the status block of the Tor resource to reflect the
+	// current state of the world
+	torCopy := tor.DeepCopy()
+	instanceName := tor.InstanceName()
+
+	var service corev1.Service
+	err = r.Get(ctx, types.NamespacedName{Name: instanceName, Namespace: namespace}, &service)
+
+	torCopy.Status.Config = "updateme"
+
+	if err := r.Status().Update(ctx, torCopy); err != nil {
+		log.Error(err, "unable to update Tor status")
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *TorReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	pred := predicate.GenerationChangedPredicate{}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&torv1alpha2.Tor{}).
+		WithEventFilter(pred).
 		Complete(r)
 }
