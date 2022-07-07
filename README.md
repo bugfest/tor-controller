@@ -221,6 +221,43 @@ Only v3 is supported.
 
 tor-controller defaults to using v3 if `spec.version` is not specified.
 
+Specify Pod Template Parameters
+-------------------------------
+
+The `template` field can be used to specify properties for the running tor-service pods.
+
+```yaml
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionService
+metadata:
+  name: example-onion-service
+spec:
+  ...
+  template:
+    metadata:
+      annotations:
+        some-special-anotation: my-value
+    spec:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 128Mi
+```
+
+| Template Property | Description |
+| -------- | ----------- |
+| `metadata.annotations` | Add pod [Annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/). |
+| `metadata.labels` | Add pod [Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/). NOTE: `tor-controller` automatically adds the labels `app` and `controller`, so you should not set these labels |
+| `spec.nodeSelector` | Set specific [Node Selectors](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) for the pod. |
+| `spec.affinity` | Add pod or node [affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules here. |
+| `spec.schedulerName` | Select a specific [scheduler](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/) to be used for service pods |
+| `spec.tolerations` | Add [tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core) to the pods. |
+| `spec.runtimeClassName` | Set the pods [Runtime Class](https://kubernetes.io/docs/concepts/containers/runtime-class/). |
+| `spec.priorityClassName` | Set the pods [Priority Class](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass) |
+| `spec.resources` | Set [Resource Requirements](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container) for the running containers. |
+| `spec.topologySpreadConstraints` | Add [Topology Spread Constraints](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/). |
+
+
 
 Using with nginx-ingress
 ------------------------

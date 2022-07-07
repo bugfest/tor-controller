@@ -1,0 +1,28 @@
+apiVersion: tor.k8s.torproject.org/v1alpha3
+kind: OnionBalancedService
+metadata:
+  name: onionbalancedservice-sample
+spec:
+  backends: 2
+  version: 3
+  template:
+    spec:
+      template:
+        spec:
+          affinity:
+            podAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                podAffinityTerm:
+                  topologyKey: kubernetes.io/hostname
+                  labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/name: ingress-nginx
+      rules:
+      - port:
+          number: 80
+        backend:
+          service:
+            name: http-app
+            port:
+              number: 8080

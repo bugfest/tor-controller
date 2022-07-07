@@ -28,10 +28,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
-	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
 )
 
-func (r *OnionBalancedServiceReconciler) reconcileBackends(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
+func (r *OnionBalancedServiceReconciler) reconcileBackends(ctx context.Context, OnionBalancedService *torv1alpha3.OnionBalancedService) error {
 	log := log.FromContext(ctx)
 
 	// Reconcile each backend
@@ -45,7 +45,7 @@ func (r *OnionBalancedServiceReconciler) reconcileBackends(ctx context.Context, 
 	return nil
 }
 
-func (r *OnionBalancedServiceReconciler) reconcileBackend(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService, idx int32) (*torv1alpha2.OnionService, error) {
+func (r *OnionBalancedServiceReconciler) reconcileBackend(ctx context.Context, OnionBalancedService *torv1alpha3.OnionBalancedService, idx int32) (*torv1alpha3.OnionService, error) {
 	// log := log.FromContext(ctx)
 
 	onionServiceName := OnionBalancedService.OnionServiceBackendName(idx)
@@ -58,7 +58,7 @@ func (r *OnionBalancedServiceReconciler) reconcileBackend(ctx context.Context, O
 		return nil, nil
 	}
 
-	var onionServiceBackend torv1alpha2.OnionService
+	var onionServiceBackend torv1alpha3.OnionService
 	err := r.Get(ctx, types.NamespacedName{Name: onionServiceName, Namespace: namespace}, &onionServiceBackend)
 
 	// We need a master address
@@ -84,24 +84,26 @@ func (r *OnionBalancedServiceReconciler) reconcileBackend(ctx context.Context, O
 	return &onionServiceBackend, nil
 }
 
-func onionBalancedServiceBackend(onion *torv1alpha2.OnionBalancedService, projectConfig configv2.ProjectConfig, idx int32) *torv1alpha2.OnionService {
-	return &torv1alpha2.OnionService{
+func onionBalancedServiceBackend(onion *torv1alpha3.OnionBalancedService, projectConfig configv2.ProjectConfig, idx int32) *torv1alpha3.OnionService {
+	// Start with template
+	onionServiceSpec := onion.Spec.Template.Spec
+
+	// Always override these values... Maybe this should only override if not specified in the template?
+	onionServiceSpec.Version = onion.Spec.Version
+	onionServiceSpec.MasterOnionAddress = onion.Status.Hostname
+
+	return &torv1alpha3.OnionService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      onion.OnionServiceBackendName(idx),
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
-					Group:   torv1alpha2.GroupVersion.Group,
-					Version: torv1alpha2.GroupVersion.Version,
+					Group:   torv1alpha3.GroupVersion.Group,
+					Version: torv1alpha3.GroupVersion.Version,
 					Kind:    "OnionBalancedService",
 				}),
 			},
 		},
-		Spec: torv1alpha2.OnionServiceSpec{
-			Rules:              onion.Spec.Template.Spec.Rules,
-			Version:            onion.Spec.Version,
-			MasterOnionAddress: onion.Status.Hostname,
-			ServiceMonitor:     onion.Spec.Template.Spec.ServiceMonitor,
-		},
+		Spec: onionServiceSpec,
 	}
 }

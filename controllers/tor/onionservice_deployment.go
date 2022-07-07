@@ -30,10 +30,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
-	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
 )
 
-func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionService *torv1alpha3.OnionService) error {
 	log := log.FromContext(ctx)
 
 	deploymentName := onionService.DeploymentName()
@@ -83,7 +83,7 @@ func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionS
 	return nil
 }
 
-func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.ProjectConfig) *appsv1.Deployment {
+func torDeployment(onion *torv1alpha3.OnionService, projectConfig configv2.ProjectConfig) *appsv1.Deployment {
 
 	privateKeyMountPath := "/run/tor/service/key"
 
@@ -141,14 +141,28 @@ func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.Proje
 		},
 	}
 
+	// Fetch Pod Template
+	podSpec := onion.Spec.Template.Spec
+	podMetadata := onion.Spec.Template.ObjectMeta
+	if podMetadata.Labels == nil {
+		// Set deployment labels
+		podMetadata.Labels = onion.DeploymentLabels()
+	} else {
+		// Add tor labels to existing template labels
+		for k, v := range onion.DeploymentLabels() {
+			// TODO: should we throw an error if a label was already set?
+			podMetadata.Labels[k] = v
+		}
+	}
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      onion.DeploymentName(),
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
-					Group:   torv1alpha2.GroupVersion.Group,
-					Version: torv1alpha2.GroupVersion.Version,
+					Group:   torv1alpha3.GroupVersion.Group,
+					Version: torv1alpha3.GroupVersion.Version,
 					Kind:    "OnionService",
 				}),
 			},
@@ -158,10 +172,18 @@ func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.Proje
 				MatchLabels: onion.DeploymentLabels(),
 			},
 			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: onion.DeploymentLabels(),
-				},
+				ObjectMeta: podMetadata,
 				Spec: corev1.PodSpec{
+					// Set properties from template
+					NodeSelector:              podSpec.NodeSelector,
+					Affinity:                  podSpec.Affinity,
+					SchedulerName:             podSpec.SchedulerName,
+					Tolerations:               podSpec.Tolerations,
+					PriorityClassName:         podSpec.PriorityClassName,
+					RuntimeClassName:          podSpec.RuntimeClassName,
+					TopologySpreadConstraints: podSpec.TopologySpreadConstraints,
+
+					// Set tor specific properties
 					ServiceAccountName: onion.ServiceAccountName(),
 					Containers: []corev1.Container{
 						{
@@ -187,6 +209,7 @@ func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.Proje
 									ContainerPort: 9035,
 								},
 							},
+							Resources: podSpec.Resources,
 						},
 					},
 					Volumes: volumes,

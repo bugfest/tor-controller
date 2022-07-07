@@ -29,10 +29,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
 )
 
-func (r *OnionServiceReconciler) reconcileMetricsService(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+func (r *OnionServiceReconciler) reconcileMetricsService(ctx context.Context, onionService *torv1alpha3.OnionService) error {
 	log := log.FromContext(ctx)
 
 	serviceName := onionService.ServiceMetricsName()
@@ -75,7 +75,7 @@ func (r *OnionServiceReconciler) reconcileMetricsService(ctx context.Context, on
 	return nil
 }
 
-func os_torMetricsService(onion *torv1alpha2.OnionService) *corev1.Service {
+func os_torMetricsService(onion *torv1alpha3.OnionService) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      onion.ServiceMetricsName(),
@@ -83,8 +83,8 @@ func os_torMetricsService(onion *torv1alpha2.OnionService) *corev1.Service {
 			Labels:    onion.ServiceMetricsSelector(),
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
-					Group:   torv1alpha2.GroupVersion.Group,
-					Version: torv1alpha2.GroupVersion.Version,
+					Group:   torv1alpha3.GroupVersion.Group,
+					Version: torv1alpha3.GroupVersion.Version,
 					Kind:    "OnionService",
 				}),
 			},

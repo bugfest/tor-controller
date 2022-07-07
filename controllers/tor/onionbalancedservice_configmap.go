@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
 )
 
 const configFormat = `# Config automatically generated
@@ -47,7 +47,7 @@ type torConfig struct {
 	MetricsPortPolicy string
 }
 
-func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
+func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context, OnionBalancedService *torv1alpha3.OnionBalancedService) error {
 	log := log.FromContext(ctx)
 
 	configMapName := OnionBalancedService.ConfigMapName()
@@ -87,7 +87,7 @@ func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context,
 	return nil
 }
 
-func onionbalanceTorConfig(onion *torv1alpha2.OnionBalancedService) string {
+func onionbalanceTorConfig(onion *torv1alpha3.OnionBalancedService) string {
 
 	s := torConfig{
 		SocksPort:         "0",
@@ -105,7 +105,7 @@ func onionbalanceTorConfig(onion *torv1alpha2.OnionBalancedService) string {
 	return tmp.String()
 }
 
-func onionbalanceTorConfigMap(onion *torv1alpha2.OnionBalancedService) *corev1.ConfigMap {
+func onionbalanceTorConfigMap(onion *torv1alpha3.OnionBalancedService) *corev1.ConfigMap {
 
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -113,8 +113,8 @@ func onionbalanceTorConfigMap(onion *torv1alpha2.OnionBalancedService) *corev1.C
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
-					Group:   torv1alpha2.GroupVersion.Group,
-					Version: torv1alpha2.GroupVersion.Version,
+					Group:   torv1alpha3.GroupVersion.Group,
+					Version: torv1alpha3.GroupVersion.Version,
 					Kind:    "onionbalancedservice",
 				}),
 			},

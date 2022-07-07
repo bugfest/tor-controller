@@ -28,8 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	onionbalancedaemon "github.com/bugfest/tor-controller/agents/onionbalance/onionbalancedaemon"
-
-	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
 )
 
 var (
@@ -47,7 +46,7 @@ func init() {
 
 func GetClient() client.Client {
 	scheme := runtime.NewScheme()
-	torv1alpha2.AddToScheme(scheme)
+	torv1alpha3.AddToScheme(scheme)
 	kubeconfig := ctrl.GetConfigOrDie()
 	controllerClient, err := client.New(kubeconfig, client.Options{Scheme: scheme})
 	if err != nil {
@@ -164,8 +163,8 @@ func GetDynamicInformer(resourceType string, namespace string) (informers.Generi
 	return informer, nil
 }
 
-func parseOnionBalancedService(obj interface{}) (torv1alpha2.OnionBalancedService, error) {
-	d := torv1alpha2.OnionBalancedService{}
+func parseOnionBalancedService(obj interface{}) (torv1alpha3.OnionBalancedService, error) {
+	d := torv1alpha3.OnionBalancedService{}
 	// try following https://erwinvaneyk.nl/kubernetes-unstructured-to-typed/
 	err := runtime.DefaultUnstructuredConverter.
 		FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), &d)
