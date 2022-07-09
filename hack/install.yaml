@@ -698,126 +698,8 @@ spec:
   - name: v1alpha2
     schema:
       openAPIV3Schema:
-        description: Tor is the Schema for the tors API
+        description: Tor is the Schema for the tor API
         properties:
-          Metadata:
-            type: object
-          Spec:
-            description: TorSpec defines the desired state of Tor
-            properties:
-              address:
-                default: 0.0.0.0
-                type: string
-              config:
-                description: 'Other options Tor latest man page (asciidoc): https://gitlab.torproject.org/tpo/core/tor/-/blob/main/doc/man/tor.1.txt'
-                type: string
-              dns:
-                description: DNSPort [address:]port|auto [isolation flags]
-                properties:
-                  address:
-                    default: 0.0.0.0
-                    type: string
-                  enabled:
-                    type: boolean
-                  flags:
-                    items:
-                      type: string
-                    type: array
-                  port:
-                    type: integer
-                type: object
-              enabled:
-                type: boolean
-              flags:
-                allOf:
-                - items:
-                    type: string
-                - items:
-                    type: string
-                type: array
-              httptunnel:
-                description: HTTPTunnelPort [address:]port|auto [isolation flags]
-                properties:
-                  address:
-                    default: 0.0.0.0
-                    type: string
-                  enabled:
-                    type: boolean
-                  flags:
-                    items:
-                      type: string
-                    type: array
-                  port:
-                    type: integer
-                type: object
-              image:
-                description: Image
-                type: string
-              natd:
-                description: NATDPort [address:]port|auto [isolation flags]
-                properties:
-                  address:
-                    default: 0.0.0.0
-                    type: string
-                  enabled:
-                    type: boolean
-                  flags:
-                    items:
-                      type: string
-                    type: array
-                  port:
-                    type: integer
-                type: object
-              policy:
-                default: accept 0.0.0.0/0
-                description: MetricsPortPolicy [address:]port|unix:path|auto [flags]
-                type: string
-              port:
-                type: integer
-              socks:
-                description: SocksPort [address:]port|unix:path|auto [flags] [isolation
-                  flags]
-                properties:
-                  address:
-                    default: 0.0.0.0
-                    type: string
-                  enabled:
-                    type: boolean
-                  flags:
-                    items:
-                      type: string
-                    type: array
-                  port:
-                    type: integer
-                type: object
-              trans:
-                description: TransPort [address:]port|auto [isolation flags]
-                properties:
-                  address:
-                    default: 0.0.0.0
-                    type: string
-                  enabled:
-                    type: boolean
-                  flags:
-                    items:
-                      type: string
-                    type: array
-                  port:
-                    type: integer
-                type: object
-              transproxytype:
-                description: TransProxyType default|TPROXY|ipfw|pf-divert
-                type: string
-            type: object
-          Status:
-            description: TorStatus defines the observed state of Tor
-            properties:
-              config:
-                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
-                  of cluster Important: Run "make" to regenerate code after modifying
-                  this file'
-                type: string
-            type: object
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
               of an object. Servers should convert recognized schemas to the latest
@@ -828,6 +710,180 @@ spec:
               object represents. Servers may infer this from the endpoint the client
               submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
+          metadata:
+            type: object
+          spec:
+            description: TorSpec defines the desired state of Tor
+            properties:
+              args:
+                items:
+                  type: string
+                type: array
+              client:
+                description: Client
+                properties:
+                  dns:
+                    description: DNSPort [address:]port|auto [isolation flags]
+                    properties:
+                      address:
+                        default: 0.0.0.0
+                        type: string
+                      enable:
+                        type: boolean
+                      flags:
+                        items:
+                          type: string
+                        type: array
+                      port:
+                        default: 0
+                        format: int32
+                        type: integer
+                    type: object
+                  httptunnel:
+                    description: HTTPTunnelPort [address:]port|auto [isolation flags]
+                    properties:
+                      address:
+                        default: 0.0.0.0
+                        type: string
+                      enable:
+                        type: boolean
+                      flags:
+                        items:
+                          type: string
+                        type: array
+                      port:
+                        default: 0
+                        format: int32
+                        type: integer
+                    type: object
+                  natd:
+                    description: NATDPort [address:]port|auto [isolation flags]
+                    properties:
+                      address:
+                        default: 0.0.0.0
+                        type: string
+                      enable:
+                        type: boolean
+                      flags:
+                        items:
+                          type: string
+                        type: array
+                      port:
+                        default: 0
+                        format: int32
+                        type: integer
+                    type: object
+                  socks:
+                    description: SocksPort [address:]port|unix:path|auto [flags] [isolation
+                      flags]
+                    properties:
+                      address:
+                        default: 0.0.0.0
+                        type: string
+                      enable:
+                        type: boolean
+                      flags:
+                        items:
+                          type: string
+                        type: array
+                      port:
+                        default: 0
+                        format: int32
+                        type: integer
+                    type: object
+                  trans:
+                    description: TransPort [address:]port|auto [isolation flags]
+                    properties:
+                      address:
+                        default: 0.0.0.0
+                        type: string
+                      enable:
+                        type: boolean
+                      flags:
+                        items:
+                          type: string
+                        type: array
+                      port:
+                        default: 0
+                        format: int32
+                        type: integer
+                    type: object
+                  transproxytype:
+                    description: TransProxyType default|TPROXY|ipfw|pf-divert
+                    type: string
+                type: object
+              config:
+                description: 'Other options Tor latest man page (asciidoc): https://gitlab.torproject.org/tpo/core/tor/-/blob/main/doc/man/tor.1.txt'
+                type: string
+              control:
+                description: Control
+                properties:
+                  address:
+                    default: 0.0.0.0
+                    type: string
+                  enable:
+                    type: boolean
+                  port:
+                    default: 0
+                    format: int32
+                    type: integer
+                type: object
+              metrics:
+                description: Metrics
+                properties:
+                  address:
+                    default: 0.0.0.0
+                    type: string
+                  enable:
+                    type: boolean
+                  flags:
+                    items:
+                      type: string
+                    type: array
+                  policy:
+                    default: accept 0.0.0.0/0
+                    description: MetricsPortPolicy [address:]port|unix:path|auto [flags]
+                    type: string
+                  port:
+                    default: 0
+                    format: int32
+                    type: integer
+                type: object
+              replicas:
+                default: 1
+                description: Replicas
+                format: int32
+                type: integer
+              server:
+                description: Server
+                properties:
+                  address:
+                    default: 0.0.0.0
+                    type: string
+                  enable:
+                    type: boolean
+                  flags:
+                    items:
+                      type: string
+                    type: array
+                  port:
+                    default: 0
+                    format: int32
+                    type: integer
+                type: object
+              serviceMonitor:
+                default: false
+                type: boolean
+            type: object
+          status:
+            description: TorStatus defines the observed state of Tor
+            properties:
+              config:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                type: string
+            type: object
         type: object
     served: true
     storage: true
@@ -1165,6 +1221,8 @@ data:
     leaderElection:
       leaderElect: true
       resourceName: 59806307.k8s.torproject.org
+    torDaemon:
+      image: quay.io/bugfest/tor-daemon:latest
     torDaemonManager:
       image: quay.io/bugfest/tor-daemon-manager:latest
     torOnionbalanceManager:

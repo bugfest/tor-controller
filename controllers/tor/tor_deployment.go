@@ -33,16 +33,16 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+func (r *TorReconciler) reconcileDeployment(ctx context.Context, tor *torv1alpha2.Tor) error {
 	log := log.FromContext(ctx)
 
-	deploymentName := onionService.DeploymentName()
-	namespace := onionService.Namespace
+	deploymentName := tor.DeploymentName()
+	namespace := tor.Namespace
 	if deploymentName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("%s/%s: deployment name must be specified", onionService.Namespace, onionService.Name))
+		runtime.HandleError(fmt.Errorf("%s/%s: deployment name must be specified", tor.Namespace, tor.Name))
 		return nil
 	}
 
@@ -51,7 +51,7 @@ func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionS
 
 	// If the deployment doesn't exist, we'll create it
 	projectConfig := r.ProjectConfig
-	newDeployment := torOnionServiceDeployment(onionService, projectConfig)
+	newDeployment := torDeployment(tor, projectConfig)
 	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newDeployment)
 		if err != nil {
@@ -67,8 +67,8 @@ func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionS
 
 	// If the Deployment is not controlled by this Foo resource, we should log
 	// a warning to the event recorder and ret
-	if !metav1.IsControlledBy(&deployment.ObjectMeta, onionService) {
-		log.Info(fmt.Sprintf("Deployment %s already exists and not controlled by %s - skipping update", deployment.Name, onionService.Name))
+	if !metav1.IsControlledBy(&deployment.ObjectMeta, tor) {
+		log.Info(fmt.Sprintf("Deployment %s already exists and not controlled by %s - skipping update", deployment.Name, tor.Name))
 		return nil
 	}
 
@@ -83,96 +83,74 @@ func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionS
 	return nil
 }
 
-func torOnionServiceDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.ProjectConfig) *appsv1.Deployment {
+func torDeployment(tor *torv1alpha2.Tor, projectConfig configv2.ProjectConfig) *appsv1.Deployment {
 
-	privateKeyMountPath := "/run/tor/service/key"
-
-	publicKeyFileName := "hs_ed25519_public_key"
-	privateKeyFileName := "hs_ed25519_secret_key"
-	if onion.Spec.GetVersion() == 2 {
-		publicKeyFileName = "public_key"
-		privateKeyFileName = "private_key"
+	// new deployment
+	if tor.Spec.Replicas == 0 {
+		tor.Spec.Replicas = 1
 	}
 
-	volumes := []corev1.Volume{
+	torConfigMountDir := "/run/tor"
+	torVolumeMounts := []corev1.VolumeMount{
 		{
-			Name: privateKeyVolume,
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: onion.SecretName(),
-					Items: []corev1.KeyToPath{
-						{
-							Key:  "privateKeyFile",
-							Path: privateKeyFileName,
-						},
-						{
-							Key:  "publicKeyFile",
-							Path: publicKeyFileName,
-						},
-						{
-							Key:  "onionAddress",
-							Path: "hostname",
-						},
-					},
-				},
-			},
+			Name:      torConfigVolume,
+			MountPath: torConfigMountDir,
 		},
 	}
 
-	volumeMounts := []corev1.VolumeMount{
+	torArgs := append(
+		[]string{"-f", "/run/tor/torfile"},
+		tor.Spec.Args...,
+	)
+
+	volumes := []corev1.Volume{
 		{
-			Name:      privateKeyVolume,
-			MountPath: privateKeyMountPath,
-			SubPath:   onion.Spec.PrivateKeySecret.Key,
+			Name: torConfigVolume,
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: tor.ConfigMapName(),
+					},
+					Items: []corev1.KeyToPath{{
+						Key:  "torfile",
+						Path: "torfile",
+					}},
+				},
+			},
 		},
 	}
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      onion.DeploymentName(),
-			Namespace: onion.Namespace,
+			Name:      tor.DeploymentName(),
+			Namespace: tor.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
+				*metav1.NewControllerRef(tor, schema.GroupVersionKind{
 					Group:   torv1alpha2.GroupVersion.Group,
 					Version: torv1alpha2.GroupVersion.Version,
-					Kind:    "OnionService",
+					Kind:    "Tor",
 				}),
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: onion.DeploymentLabels(),
+				MatchLabels: tor.DeploymentLabels(),
 			},
+			Replicas: &tor.Spec.Replicas,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: onion.DeploymentLabels(),
+					Labels: tor.DeploymentLabels(),
 				},
 				Spec: corev1.PodSpec{
-					ServiceAccountName: onion.ServiceAccountName(),
+					// ServiceAccountName: tor.ServiceAccountName(),
 					Containers: []corev1.Container{
 						{
-							Name:  "tor",
-							Image: projectConfig.TorDaemonManager.Image,
-							Args: []string{
-								"-name",
-								onion.Name,
-								"-namespace",
-								onion.Namespace,
-							},
+							Name:            "tor",
+							Image:           projectConfig.TorDaemon.Image,
+							Args:            torArgs,
 							ImagePullPolicy: corev1.PullAlways,
-							VolumeMounts:    volumeMounts,
-							Ports: []corev1.ContainerPort{
-								// {
-								// 	Name: "control",
-								// 	Protocol: "TCP",
-								// 	ContainerPort: 9051,
-								// },
-								{
-									Name:          "metrics",
-									Protocol:      "TCP",
-									ContainerPort: 9035,
-								},
-							},
+							VolumeMounts:    torVolumeMounts,
+							Ports:           getTorContainerPortList(tor),
 						},
 					},
 					Volumes: volumes,
@@ -180,4 +158,21 @@ func torOnionServiceDeployment(onion *torv1alpha2.OnionService, projectConfig co
 			},
 		},
 	}
+}
+
+func getTorContainerPortList(tor *torv1alpha2.Tor) []corev1.ContainerPort {
+	ports := []corev1.ContainerPort{}
+
+	for _, r := range tor.GetAllPorts() {
+		if r.Port.Enable {
+			port := corev1.ContainerPort{
+				Name:          r.Name,
+				Protocol:      corev1.Protocol(r.Protocol),
+				ContainerPort: r.Port.Port,
+			}
+			ports = append(ports, port)
+		}
+	}
+
+	return ports
 }

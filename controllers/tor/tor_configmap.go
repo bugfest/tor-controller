@@ -33,25 +33,30 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-const configFormat = `# Config automatically generated
+const torConfigFormat = `# Config automatically generated
+# {{ .Tor.Namespace }}/{{ .Tor.Name }}
 SocksPort {{ .SocksPort }}
 ControlPort {{ .ControlPort }}
 MetricsPort {{ .MetricsPort }}
 MetricsPortPolicy {{ .MetricsPortPolicy }}
+
+# Tor Custom config goes here
+{{ .Tor.Spec.Config }}
 `
 
-type onionBalancedServiceTorConfig struct {
+type torConfig struct {
+	Tor               *torv1alpha2.Tor
 	SocksPort         string
 	ControlPort       string
 	MetricsPort       string
 	MetricsPortPolicy string
 }
 
-func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
+func (r *TorReconciler) reconcileConfigMap(ctx context.Context, Tor *torv1alpha2.Tor) error {
 	log := log.FromContext(ctx)
 
-	configMapName := OnionBalancedService.ConfigMapName()
-	namespace := OnionBalancedService.Namespace
+	configMapName := Tor.ConfigMapName()
+	namespace := Tor.Namespace
 	if configMapName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
@@ -63,7 +68,7 @@ func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context,
 	var configmap corev1.ConfigMap
 	err := r.Get(ctx, types.NamespacedName{Name: configMapName, Namespace: namespace}, &configmap)
 
-	newConfigMap := onionbalanceTorConfigMap(OnionBalancedService)
+	newConfigMap := torConfigMap(Tor)
 	if errors.IsNotFound(err) {
 		err := r.Create(ctx, newConfigMap)
 		if err != nil {
@@ -74,29 +79,30 @@ func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context,
 		return err
 	}
 
-	if !metav1.IsControlledBy(&configmap.ObjectMeta, OnionBalancedService) {
-		// msg := fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, OnionBalancedService.Name)
+	if !metav1.IsControlledBy(&configmap.ObjectMeta, Tor) {
+		// msg := fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, Tor.Name)
 		// TODO: generate MessageResourceExists event
 		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
-		// bc.recorder.Event(OnionBalancedService, corev1.EventTypeWarning, ErrResourceExists, msg)
+		// bc.recorder.Event(Tor, corev1.EventTypeWarning, ErrResourceExists, msg)
 		// return fmt.Errorf(msg)
-		log.Info(fmt.Sprintf("Secret %s already exists and is not controller by %s", configmap.Name, OnionBalancedService.Name))
+		log.Info(fmt.Sprintf("Secret %s already exists and is not controller by %s", configmap.Name, Tor.Name))
 		return nil
 	}
 
 	return nil
 }
 
-func onionbalanceTorConfig(onion *torv1alpha2.OnionBalancedService) string {
+func torConfigFile(tor *torv1alpha2.Tor) string {
 
-	s := onionBalancedServiceTorConfig{
-		SocksPort:         "0",
-		ControlPort:       "127.0.0.1:9051",
+	s := torConfig{
+		Tor:               tor,
+		SocksPort:         "0.0.0.0:9050",
+		ControlPort:       "0.0.0.0:9051",
 		MetricsPort:       "0.0.0.0:9035",
 		MetricsPortPolicy: "accept 0.0.0.0/0",
 	}
 
-	var configTemplate = template.Must(template.New("config").Parse(configFormat))
+	var configTemplate = template.Must(template.New("config").Parse(torConfigFormat))
 	var tmp bytes.Buffer
 	err := configTemplate.Execute(&tmp, s)
 	if err != nil {
@@ -105,22 +111,22 @@ func onionbalanceTorConfig(onion *torv1alpha2.OnionBalancedService) string {
 	return tmp.String()
 }
 
-func onionbalanceTorConfigMap(onion *torv1alpha2.OnionBalancedService) *corev1.ConfigMap {
+func torConfigMap(tor *torv1alpha2.Tor) *corev1.ConfigMap {
 
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      onion.ConfigMapName(),
-			Namespace: onion.Namespace,
+			Name:      tor.ConfigMapName(),
+			Namespace: tor.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
+				*metav1.NewControllerRef(tor, schema.GroupVersionKind{
 					Group:   torv1alpha2.GroupVersion.Group,
 					Version: torv1alpha2.GroupVersion.Version,
-					Kind:    "onionbalancedservice",
+					Kind:    "Tor",
 				}),
 			},
 		},
 		Data: map[string]string{
-			"torfile": onionbalanceTorConfig(onion),
+			"torfile": torConfigFile(tor),
 		},
 	}
 }

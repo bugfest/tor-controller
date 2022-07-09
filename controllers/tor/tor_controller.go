@@ -87,25 +87,30 @@ func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	// 	return ctrl.Result{}, err
 	// }
 
-	// err = r.reconcileService(ctx, &tor)
-	// if err != nil {
-	// 	return ctrl.Result{}, err
-	// }
+	err = r.reconcileService(ctx, &tor)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
-	// err = r.reconcileDeployment(ctx, &tor)
-	// if err != nil {
-	// 	return ctrl.Result{}, err
-	// }
+	err = r.reconcileConfigMap(ctx, &tor)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
-	// err = r.reconcileMetricsService(ctx, &tor)
-	// if err != nil {
-	// 	return ctrl.Result{}, err
-	// }
+	err = r.reconcileDeployment(ctx, &tor)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
-	// err = r.reconcileServiceMonitor(ctx, &tor)
-	// if err != nil {
-	// 	return ctrl.Result{}, err
-	// }
+	err = r.reconcileMetricsService(ctx, &tor)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.reconcileServiceMonitor(ctx, &tor)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
 	// Finally, we update the status block of the Tor resource to reflect the
 	// current state of the world
@@ -113,7 +118,10 @@ func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	instanceName := tor.InstanceName()
 
 	var service corev1.Service
-	err = r.Get(ctx, types.NamespacedName{Name: instanceName, Namespace: namespace}, &service)
+	if err := r.Get(ctx, types.NamespacedName{Name: instanceName, Namespace: namespace}, &service); err != nil {
+		log.Error(err, "unable to get service")
+		return ctrl.Result{}, err
+	}
 
 	torCopy.Status.Config = "updateme"
 

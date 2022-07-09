@@ -40,10 +40,19 @@ type ProjectConfig struct {
 	cfg.ControllerManagerConfigurationSpec `json:",inline"`
 
 	// +optional
+	TorDaemon TorDaemonType `json:"torDaemon,omitempty"`
+
+	// +optional
 	TorDaemonManager TorDaemonManagerType `json:"torDaemonManager,omitempty"`
 
 	// +optional
 	TorOnionbalanceManager TorOnionbalanceManagerType `json:"torOnionbalanceManager,omitempty"`
+}
+
+type TorDaemonType struct {
+	// +optional
+	// +kubebuilder:default:="quay.io/bugfest/tor-daemon:latest"
+	Image string `json:"image,omitempty"`
 }
 
 type TorDaemonManagerType struct {

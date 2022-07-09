@@ -23,29 +23,36 @@ import (
 // TorSpec defines the desired state of Tor
 type TorSpec struct {
 
-	// Image
-	// +optional
-	Image string `json:"image,omitempty"`
+	// Replicas
+	// +kubebuilder:default:=1
+	Replicas int32 `json:"replicas,omitempty"`
 
 	// Client
-	Client TorClientSpec `json:"client,inline,omitempty"`
+	Client TorClientSpec `json:"client,omitempty"`
 
 	// Server
 	// +optional
-	Server TorServerSpec `json:"server,inline,omitempty"`
+	Server TorServerSpec `json:"server,omitempty"`
 
 	// Control
 	// +optional
-	Control TorControlSpec `json:"control,inline,omitempty"`
+	Control TorControlSpec `json:"control,omitempty"`
 
 	// Metrics
 	// +optional
-	Metrics TorMetricsSpec `json:"metrics,inline,omitempty"`
+	Metrics TorMetricsSpec `json:"metrics,omitempty"`
+
+	// +optional
+	// +kubebuilder:default:=false
+	ServiceMonitor bool `json:"serviceMonitor,omitempty"`
 
 	// Other options
 	// Tor latest man page (asciidoc): https://gitlab.torproject.org/tpo/core/tor/-/blob/main/doc/man/tor.1.txt
 	// +optional
 	Config string `json:"config,omitempty"`
+
+	// +optional
+	Args []string `json:"args,omitempty"`
 }
 
 // TorStatus defines the observed state of Tor
@@ -55,16 +62,19 @@ type TorStatus struct {
 	Config string `json:"config,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:resource:shortName={"tor"}
+// +kubebuilder:storageversion
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // Tor is the Schema for the tor API
 type Tor struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"Metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   TorSpec   `json:"Spec,omitempty"`
-	Status TorStatus `json:"Status,omitempty"`
+	Spec   TorSpec   `json:"spec,omitempty"`
+	Status TorStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -72,7 +82,7 @@ type Tor struct {
 // TorList contains a list of Tor
 type TorList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"Metadata,omitempty"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Tor `json:"items"`
 }
 
@@ -108,9 +118,11 @@ type TorClientSpec struct {
 
 type TorGenericPortSpec struct {
 	// +optional
-	Enabled bool `json:"enabled,omitempty"`
+	Enable bool `json:"enable,omitempty"`
 
-	Port int `json:"port,omitempty"`
+	// +optional
+	// +kubebuilder:default:=0
+	Port int32 `json:"port,omitempty"`
 
 	// +optional
 	// +kubebuilder:default:="0.0.0.0"
@@ -137,4 +149,10 @@ type TorMetricsSpec struct {
 	// +optional
 	// +kubebuilder:default:="accept 0.0.0.0/0"
 	Policy string `json:"policy,omitempty"`
+}
+
+type TorGenericPortDef struct {
+	Name     string
+	Protocol string
+	Port     TorGenericPortSpec
 }
