@@ -28,10 +28,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileSecret(ctx context.Context, onionService *torv1alpha3.OnionService) error {
+func (r *OnionServiceReconciler) reconcileSecret(ctx context.Context, onionService *torv1alpha2.OnionService) error {
 	log := log.FromContext(ctx)
 
 	secretName := onionService.SecretName()
@@ -71,7 +71,7 @@ func (r *OnionServiceReconciler) reconcileSecret(ctx context.Context, onionServi
 	return nil
 }
 
-func torSecret(onion *torv1alpha3.OnionService) *corev1.Secret {
+func torSecret(onion *torv1alpha2.OnionService) *corev1.Secret {
 
 	onionv3, err := GenerateOnionV3()
 	if err != nil {
@@ -85,8 +85,8 @@ func torSecret(onion *torv1alpha3.OnionService) *corev1.Secret {
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
-					Group:   torv1alpha3.GroupVersion.Group,
-					Version: torv1alpha3.GroupVersion.Version,
+					Group:   torv1alpha2.GroupVersion.Group,
+					Version: torv1alpha2.GroupVersion.Version,
 					Kind:    "OnionService",
 				}),
 			},

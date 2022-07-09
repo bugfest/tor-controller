@@ -23,7 +23,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 )
 
-// func onionServiceEqual(a, b *torv1alpha3.OnionService) bool {
+// func onionServiceEqual(a, b *torv1alpha2.OnionService) bool {
 // 	// TODO: actually detect differences
 // 	return false
 // }

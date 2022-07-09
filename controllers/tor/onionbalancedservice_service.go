@@ -29,10 +29,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionBalancedServiceReconciler) reconcileService(ctx context.Context, OnionBalancedService *torv1alpha3.OnionBalancedService) error {
+func (r *OnionBalancedServiceReconciler) reconcileService(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
 	log := log.FromContext(ctx)
 
 	serviceName := OnionBalancedService.ServiceName()
@@ -75,7 +75,7 @@ func (r *OnionBalancedServiceReconciler) reconcileService(ctx context.Context, O
 	return nil
 }
 
-func onionbalanceService(onion *torv1alpha3.OnionBalancedService) *corev1.Service {
+func onionbalanceService(onion *torv1alpha2.OnionBalancedService) *corev1.Service {
 	ports := []corev1.ServicePort{}
 	for _, r := range onion.Spec.Template.Spec.Rules {
 		port := corev1.ServicePort{
@@ -92,8 +92,8 @@ func onionbalanceService(onion *torv1alpha3.OnionBalancedService) *corev1.Servic
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
-					Group:   torv1alpha3.GroupVersion.Group,
-					Version: torv1alpha3.GroupVersion.Version,
+					Group:   torv1alpha2.GroupVersion.Group,
+					Version: torv1alpha2.GroupVersion.Version,
 					Kind:    "OnionBalancedService",
 				}),
 			},

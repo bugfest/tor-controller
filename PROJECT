@@ -35,24 +35,6 @@ resources:
 - api:
     crdVersion: v1
     namespaced: true
-  controller: true
-  domain: k8s.torproject.org
-  group: tor
-  kind: OnionService
-  path: github.com/bugfest/tor-controller/apis/tor/v1alpha3
-  version: v1alpha3
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: k8s.torproject.org
-  group: tor
-  kind: OnionBalancedService
-  path: github.com/bugfest/tor-controller/apis/tor/v1alpha3
-  version: v1alpha3
-- api:
-    crdVersion: v1
-    namespaced: true
   domain: k8s.torproject.org
   group: config
   kind: ProjectConfig

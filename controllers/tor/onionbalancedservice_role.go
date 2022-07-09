@@ -28,10 +28,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionBalancedServiceReconciler) reconcileRole(ctx context.Context, OnionBalancedService *torv1alpha3.OnionBalancedService) error {
+func (r *OnionBalancedServiceReconciler) reconcileRole(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
 	log := log.FromContext(ctx)
 
 	roleName := OnionBalancedService.RoleName()
@@ -74,29 +74,29 @@ func (r *OnionBalancedServiceReconciler) reconcileRole(ctx context.Context, Onio
 	return nil
 }
 
-func onionbalanceRole(onion *torv1alpha3.OnionBalancedService) *rbacv1.Role {
+func onionbalanceRole(onion *torv1alpha2.OnionBalancedService) *rbacv1.Role {
 	return &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      onion.RoleName(),
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
-					Group:   torv1alpha3.GroupVersion.Group,
-					Version: torv1alpha3.GroupVersion.Version,
+					Group:   torv1alpha2.GroupVersion.Group,
+					Version: torv1alpha2.GroupVersion.Version,
 					Kind:    onion.Kind,
 				}),
 			},
 		},
 		Rules: []rbacv1.PolicyRule{
 			{
-				APIGroups: []string{torv1alpha3.GroupVersion.Group},
+				APIGroups: []string{torv1alpha2.GroupVersion.Group},
 				Verbs:     []string{"get", "list", "watch"},
 				Resources: []string{
 					"onionbalancedservices",
 				},
 			},
 			{
-				APIGroups: []string{torv1alpha3.GroupVersion.Group},
+				APIGroups: []string{torv1alpha2.GroupVersion.Group},
 				Verbs:     []string{"update", "patch"},
 				Resources: []string{
 					"onionbalancedservices/status",

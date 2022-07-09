@@ -1,4 +1,4 @@
-apiVersion: tor.k8s.torproject.org/v1alpha3
+apiVersion: tor.k8s.torproject.org/v1alpha2
 kind: OnionBalancedService
 metadata:
   name: onionbalancedservice-sample

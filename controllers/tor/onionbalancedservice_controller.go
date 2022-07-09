@@ -32,7 +32,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
-	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
 // OnionBalancedServiceReconciler reconciles a OnionBalancedService object
@@ -69,7 +69,7 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 	log := log.FromContext(ctx)
 
 	//namespace, name := req.Namespace, req.Name
-	var OnionBalancedService torv1alpha3.OnionBalancedService
+	var OnionBalancedService torv1alpha2.OnionBalancedService
 
 	err := r.Get(ctx, req.NamespacedName, &OnionBalancedService)
 	if err != nil {
@@ -162,7 +162,7 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 	// OnionBalancedService.Status.Hostname = hostname
 
 	// Update backends
-	var onionServiceList torv1alpha3.OnionServiceList
+	var onionServiceList torv1alpha2.OnionServiceList
 	filter := []client.ListOption{
 		client.InNamespace(req.Namespace),
 		// client.MatchingLabels{"instance": req.NamespacedName.Name},
@@ -176,7 +176,7 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 		log.Error(err, "unable to list OnionServices")
 	}
 
-	backends := map[string]torv1alpha3.OnionServiceStatus{}
+	backends := map[string]torv1alpha2.OnionServiceStatus{}
 	log.Info(fmt.Sprintf("Found %d backends", len(onionServiceList.Items)))
 
 	for _, onionService := range onionServiceList.Items {
@@ -202,7 +202,7 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 func (r *OnionBalancedServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	pred := predicate.GenerationChangedPredicate{}
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&torv1alpha3.OnionBalancedService{}).
+		For(&torv1alpha2.OnionBalancedService{}).
 		WithEventFilter(pred).
 		Complete(r)
 }

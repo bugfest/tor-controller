@@ -31,7 +31,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
-	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
 // OnionServiceReconciler reconciles a OnionService object
@@ -67,7 +67,7 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	log := log.FromContext(ctx)
 
 	//namespace, name := req.Namespace, req.Name
-	var onionService torv1alpha3.OnionService
+	var onionService torv1alpha2.OnionService
 
 	err := r.Get(ctx, req.NamespacedName, &onionService)
 	if err != nil {
@@ -182,7 +182,7 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 func (r *OnionServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	pred := predicate.GenerationChangedPredicate{}
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&torv1alpha3.OnionService{}).
+		For(&torv1alpha2.OnionService{}).
 		WithEventFilter(pred).
 		Complete(r)
 }

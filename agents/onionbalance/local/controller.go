@@ -16,7 +16,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 
 	config "github.com/bugfest/tor-controller/agents/onionbalance/config"
-	v1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	v1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
 type Controller struct {
@@ -107,7 +107,7 @@ func (c *Controller) sync(key string) error {
 	return nil
 }
 
-func (c *Controller) updateOnionBalancedServiceStatus(onionBalancedService *v1alpha3.OnionBalancedService) error {
+func (c *Controller) updateOnionBalancedServiceStatus(onionBalancedService *v1alpha2.OnionBalancedService) error {
 	hostname, err := ioutil.ReadFile("/run/onionbalance/key/onionAddress")
 	if err != nil {
 		log.Error(fmt.Sprintf("Got this error when trying to find hostname: %v", err))

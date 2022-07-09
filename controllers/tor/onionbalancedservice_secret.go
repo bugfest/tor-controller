@@ -28,10 +28,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionBalancedServiceReconciler) reconcileSecret(ctx context.Context, OnionBalancedService *torv1alpha3.OnionBalancedService) error {
+func (r *OnionBalancedServiceReconciler) reconcileSecret(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
 	log := log.FromContext(ctx)
 
 	secretName := OnionBalancedService.SecretName()
@@ -74,7 +74,7 @@ func (r *OnionBalancedServiceReconciler) reconcileSecret(ctx context.Context, On
 	return nil
 }
 
-func onionbalanceSecret(onion *torv1alpha3.OnionBalancedService) *corev1.Secret {
+func onionbalanceSecret(onion *torv1alpha2.OnionBalancedService) *corev1.Secret {
 
 	onionv3, err := GenerateOnionV3()
 	if err != nil {
@@ -88,8 +88,8 @@ func onionbalanceSecret(onion *torv1alpha3.OnionBalancedService) *corev1.Secret 
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
-					Group:   torv1alpha3.GroupVersion.Group,
-					Version: torv1alpha3.GroupVersion.Version,
+					Group:   torv1alpha2.GroupVersion.Group,
+					Version: torv1alpha2.GroupVersion.Version,
 					Kind:    "OnionBalancedService",
 				}),
 			},

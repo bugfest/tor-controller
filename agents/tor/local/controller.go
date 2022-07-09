@@ -17,7 +17,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 
 	config "github.com/bugfest/tor-controller/agents/tor/config"
-	v1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	v1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
 type Controller struct {
@@ -160,7 +160,7 @@ func (c *Controller) sync(key string) error {
 	return nil
 }
 
-func (c *Controller) updateOnionServiceStatus(onionService *v1alpha3.OnionService) error {
+func (c *Controller) updateOnionServiceStatus(onionService *v1alpha2.OnionService) error {
 	hostname, err := ioutil.ReadFile("/run/tor/service/hostname")
 	if err != nil {
 		log.Error(fmt.Sprintf("Got this error when trying to find hostname: %v", err))

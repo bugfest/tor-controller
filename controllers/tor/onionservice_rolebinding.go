@@ -28,10 +28,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onionService *torv1alpha3.OnionService) error {
+func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onionService *torv1alpha2.OnionService) error {
 	log := log.FromContext(ctx)
 
 	roleName := onionService.RoleName()
@@ -74,15 +74,15 @@ func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onion
 	return nil
 }
 
-func torRolebinding(onion *torv1alpha3.OnionService) *rbacv1.RoleBinding {
+func torRolebinding(onion *torv1alpha2.OnionService) *rbacv1.RoleBinding {
 	return &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      onion.RoleName(),
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
-					Group:   torv1alpha3.GroupVersion.Group,
-					Version: torv1alpha3.GroupVersion.Version,
+					Group:   torv1alpha2.GroupVersion.Group,
+					Version: torv1alpha2.GroupVersion.Version,
 					Kind:    "OnionService",
 				}),
 			},

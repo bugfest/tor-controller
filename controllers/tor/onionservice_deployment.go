@@ -30,10 +30,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
-	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionService *torv1alpha3.OnionService) error {
+func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionService *torv1alpha2.OnionService) error {
 	log := log.FromContext(ctx)
 
 	deploymentName := onionService.DeploymentName()
@@ -83,7 +83,7 @@ func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionS
 	return nil
 }
 
-func torDeployment(onion *torv1alpha3.OnionService, projectConfig configv2.ProjectConfig) *appsv1.Deployment {
+func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.ProjectConfig) *appsv1.Deployment {
 
 	privateKeyMountPath := "/run/tor/service/key"
 
@@ -161,8 +161,8 @@ func torDeployment(onion *torv1alpha3.OnionService, projectConfig configv2.Proje
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
-					Group:   torv1alpha3.GroupVersion.Group,
-					Version: torv1alpha3.GroupVersion.Version,
+					Group:   torv1alpha2.GroupVersion.Group,
+					Version: torv1alpha2.GroupVersion.Version,
 					Kind:    "OnionService",
 				}),
 			},

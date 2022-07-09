@@ -47,6 +47,9 @@ type OnionBalancedServiceSpec struct {
 
 	// +optional
 	Template TemplateReference `json:"template,omitempty"`
+
+	// +optional
+	BalancerTemplate ServicePodTemplate `json:"balancerTemplate,omitempty"`
 }
 
 type TemplateReference struct {
@@ -67,6 +70,7 @@ type OnionBalancedServiceStatus struct {
 }
 
 // +kubebuilder:resource:shortName={"onionha","oha","obs"}
+// +kubebuilder:storageversion
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Hostname",type=string,JSONPath=`.status.hostname`

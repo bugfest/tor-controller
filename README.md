@@ -21,6 +21,7 @@
    1. [Quickstart with random address](#quickstart-with-random-address)
    1. [Random service names](#random-service-names)
    1. [Bring your own secret](#bring-your-own-secret)
+   1. [Specify pod template settings](#specify-pod-template-settings)
    1. [Using with nginx-ingress](#using-with-nginx-ingress)
    1. [HA Onionbalance Hidden Services](#ha-onionbalance-hidden-services)
    1. [Service Monitors](#service-monitors)
@@ -221,8 +222,8 @@ Only v3 is supported.
 
 tor-controller defaults to using v3 if `spec.version` is not specified.
 
-Specify Pod Template Parameters
--------------------------------
+Specify Pod Template Settings
+-----------------------------
 
 The `template` field can be used to specify properties for the running tor-service pods.
 

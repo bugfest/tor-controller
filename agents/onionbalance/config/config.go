@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	v1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	v1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 	"gopkg.in/yaml.v2"
 )
 
@@ -21,7 +21,7 @@ type Instance struct {
 	Address string `yaml:"address"`
 }
 
-func OnionBalanceConfigForService(onion *v1alpha3.OnionBalancedService) (string, error) {
+func OnionBalanceConfigForService(onion *v1alpha2.OnionBalancedService) (string, error) {
 
 	instances := []Instance{}
 	for name, b := range onion.Status.Backends {

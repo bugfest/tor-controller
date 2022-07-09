@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"text/template"
 
-	v1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	v1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
 const configFormat = `
@@ -51,7 +51,7 @@ type portTuple struct {
 	ServiceClusterIP string
 }
 
-func OnionServiceInputData(onion *v1alpha3.OnionService) torConfig {
+func OnionServiceInputData(onion *v1alpha2.OnionService) torConfig {
 	ports := []portTuple{}
 	for _, rule := range onion.Spec.Rules {
 		port := portTuple{
@@ -77,7 +77,7 @@ func OnionServiceInputData(onion *v1alpha3.OnionService) torConfig {
 	}
 }
 
-func TorConfigForService(onion *v1alpha3.OnionService) (string, error) {
+func TorConfigForService(onion *v1alpha2.OnionService) (string, error) {
 	s := OnionServiceInputData(onion)
 	var tmp bytes.Buffer
 	err := configTemplate.Execute(&tmp, s)
@@ -88,7 +88,7 @@ func TorConfigForService(onion *v1alpha3.OnionService) (string, error) {
 }
 
 // Generates ob_config file if this instance handles traffic on behalf of a master hidden service
-func ObConfigForService(onion *v1alpha3.OnionService) (string, error) {
+func ObConfigForService(onion *v1alpha2.OnionService) (string, error) {
 	s := OnionServiceInputData(onion)
 	var tmp bytes.Buffer
 	err := oBconfigTemplate.Execute(&tmp, s)

@@ -28,10 +28,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileServiceAccount(ctx context.Context, onionService *torv1alpha3.OnionService) error {
+func (r *OnionServiceReconciler) reconcileServiceAccount(ctx context.Context, onionService *torv1alpha2.OnionService) error {
 	log := log.FromContext(ctx)
 
 	serviceAccountName := onionService.ServiceAccountName()
@@ -74,15 +74,15 @@ func (r *OnionServiceReconciler) reconcileServiceAccount(ctx context.Context, on
 	return nil
 }
 
-func torServiceAccount(onion *torv1alpha3.OnionService) *corev1.ServiceAccount {
+func torServiceAccount(onion *torv1alpha2.OnionService) *corev1.ServiceAccount {
 	return &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      onion.ServiceAccountName(),
 			Namespace: onion.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
-					Group:   torv1alpha3.GroupVersion.Group,
-					Version: torv1alpha3.GroupVersion.Version,
+					Group:   torv1alpha2.GroupVersion.Group,
+					Version: torv1alpha2.GroupVersion.Version,
 					Kind:    "OnionService",
 				}),
 			},

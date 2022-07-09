@@ -30,10 +30,10 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
-	torv1alpha3 "github.com/bugfest/tor-controller/apis/tor/v1alpha3"
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileServiceMonitor(ctx context.Context, onionService *torv1alpha3.OnionService) error {
+func (r *OnionServiceReconciler) reconcileServiceMonitor(ctx context.Context, onionService *torv1alpha2.OnionService) error {
 	log := log.FromContext(ctx)
 
 	if !r.monitoringInstalled(ctx) {
@@ -98,7 +98,7 @@ func (r *OnionServiceReconciler) reconcileServiceMonitor(ctx context.Context, on
 
 // It requires fix for "metrics: Prometheus output needs to quote the label's value"
 // (tor-0.4.6.10) https://gitlab.torproject.org/tpo/core/tor/-/issues/40552
-func os_torServiceMonitor(onion *torv1alpha3.OnionService) *monitoringv1.ServiceMonitor {
+func os_torServiceMonitor(onion *torv1alpha2.OnionService) *monitoringv1.ServiceMonitor {
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      onion.ServiceMetricsName(),
@@ -106,8 +106,8 @@ func os_torServiceMonitor(onion *torv1alpha3.OnionService) *monitoringv1.Service
 			Labels:    onion.ServiceMetricsSelector(),
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
-					Group:   torv1alpha3.GroupVersion.Group,
-					Version: torv1alpha3.GroupVersion.Version,
+					Group:   torv1alpha2.GroupVersion.Group,
+					Version: torv1alpha2.GroupVersion.Version,
 					Kind:    "OnionService",
 				}),
 			},
