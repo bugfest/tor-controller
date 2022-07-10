@@ -143,6 +143,7 @@ func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.Proje
 
 	// Fetch Pod Template
 	podSpec := onion.Spec.Template.Spec
+	podResources := onion.Spec.Template.Resources
 	podMetadata := onion.Spec.Template.ObjectMeta
 	if podMetadata.Labels == nil {
 		// Set deployment labels
@@ -209,7 +210,7 @@ func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.Proje
 									ContainerPort: 9035,
 								},
 							},
-							Resources: podSpec.Resources,
+							Resources: podResources,
 						},
 					},
 					Volumes: volumes,
