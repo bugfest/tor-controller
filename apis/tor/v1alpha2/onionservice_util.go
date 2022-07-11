@@ -1,6 +1,10 @@
 package v1alpha2
 
-import "fmt"
+import (
+	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
+)
 
 const (
 	torDeploymentNameFmt       = "%s-tor-daemon"
@@ -68,4 +72,15 @@ func (s *OnionService) RoleName() string {
 
 func (s *OnionService) ServiceAccountName() string {
 	return fmt.Sprintf(torServiceAccountNameFmt, s.Name)
+}
+
+func (s *OnionService) PodTemplate() corev1.PodTemplateSpec {
+	return corev1.PodTemplateSpec{
+		ObjectMeta: s.Spec.Template.ObjectMeta,
+		Spec:       s.Spec.Template.Spec,
+	}
+}
+
+func (s *OnionService) Resources() corev1.ResourceRequirements {
+	return s.Spec.Template.Resources
 }

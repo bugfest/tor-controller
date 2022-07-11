@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha2
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -48,13 +49,33 @@ type OnionBalancedServiceSpec struct {
 	// +optional
 	Template TemplateReference `json:"template,omitempty"`
 
+	// Template describes the balancer daemon pods that will be created.
 	// +optional
-	BalancerTemplate ServicePodTemplate `json:"balancerTemplate,omitempty"`
+	BalancerTemplate BalancerTemplate `json:"balancerTemplate,omitempty"`
 }
 
 type TemplateReference struct {
 	// +optional
 	Spec OnionServiceSpec `json:"spec,omitempty"`
+}
+
+// Template for the daemon pods
+type BalancerTemplate struct {
+	// Metadata of the pods created from this template.
+	// +optional
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	// Spec defines the behavior of a pod.
+	// +optional
+	Spec corev1.PodSpec `json:"spec,omitempty"`
+
+	// Default resources for tor containers
+	// +optional
+	TorResources corev1.ResourceRequirements `json:"torResources,omitempty" protobuf:"bytes,8,opt,name=resources"`
+
+	// Default resources for onionbalance containers
+	// +optional
+	BalancerResources corev1.ResourceRequirements `json:"balancerResources,omitempty" protobuf:"bytes,8,opt,name=resources"`
 }
 
 // OnionBalancedServiceStatus defines the observed state of OnionBalancedService

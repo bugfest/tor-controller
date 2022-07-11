@@ -142,18 +142,48 @@ func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.Proje
 	}
 
 	// Fetch Pod Template
-	podSpec := onion.Spec.Template.Spec
-	podMetadata := onion.Spec.Template.ObjectMeta
-	if podMetadata.Labels == nil {
+	podTemplate := onion.PodTemplate()
+
+	// Add Labels to template
+	if podTemplate.ObjectMeta.Labels == nil {
 		// Set deployment labels
-		podMetadata.Labels = onion.DeploymentLabels()
+		podTemplate.ObjectMeta.Labels = onion.DeploymentLabels()
 	} else {
 		// Add tor labels to existing template labels
 		for k, v := range onion.DeploymentLabels() {
 			// TODO: should we throw an error if a label was already set?
-			podMetadata.Labels[k] = v
+			podTemplate.ObjectMeta.Labels[k] = v
 		}
 	}
+
+	// Set Onion Service pod properties
+	podTemplate.Spec.ServiceAccountName = onion.ServiceAccountName()
+	podTemplate.Spec.Volumes = append(podTemplate.Spec.Volumes, volumes...)
+	podTemplate.Spec.Containers = append(podTemplate.Spec.Containers, corev1.Container{
+		Name:  "tor",
+		Image: projectConfig.TorDaemonManager.Image,
+		Args: []string{
+			"-name",
+			onion.Name,
+			"-namespace",
+			onion.Namespace,
+		},
+		ImagePullPolicy: corev1.PullAlways,
+		VolumeMounts:    volumeMounts,
+		Ports: []corev1.ContainerPort{
+			// {
+			// 	Name: "control",
+			// 	Protocol: "TCP",
+			// 	ContainerPort: 9051,
+			// },
+			{
+				Name:          "metrics",
+				Protocol:      "TCP",
+				ContainerPort: 9035,
+			},
+		},
+		Resources: onion.Resources(),
+	})
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -171,50 +201,7 @@ func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.Proje
 			Selector: &metav1.LabelSelector{
 				MatchLabels: onion.DeploymentLabels(),
 			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: podMetadata,
-				Spec: corev1.PodSpec{
-					// Set properties from template
-					NodeSelector:              podSpec.NodeSelector,
-					Affinity:                  podSpec.Affinity,
-					SchedulerName:             podSpec.SchedulerName,
-					Tolerations:               podSpec.Tolerations,
-					PriorityClassName:         podSpec.PriorityClassName,
-					RuntimeClassName:          podSpec.RuntimeClassName,
-					TopologySpreadConstraints: podSpec.TopologySpreadConstraints,
-
-					// Set tor specific properties
-					ServiceAccountName: onion.ServiceAccountName(),
-					Containers: []corev1.Container{
-						{
-							Name:  "tor",
-							Image: projectConfig.TorDaemonManager.Image,
-							Args: []string{
-								"-name",
-								onion.Name,
-								"-namespace",
-								onion.Namespace,
-							},
-							ImagePullPolicy: corev1.PullAlways,
-							VolumeMounts:    volumeMounts,
-							Ports: []corev1.ContainerPort{
-								// {
-								// 	Name: "control",
-								// 	Protocol: "TCP",
-								// 	ContainerPort: 9051,
-								// },
-								{
-									Name:          "metrics",
-									Protocol:      "TCP",
-									ContainerPort: 9035,
-								},
-							},
-							Resources: podSpec.Resources,
-						},
-					},
-					Volumes: volumes,
-				},
-			},
+			Template: podTemplate,
 		},
 	}
 }

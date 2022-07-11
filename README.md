@@ -226,6 +226,7 @@ Specify Pod Template Settings
 -----------------------------
 
 The `template` field can be used to specify properties for the running tor-service pods.
+Use `template.resources` to specify the compute resources required by the tor containers that will be created.
 
 ```yaml
 apiVersion: tor.k8s.torproject.org/v1alpha2
@@ -239,10 +240,17 @@ spec:
       annotations:
         some-special-anotation: my-value
     spec:
-      resources:
-        limits:
-          cpu: 500m
-          memory: 128Mi
+      # nodeSelector:
+      # affinity:
+      # schedulerName:
+      # tolerations:
+      # priorityClassName:
+      # runtimeClassName:
+      # topologySpreadConstraints:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
 ```
 
 | Template Property | Description |
@@ -257,7 +265,50 @@ spec:
 | `spec.priorityClassName` | Set the pods [Priority Class](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass) |
 | `spec.resources` | Set [Resource Requirements](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container) for the running containers. |
 | `spec.topologySpreadConstraints` | Add [Topology Spread Constraints](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/). |
+| `resources` | Set [Resource Requirements](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container) for the running containers. |
 
+
+OnionBalancedService Pod Template
+---------------------------------
+
+In addition to creating backend `OnionServices`, a OnionBalancedService also creates a deployment that runs the Onion Balancer.  To modify the pod settings for the balancer service, you can specify the a `balancerTemplate` property in the `OnionBalancedServie` spec.
+
+```yaml
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionBalancedService
+metadata:
+  name: example-onion-service
+spec:
+  ...
+  balancerTemplate:
+    spec:
+      # nodeSelector:
+      # affinity:
+      # schedulerName:
+      # tolerations:
+      # priorityClassName:
+      # runtimeClassName:
+```
+
+Additionally, the Onion Balancer pod contains two separate containers, which can each be specified by `balancerTemplate.torResources` and `balancerTemplate.balancerResources`.
+
+```yaml
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionBalancedService
+metadata:
+  name: example-onion-service
+spec:
+  ...
+  balancerTemplate:
+    torResources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+    balancerResources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+```
 
 
 Using with nginx-ingress
