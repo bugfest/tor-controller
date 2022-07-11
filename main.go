@@ -51,7 +51,6 @@ func init() {
 
 	utilruntime.Must(torv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(torv1alpha2.AddToScheme(scheme))
-	utilruntime.Must(torv1alpha2.AddToScheme(scheme))
 	utilruntime.Must(configv2.AddToScheme(scheme))
 	utilruntime.Must(monitoringv1.AddToScheme(scheme))
 	utilruntime.Must(apiextensionsv1.AddToScheme(scheme))
