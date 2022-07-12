@@ -290,7 +290,7 @@ spec:
       # runtimeClassName:
 ```
 
-Additionally, the Onion Balancer pod contains two separate containers, which can each be specified by `balancerTemplate.torResources` and `balancerTemplate.balancerResources`.
+Additionally, the Onion Balancer pod contains two separate containers, which can each have their resource requirements set via `balancerTemplate.torResources` and `balancerTemplate.balancerResources`.
 
 ```yaml
 apiVersion: tor.k8s.torproject.org/v1alpha2
