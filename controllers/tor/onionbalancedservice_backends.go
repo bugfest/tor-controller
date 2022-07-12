@@ -85,6 +85,13 @@ func (r *OnionBalancedServiceReconciler) reconcileBackend(ctx context.Context, O
 }
 
 func onionBalancedServiceBackend(onion *torv1alpha2.OnionBalancedService, projectConfig configv2.ProjectConfig, idx int32) *torv1alpha2.OnionService {
+	// Start with template
+	onionServiceSpec := onion.Spec.Template.Spec
+
+	// Always override these values... Maybe this should only override if not specified in the template?
+	onionServiceSpec.Version = onion.Spec.Version
+	onionServiceSpec.MasterOnionAddress = onion.Status.Hostname
+
 	return &torv1alpha2.OnionService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      onion.OnionServiceBackendName(idx),
@@ -97,11 +104,6 @@ func onionBalancedServiceBackend(onion *torv1alpha2.OnionBalancedService, projec
 				}),
 			},
 		},
-		Spec: torv1alpha2.OnionServiceSpec{
-			Rules:              onion.Spec.Template.Spec.Rules,
-			Version:            onion.Spec.Version,
-			MasterOnionAddress: onion.Status.Hostname,
-			ServiceMonitor:     onion.Spec.Template.Spec.ServiceMonitor,
-		},
+		Spec: onionServiceSpec,
 	}
 }

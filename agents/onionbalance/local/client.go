@@ -28,7 +28,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	onionbalancedaemon "github.com/bugfest/tor-controller/agents/onionbalance/onionbalancedaemon"
-
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 

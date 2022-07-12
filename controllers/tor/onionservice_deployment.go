@@ -141,6 +141,50 @@ func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.Proje
 		},
 	}
 
+	// Fetch Pod Template
+	podTemplate := onion.PodTemplate()
+
+	// Add Labels to template
+	if podTemplate.ObjectMeta.Labels == nil {
+		// Set deployment labels
+		podTemplate.ObjectMeta.Labels = onion.DeploymentLabels()
+	} else {
+		// Add tor labels to existing template labels
+		for k, v := range onion.DeploymentLabels() {
+			// TODO: should we throw an error if a label was already set?
+			podTemplate.ObjectMeta.Labels[k] = v
+		}
+	}
+
+	// Set Onion Service pod properties
+	podTemplate.Spec.ServiceAccountName = onion.ServiceAccountName()
+	podTemplate.Spec.Volumes = append(podTemplate.Spec.Volumes, volumes...)
+	podTemplate.Spec.Containers = append(podTemplate.Spec.Containers, corev1.Container{
+		Name:  "tor",
+		Image: projectConfig.TorDaemonManager.Image,
+		Args: []string{
+			"-name",
+			onion.Name,
+			"-namespace",
+			onion.Namespace,
+		},
+		ImagePullPolicy: corev1.PullAlways,
+		VolumeMounts:    volumeMounts,
+		Ports: []corev1.ContainerPort{
+			// {
+			// 	Name: "control",
+			// 	Protocol: "TCP",
+			// 	ContainerPort: 9051,
+			// },
+			{
+				Name:          "metrics",
+				Protocol:      "TCP",
+				ContainerPort: 9035,
+			},
+		},
+		Resources: onion.Resources(),
+	})
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      onion.DeploymentName(),
@@ -157,41 +201,7 @@ func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.Proje
 			Selector: &metav1.LabelSelector{
 				MatchLabels: onion.DeploymentLabels(),
 			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: onion.DeploymentLabels(),
-				},
-				Spec: corev1.PodSpec{
-					ServiceAccountName: onion.ServiceAccountName(),
-					Containers: []corev1.Container{
-						{
-							Name:  "tor",
-							Image: projectConfig.TorDaemonManager.Image,
-							Args: []string{
-								"-name",
-								onion.Name,
-								"-namespace",
-								onion.Namespace,
-							},
-							ImagePullPolicy: corev1.PullAlways,
-							VolumeMounts:    volumeMounts,
-							Ports: []corev1.ContainerPort{
-								// {
-								// 	Name: "control",
-								// 	Protocol: "TCP",
-								// 	ContainerPort: 9051,
-								// },
-								{
-									Name:          "metrics",
-									Protocol:      "TCP",
-									ContainerPort: 9035,
-								},
-							},
-						},
-					},
-					Volumes: volumes,
-				},
-			},
+			Template: podTemplate,
 		},
 	}
 }

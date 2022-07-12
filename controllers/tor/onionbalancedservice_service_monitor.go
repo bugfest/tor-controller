@@ -27,9 +27,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
 func (r *OnionBalancedServiceReconciler) reconcileServiceMonitor(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {

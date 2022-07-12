@@ -29,8 +29,9 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 	//+kubebuilder:scaffold:imports
+
+	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to

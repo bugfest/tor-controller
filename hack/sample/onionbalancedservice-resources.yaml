@@ -1,0 +1,35 @@
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionBalancedService
+metadata:
+  name: example-onionbalanced-service-resources
+spec:
+  backends: 2
+  serviceMonitor: true
+  balancerTemplate:
+    # Resource limits for the balancer deployments "tor" container
+    torResources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+    # Resource limits for the balancer deployments "onionbalance" container
+    balancerResources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+  template:
+    spec:
+      version: 3
+      template:
+        # Resource limits for the backend onion service pods
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+      rules:
+        - port:
+            number: 80
+          backend:
+            service:
+              name: http-app
+              port:
+                number: 8080

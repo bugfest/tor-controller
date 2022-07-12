@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha2
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -24,11 +25,29 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+type ServicePodTemplate struct {
+	// Metadata of the pods created from this template.
+	// +optional
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	// Spec defines the behavior of a pod.
+	// +optional
+	Spec corev1.PodSpec `json:"spec,omitempty"`
+
+	// Default resources for containers
+	// +optional
+	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,8,opt,name=resources"`
+}
+
 // OnionServiceSpec defines the desired state of OnionService
 type OnionServiceSpec struct {
 	// +patchMergeKey=port
 	// +patchStrategy=merge
 	Rules []ServiceRule `json:"rules,omitempty" pathchStrategy:"merge" patchMergeKey:"port"`
+
+	// Template describes the pods that will be created.
+	// +optional
+	Template ServicePodTemplate `json:"template,omitempty"`
 
 	// +optional
 	PrivateKeySecret SecretReference `json:"privateKeySecret,omitempty"`

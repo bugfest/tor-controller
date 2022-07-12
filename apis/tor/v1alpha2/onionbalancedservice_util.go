@@ -1,6 +1,10 @@
 package v1alpha2
 
-import "fmt"
+import (
+	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
+)
 
 const (
 	onionbalanceDeploymentNameFmt     = "%s-tor-daemon"
@@ -86,4 +90,19 @@ func (s *OnionBalancedService) IsSynced() bool {
 		}
 	}
 	return true
+}
+
+func (s *OnionBalancedService) PodTemplate() corev1.PodTemplateSpec {
+	return corev1.PodTemplateSpec{
+		ObjectMeta: s.Spec.BalancerTemplate.ObjectMeta,
+		Spec:       s.Spec.BalancerTemplate.Spec,
+	}
+}
+
+func (s *OnionBalancedService) TorResources() corev1.ResourceRequirements {
+	return s.Spec.BalancerTemplate.TorResources
+}
+
+func (s *OnionBalancedService) BalancerResources() corev1.ResourceRequirements {
+	return s.Spec.BalancerTemplate.BalancerResources
 }
