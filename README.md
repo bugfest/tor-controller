@@ -47,6 +47,8 @@ Changes
 - **(v0.3.2)** MultiArch images. Supported architectures: amd64, arm, arm64
 - **(v0.4.0)** Implement `OnionBalancedService` resource (HA Onion Services)
 - **(v0.5.0)** Tor & OnionBalance metric exporters. Prometheus ServiceMonitor integration
+- **(v0.5.1)** Bring your own secret key
+- **(v0.6.0)** Support specifying PodSpec properties on the OnionService/OnionBalancer pods
 
 Changelog: [CHANGELOG](CHANGELOG.md)
 
@@ -439,12 +441,13 @@ Versions
 --------
 
 | Helm Chart version | Tor-Controller version | Tor daemon |
-| ----- | ----- | ------- |
-| 0.1.0 | 0.3.1 | 0.4.6.8 |
-| 0.1.1 | 0.3.2 | 0.4.6.8 |
-| 0.1.2 | 0.4.0 | 0.4.6.8 |
-| 0.1.3 | 0.5.0 | 0.4.6.10 |
-| 0.1.4 | 0.5.1 | 0.4.6.10 |
+| ------------------ | ---------------------- | ---------- |
+| 0.1.0              | 0.3.1                  | 0.4.6.8    |
+| 0.1.1              | 0.3.2                  | 0.4.6.8    |
+| 0.1.2              | 0.4.0                  | 0.4.6.8    |
+| 0.1.3              | 0.5.0                  | 0.4.6.10   |
+| 0.1.4              | 0.5.1                  | 0.4.6.10   |
+| 0.1.5              | 0.6.0                  | 0.4.6.10   |
 
 References
 ----------
