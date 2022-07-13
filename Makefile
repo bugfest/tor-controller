@@ -77,6 +77,12 @@ run: manifests generate fmt vet ## Run a controller from your host.
 rundev: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go -no-leader-elect --config config/manager/controller_manager_config_dev.yaml
 
+.PHONY: docker-build-all
+docker-build-all: docker-build-daemon docker-build-daemon-manager docker-build-onionbalance-manager
+
+.PHONY: docker-push-all
+docker-push-all: docker-push-daemon docker-push-daemon-manager docker-push-onionbalance-manager
+
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
 	docker build -t ${IMG} -f Dockerfile .
@@ -87,19 +93,27 @@ docker-push: ## Push docker image with the manager.
 
 .PHONY: docker-build-daemon
 docker-build-daemon:
-	docker build -t ${IMG_DAEMON} -f Dockerfile.tor-daemon-manager .
+	docker build -t ${IMG_DAEMON} -f Dockerfile.tor-daemon .
 
 .PHONY: docker-push-daemon
  docker-push-daemon:
 	docker push ${IMG_DAEMON}
 
-.PHONY: docker-build-onionbalance
-docker-build-onionbalance:
-	docker build -t ${IMG_ONIONBALANCE} -f Dockerfile.tor-onionbalance-manager .
+.PHONY: docker-build-daemon-manager
+docker-build-daemon-manager:
+	docker build -t ${IMG_DAEMON_MANAGER} -f Dockerfile.tor-daemon-manager .
 
-.PHONY: docker-push-onionbalance
-docker-push-onionbalance:
-	docker push ${IMG_ONIONBALANCE}
+.PHONY: docker-push-daemon-manager
+ docker-push-daemon-manager:
+	docker push ${IMG_DAEMON_MANAGER}
+
+.PHONY: docker-build-onionbalance-manager
+docker-build-onionbalance-manager:
+	docker build -t ${IMG_ONIONBALANCE_MANAGER} -f Dockerfile.tor-onionbalance-manager .
+
+.PHONY: docker-push-onionbalance-manager
+docker-push-onionbalance-manager:
+	docker push ${IMG_ONIONBALANCE_MANAGER}
 
 ##@ Deployment
 

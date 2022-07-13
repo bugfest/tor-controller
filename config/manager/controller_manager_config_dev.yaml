@@ -11,6 +11,8 @@ webhook:
 leaderElection:
   leaderElect: true
   resourceName: 59806307.k8s.torproject.org
+torDaemon:
+  image: onions:5000/tor-daemon:latest
 torDaemonManager:
   image: onions:5000/tor-daemon-manager:latest
 torOnionbalanceManager:

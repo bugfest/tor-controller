@@ -51,7 +51,7 @@ func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionS
 
 	// If the deployment doesn't exist, we'll create it
 	projectConfig := r.ProjectConfig
-	newDeployment := torDeployment(onionService, projectConfig)
+	newDeployment := torOnionServiceDeployment(onionService, projectConfig)
 	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newDeployment)
 		if err != nil {
@@ -83,7 +83,7 @@ func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionS
 	return nil
 }
 
-func torDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.ProjectConfig) *appsv1.Deployment {
+func torOnionServiceDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.ProjectConfig) *appsv1.Deployment {
 
 	privateKeyMountPath := "/run/tor/service/key"
 

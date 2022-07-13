@@ -22,6 +22,7 @@ optional:
     kubebuilder create api --group tor --version v1alpha1 --kind OnionBalancedService --controller --namespaced --resource
 
     # v1alpha2 (to implement new OnionService and OnionBalancedService)
+    kubebuilder create api --group tor --version v1alpha2 --kind Tor --controller --namespaced --resource
     kubebuilder create api --group tor --version v1alpha2 --kind OnionService --controller --namespaced --resource
     kubebuilder create api --group tor --version v1alpha2 --kind OnionBalancedService --controller --namespaced --resource
     kubebuilder create webhook --group tor --version v1alpha2 --kind OnionService --conversion
@@ -56,12 +57,15 @@ To deploy in a test cluster
 
     export REGISTRY=onions:5000
     export IMG=$REGISTRY/tor-controller:latest
-    export IMG_DAEMON=$REGISTRY/tor-daemon-manager:latest
-    export IMG_ONIONBALANCE=$REGISTRY/tor-onionbalance-manager:latest
+    export IMG_DAEMON=$REGISTRY/tor-daemon:latest
+    export IMG_DAEMON_MANAGER=$REGISTRY/tor-daemon-manager:latest
+    export IMG_ONIONBALANCE_MANAGER=$REGISTRY/tor-onionbalance-manager:latest
 
-    make docker-build && make docker-push
-    make docker-build-daemon && make docker-push-daemon
-    make docker-build-onionbalance && make docker-push-onionbalance
+    make docker-build-all && make docker-push-all
+    # make docker-build && make docker-push
+    # make docker-build-daemon && make docker-push-daemon
+    # make docker-build-daemon-manager && make docker-push-daemon-manager
+    # make docker-build-onionbalance-manager && make docker-push-onionbalance-manager
 
     # make deploy
     make rundev ENABLE_WEBHOOKS=false
