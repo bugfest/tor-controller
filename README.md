@@ -49,7 +49,7 @@ Changes
 - **(v0.5.0)** Tor & OnionBalance metric exporters. Prometheus ServiceMonitor integration
 - **(v0.5.1)** Bring your own secret key
 - **(v0.6.0)** Support specifying PodSpec properties on the OnionService/OnionBalancer pods
-- **(v0.6.0)** Tor instance CRD supporting custom config
+- **(v0.6.1)** Tor instance CRD supporting custom config and Client/Server/Metrics/Control ports  
 
 Changelog: [CHANGELOG](CHANGELOG.md)
 
@@ -57,7 +57,7 @@ Roadmap / TODO
 --------------
 
 - Tor daemon management via socket (e.g: config reload)
-- Tor proxy resource: expose socks and http k8s's svc
+- Manage Tor Server fingerpting (ed25519_master_id_secret_key, secret_id_key) and automatic family and nikname management 
 - Tor relays:
   - Non exit: Bridge, Snowflake, Middle/Guard
   - Exit relay: Tor Exit
@@ -83,16 +83,17 @@ Resources
 
 | Name | Shortnames | Api Version | Namespaced | Kind |
 | ---- | ---------- | ----------- | ---------- | ---- |
+|tor|tor|onion,os|tor.k8s.torproject.org/v1alpha2|true|Tor|
 |onionservices|onion,os|tor.k8s.torproject.org/v1alpha2|true|OnionService|
 |onionbalancedservices|onionha,oha,obs|tor.k8s.torproject.org/v1alpha2|true|OnionBalancedService|
 |projectconfigs| | config.k8s.torproject.org/v2|true|ProjectConfig|
 
 
+***Tor***: Tor instance you can use to route traffic to/thru Tor network
+
 **OnionService**: Exposes a set of k8s services using as a Tor Hidden Service. By default it generates a random .onion adress
 
 **OnionBalancedService**: Exposes a set of k8s services using [Onionbalance](https://gitlab.torproject.org/tpo/core/onionbalance.git). It creates multiple backends providing some sort of HA. Users connect to the OnionBalancedService address and the requests are managed by one of the registered backends.
-
-***Tor***: Tor instance you can use to route traffic to/thru Tor network
 
 
 How to
@@ -392,9 +393,9 @@ example-onionbalanced-service-obb-2   4r4n25aewayyupxby34bckljr5rn7j4xynagvqqgde
 Tor Instances
 -------------
 
-(Available since v0.6.0)
+(Available since v0.6.1)
 
-Create a Tor instance, e.g: [hack/sample/tor.yaml](hack/sample/tor.yaml). Use `spec.config` to add your customized configuration (Example: [hack/sample/tor-custom-config.yaml](hack/sample/tor-custom-config.yaml)).
+Create a Tor instance, e.g: [hack/sample/tor.yaml](hack/sample/tor.yaml). 
 
 ```
 apiVersion: tor.k8s.torproject.org/v1alpha2
@@ -428,6 +429,16 @@ If you don't see a command prompt, try pressing enter.
 ...
 * Connection #0 to host example-tor-instance-tor-svc left intact
 198.96.155.3
+```
+
+Other examples:
+
+- Use `spec.config` to add your customized configuration (Example: [hack/sample/tor-custom-config.yaml](hack/sample/tor-custom-config.yaml)).
+
+- Set `spec.control.enable` to `true` to enable Tor's control port. If you don't set `spec.control.secret` or `spec.control.secretRef` a random password will be set and stored in a secret object. Example: [hack/sample/tor-custom-config.yaml](hack/sample/tor-external-full.yaml). In this example, the generated password can be retrieved with: 
+
+```shell
+ echo $(kubectl get secret/example-tor-instance-full-tor-secret -o jsonpath='{.data.control}' | base64 -d)
 ```
 
 Service Monitors

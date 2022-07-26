@@ -1,0 +1,63 @@
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: Tor
+metadata:
+  name: example-tor-instance-full
+spec:
+  client:
+    socks:
+      enable: true
+      policy:
+        - "accept 1.2.3.4"
+        - "accept 5.6.7.8"
+      flags:
+        - IsolateClientAddr
+        - IsolateSOCKSAuth
+    dns:
+      enable: true
+    natd:
+      enable: true
+    httptunnel:
+      enable: true
+    trans:
+      # transparent proxy is disabled in Tor build 0.4.6.10
+      enable: false
+  control:
+    enable: true
+    # secret: # if not set a random one will be generated
+    #   - "changeme"
+    # secretRef:
+    #   - name: my-tor-control-secret
+    #     key: mykey
+  metrics:
+    enable: true
+  config: |
+    # This is a comment
+  configMapKeyRef:
+    # Will be mounted at /config/custom1/custom-1.conf
+    - name: example-tor-instance-full-extraconfig
+      key: config1.conf
+    # Will be mounted at /config/custom2/custom-2.conf
+    - name: example-tor-instance-full-extraconfig
+      key: config2.conf
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: example-tor-instance-full-extraconfig
+data:
+  config1.conf: |
+    # config test1
+  config2.conf: |
+    # config test2
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-tor-control-secret
+data:
+  # alsochangeme
+  mykey: YWxzb2NoYW5nZW1l

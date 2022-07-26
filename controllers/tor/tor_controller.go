@@ -72,22 +72,30 @@ func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 
 	namespace := tor.Namespace
 
-	// err = r.reconcileServiceAccount(ctx, &tor)
-	// if err != nil {
-	// 	return ctrl.Result{}, err
-	// }
+	tor.SetTorDefaults()
 
-	// err = r.reconcileRole(ctx, &tor)
-	// if err != nil {
-	// 	return ctrl.Result{}, err
-	// }
+	err = r.reconcileServiceAccount(ctx, &tor)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
-	// err = r.reconcileRolebinding(ctx, &tor)
-	// if err != nil {
-	// 	return ctrl.Result{}, err
-	// }
+	err = r.reconcileRole(ctx, &tor)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.reconcileRolebinding(ctx, &tor)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
 	err = r.reconcileService(ctx, &tor)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Manages Tor Control secrets
+	err = r.reconcileControlSecret(ctx, &tor)
 	if err != nil {
 		return ctrl.Result{}, err
 	}

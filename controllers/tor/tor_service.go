@@ -110,6 +110,7 @@ func getTorServicePortList(tor *torv1alpha2.Tor) []corev1.ServicePort {
 				Name:       r.Name,
 				TargetPort: intstr.FromInt(int(r.Port.Port)),
 				Port:       r.Port.Port,
+				Protocol:   corev1.Protocol(r.Protocol),
 			}
 			ports = append(ports, port)
 		}

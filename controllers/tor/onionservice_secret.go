@@ -47,7 +47,7 @@ func (r *OnionServiceReconciler) reconcileSecret(ctx context.Context, onionServi
 	var secret corev1.Secret
 	err := r.Get(ctx, types.NamespacedName{Name: secretName, Namespace: namespace}, &secret)
 
-	newSecret := torSecret(onionService)
+	newSecret := torOnionServiceSecret(onionService)
 	if errors.IsNotFound(err) {
 		err := r.Create(ctx, newSecret)
 		if err != nil {
@@ -71,7 +71,7 @@ func (r *OnionServiceReconciler) reconcileSecret(ctx context.Context, onionServi
 	return nil
 }
 
-func torSecret(onion *torv1alpha2.OnionService) *corev1.Secret {
+func torOnionServiceSecret(onion *torv1alpha2.OnionService) *corev1.Secret {
 
 	onionv3, err := GenerateOnionV3()
 	if err != nil {

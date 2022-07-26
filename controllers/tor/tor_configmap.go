@@ -20,7 +20,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"html/template"
+	"strings"
+	"text/template"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -35,21 +36,58 @@ import (
 
 const torConfigFormat = `# Config automatically generated
 # {{ .Tor.Namespace }}/{{ .Tor.Name }}
-SocksPort {{ .SocksPort }}
-ControlPort {{ .ControlPort }}
-MetricsPort {{ .MetricsPort }}
-MetricsPortPolicy {{ .MetricsPortPolicy }}
 
-# Tor Custom config goes here
+{{- if .Tor.Spec.Client.DNS.Enable }}
+# Client:DNS
+DNSPort {{ .Tor.Spec.Client.DNS.Address }}:{{ .Tor.Spec.Client.DNS.Port }} {{ StringsJoin .Tor.Spec.Client.DNS.Flags "," }}
+{{ end }}
+{{- if .Tor.Spec.Client.NATD.Enable }}
+# Client:NATD
+NATDPort {{ .Tor.Spec.Client.NATD.Address }}:{{ .Tor.Spec.Client.NATD.Port }} {{ StringsJoin .Tor.Spec.Client.NATD.Flags "," }}
+{{ end }}
+{{- if .Tor.Spec.Client.HTTPTunnel.Enable }}
+# Client:HTTPTunnel
+HTTPTunnelPort {{ .Tor.Spec.Client.HTTPTunnel.Address }}:{{ .Tor.Spec.Client.HTTPTunnel.Port }} {{ StringsJoin .Tor.Spec.Client.HTTPTunnel.Flags "," }}
+{{ end }}
+{{- if .Tor.Spec.Client.Trans.Enable }}
+# Client:Trans
+TransPort {{ .Tor.Spec.Client.Trans.Address }}:{{ .Tor.Spec.Client.Trans.Port }} {{ StringsJoin .Tor.Spec.Client.Trans.Flags "," }}
+TransProxyType {{ .Tor.Spec.Client.TransProxyType }}
+{{ end }}
+{{- if .Tor.Spec.Client.Socks.Enable }}
+# Client:Socks
+SocksPort {{ .Tor.Spec.Client.Socks.Address }}:{{ .Tor.Spec.Client.Socks.Port }} {{ StringsJoin .Tor.Spec.Client.Socks.Flags "," }}
+SocksPolicy {{ StringsJoin .Tor.Spec.Client.Socks.Policy "," }}
+{{ end }}
+
+{{- if .Tor.Spec.Control.Enable }}
+# Control
+ControlPort {{ .Tor.Spec.Control.Address }}:{{ .Tor.Spec.Control.Port }} {{ StringsJoin .Tor.Spec.Control.Flags "," }}
+{{- range .ControlHashedPasswords }}
+HashedControlPassword {{ . }}
+{{ end }}
+{{ end }}
+
+{{- if .Tor.Spec.Metrics.Enable }}
+# Metrics
+MetricsPort {{ .Tor.Spec.Metrics.Address }}:{{ .Tor.Spec.Metrics.Port }} {{ StringsJoin .Tor.Spec.Metrics.Flags "," }}
+MetricsPortPolicy {{ StringsJoin .Tor.Spec.Metrics.Policy "," }}
+{{ end }}
+
+{{- if ne .Tor.Spec.Config "" }}
+# Tor Custom config
 {{ .Tor.Spec.Config }}
+{{ end }}
+
+{{- if ne (len .Tor.Spec.ConfigMapKeyRef) 0 }}
+# Include Custom Configs mounted by ConfigMapKeyRef
+%include /config/*/*.conf
+{{ end }}
 `
 
 type torConfig struct {
-	Tor               *torv1alpha2.Tor
-	SocksPort         string
-	ControlPort       string
-	MetricsPort       string
-	MetricsPortPolicy string
+	Tor                    *torv1alpha2.Tor
+	ControlHashedPasswords []string
 }
 
 func (r *TorReconciler) reconcileConfigMap(ctx context.Context, Tor *torv1alpha2.Tor) error {
@@ -85,7 +123,7 @@ func (r *TorReconciler) reconcileConfigMap(ctx context.Context, Tor *torv1alpha2
 		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
 		// bc.recorder.Event(Tor, corev1.EventTypeWarning, ErrResourceExists, msg)
 		// return fmt.Errorf(msg)
-		log.Info(fmt.Sprintf("Secret %s already exists and is not controller by %s", configmap.Name, Tor.Name))
+		log.Info(fmt.Sprintf("ConfigMap %s already exists and is not controller by %s", configmap.Name, Tor.Name))
 		return nil
 	}
 
@@ -95,18 +133,20 @@ func (r *TorReconciler) reconcileConfigMap(ctx context.Context, Tor *torv1alpha2
 func torConfigFile(tor *torv1alpha2.Tor) string {
 
 	s := torConfig{
-		Tor:               tor,
-		SocksPort:         "0.0.0.0:9050",
-		ControlPort:       "0.0.0.0:9051",
-		MetricsPort:       "0.0.0.0:9035",
-		MetricsPortPolicy: "accept 0.0.0.0/0",
+		Tor:                    tor,
+		ControlHashedPasswords: getTorControlHashedPasswords(tor),
 	}
 
-	var configTemplate = template.Must(template.New("config").Parse(torConfigFormat))
+	var configTemplate = template.Must(
+		template.New("config").Funcs(
+			template.FuncMap{"StringsJoin": strings.Join},
+		).Parse(torConfigFormat),
+	)
+
 	var tmp bytes.Buffer
 	err := configTemplate.Execute(&tmp, s)
 	if err != nil {
-		return ""
+		return fmt.Sprintf("# error in template: %s", err)
 	}
 	return tmp.String()
 }
@@ -129,4 +169,17 @@ func torConfigMap(tor *torv1alpha2.Tor) *corev1.ConfigMap {
 			"torfile": torConfigFile(tor),
 		},
 	}
+}
+
+func getTorControlHashedPasswords(tor *torv1alpha2.Tor) []string {
+	hashes := []string{}
+
+	for _, secret := range tor.Spec.Control.Secret {
+		hash, err := doHashPassword(secret)
+		if err == nil {
+			hashes = append(hashes, hash)
+		}
+	}
+
+	return hashes
 }

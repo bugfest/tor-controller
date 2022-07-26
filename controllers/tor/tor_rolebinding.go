@@ -31,11 +31,11 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+func (r *TorReconciler) reconcileRolebinding(ctx context.Context, tor *torv1alpha2.Tor) error {
 	log := log.FromContext(ctx)
 
-	roleName := onionService.RoleName()
-	namespace := onionService.Namespace
+	roleName := tor.RoleName()
+	namespace := tor.Namespace
 	if roleName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
@@ -47,7 +47,7 @@ func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onion
 	var roleBinding rbacv1.RoleBinding
 	err := r.Get(ctx, types.NamespacedName{Name: roleName, Namespace: namespace}, &roleBinding)
 
-	newRolebinding := torOnionRolebinding(onionService)
+	newRolebinding := torRolebinding(tor)
 	if errors.IsNotFound(err) {
 		err := r.Create(ctx, newRolebinding)
 		if err != nil {
@@ -58,8 +58,8 @@ func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onion
 		return err
 	}
 
-	if !metav1.IsControlledBy(&roleBinding.ObjectMeta, onionService) {
-		log.Info(fmt.Sprintf("RoleBinding %s already exists and is not controlled by %s", roleBinding.Name, onionService.Name))
+	if !metav1.IsControlledBy(&roleBinding.ObjectMeta, tor) {
+		log.Info(fmt.Sprintf("RoleBinding %s already exists and is not controlled by %s", roleBinding.Name, tor.Name))
 		return nil
 	}
 
@@ -74,28 +74,28 @@ func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onion
 	return nil
 }
 
-func torOnionRolebinding(onion *torv1alpha2.OnionService) *rbacv1.RoleBinding {
+func torRolebinding(tor *torv1alpha2.Tor) *rbacv1.RoleBinding {
 	return &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      onion.RoleName(),
-			Namespace: onion.Namespace,
+			Name:      tor.RoleName(),
+			Namespace: tor.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
+				*metav1.NewControllerRef(tor, schema.GroupVersionKind{
 					Group:   torv1alpha2.GroupVersion.Group,
 					Version: torv1alpha2.GroupVersion.Version,
-					Kind:    "OnionService",
+					Kind:    "Tor",
 				}),
 			},
 		},
 		Subjects: []rbacv1.Subject{
 			{
 				Kind: rbacv1.ServiceAccountKind,
-				Name: onion.ServiceAccountName(),
+				Name: tor.ServiceAccountName(),
 			},
 		},
 		RoleRef: rbacv1.RoleRef{
 			Kind: "Role",
-			Name: onion.RoleName(),
+			Name: tor.RoleName(),
 		},
 	}
 

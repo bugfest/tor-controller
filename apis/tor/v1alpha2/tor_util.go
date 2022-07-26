@@ -1,6 +1,10 @@
 package v1alpha2
 
-import "fmt"
+import (
+	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
+)
 
 const (
 	torDeploymentNameFmt     = "%s-tor-daemon"
@@ -47,6 +51,10 @@ func (s *Tor) ServiceName() string {
 	return fmt.Sprintf(torServiceNameFmt, s.Name)
 }
 
+func (s *Tor) SecretName() string {
+	return fmt.Sprintf(torSecretNameFmt, s.Name)
+}
+
 func (s *Tor) DeploymentLabels() map[string]string {
 	return s.ServiceSelector()
 }
@@ -59,29 +67,77 @@ func (s *Tor) ServiceAccountName() string {
 	return fmt.Sprintf(torServiceAccountNameFmt, s.Name)
 }
 
-func (p *TorGenericPortSpec) DefaultPort(port int32) TorGenericPortSpec {
-	var new TorGenericPortSpec = *p.DeepCopy()
-	if p.Port == int32(0) {
-		new.Port = port
+// func (p *TorGenericPortSpec) DefaultPort(port int32) TorGenericPortSpec {
+// 	var new TorGenericPortSpec = *p.DeepCopy()
+// 	if p.Port == int32(0) {
+// 		new.Port = port
+// 	}
+// 	return new
+// }
+
+// func (p *TorGenericPortSpec) DefaultEnable(enable bool) TorGenericPortSpec {
+// 	var new TorGenericPortSpec = *p.DeepCopy()
+// 	if enable {
+// 		p.Enable = true
+// 	}
+// 	return new
+// }
+
+// Set default vaules port all the Tor ports
+func (tor *Tor) SetTorDefaults() {
+	tor.Spec.Client.DNS.setPortsDefaults(53)
+	tor.Spec.Client.NATD.setPortsDefaults(8082)
+	tor.Spec.Client.HTTPTunnel.setPortsDefaults(8080)
+	tor.Spec.Client.Trans.setPortsDefaults(8081)
+	tor.Spec.Client.Socks.setPortsDefaults(9050)
+	tor.Spec.Control.setPortsDefaults(9051)
+	tor.Spec.Metrics.setPortsDefaults(9035)
+	tor.Spec.Server.setPortsDefaults(9999)
+	if tor.Spec.Client.TransProxyType == "" {
+		tor.Spec.Client.TransProxyType = "default"
 	}
-	return new
+	anyPortEnabled := false
+	// Loop thru available ports but metrics
+	for _, enabled := range []bool{
+		tor.Spec.Client.DNS.Enable,
+		tor.Spec.Client.NATD.Enable,
+		tor.Spec.Client.HTTPTunnel.Enable,
+		tor.Spec.Client.Trans.Enable,
+		tor.Spec.Client.Socks.Enable,
+		tor.Spec.Server.Enable,
+	} {
+		if enabled {
+			anyPortEnabled = true
+		}
+	}
+	if !anyPortEnabled {
+		// if no client or server port is enabled, socks is the default
+		tor.Spec.Client.Socks.Enable = true
+	}
 }
 
-func (p *TorGenericPortSpec) DefaultEnable(enable bool) TorGenericPortSpec {
-	var new TorGenericPortSpec = *p.DeepCopy()
-	if enable {
-		p.Enable = true
+// Set default values for port number, address and policy
+func (torPort *TorGenericPortWithFlagSpec) setPortsDefaults(portDefault int32) {
+	defaultAddress := "0.0.0.0"
+	if torPort.Address == "" {
+		torPort.Address = defaultAddress
 	}
-	return new
+	if len(torPort.Policy) == 0 {
+		torPort.Policy = []string{"accept 0.0.0.0"}
+	}
+	if torPort.Port == 0 {
+		torPort.Port = portDefault
+	}
 }
 
+// Retrieves an array of TorGenericPortDef with their protocols and port details
 func (s *Tor) GetAllPorts() []TorGenericPortDef {
 	var ports = []TorGenericPortDef{}
 
 	// Control
 	ports = append(ports, TorGenericPortDef{Name: "control",
 		Protocol: "TCP",
-		Port:     s.Spec.Control.TorGenericPortSpec.DefaultPort(9051)},
+		Port:     s.Spec.Control.TorGenericPortSpec},
 	)
 
 	// Metrics
@@ -103,18 +159,12 @@ func (s *Tor) GetAllPorts() []TorGenericPortDef {
 	)
 	ports = append(ports, TorGenericPortDef{Name: "httptunnel",
 		Protocol: "TCP",
-		Port:     s.Spec.Client.HTTPtunnel.TorGenericPortSpec},
+		Port:     s.Spec.Client.HTTPTunnel.TorGenericPortSpec},
 	)
 	ports = append(ports, TorGenericPortDef{Name: "natd",
 		Protocol: "TCP",
 		Port:     s.Spec.Client.NATD.TorGenericPortSpec},
 	)
-
-	// socks always default
-	s.Spec.Client.Socks.TorGenericPortSpec.Enable = true
-	if s.Spec.Client.Socks.TorGenericPortSpec.Port == 0 {
-		s.Spec.Client.Socks.TorGenericPortSpec.Port = 9050
-	}
 	ports = append(ports, TorGenericPortDef{Name: "socks",
 		Protocol: "TCP",
 		Port:     s.Spec.Client.Socks.TorGenericPortSpec},
@@ -125,4 +175,15 @@ func (s *Tor) GetAllPorts() []TorGenericPortDef {
 	)
 
 	return ports
+}
+
+func (s *Tor) PodTemplate() corev1.PodTemplateSpec {
+	return corev1.PodTemplateSpec{
+		ObjectMeta: s.Spec.Template.ObjectMeta,
+		Spec:       s.Spec.Template.Spec,
+	}
+}
+
+func (s *Tor) Resources() corev1.ResourceRequirements {
+	return s.Spec.Template.Resources
 }

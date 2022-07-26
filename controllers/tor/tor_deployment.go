@@ -91,6 +91,7 @@ func torDeployment(tor *torv1alpha2.Tor, projectConfig configv2.ProjectConfig) *
 	}
 
 	torConfigMountDir := "/run/tor"
+
 	torVolumeMounts := []corev1.VolumeMount{
 		{
 			Name:      torConfigVolume,
@@ -100,7 +101,7 @@ func torDeployment(tor *torv1alpha2.Tor, projectConfig configv2.ProjectConfig) *
 
 	torArgs := append(
 		[]string{"-f", "/run/tor/torfile"},
-		tor.Spec.Args...,
+		tor.Spec.ExtraArgs...,
 	)
 
 	volumes := []corev1.Volume{
@@ -120,6 +121,60 @@ func torDeployment(tor *torv1alpha2.Tor, projectConfig configv2.ProjectConfig) *
 		},
 	}
 
+	for i, ConfigMapKeyRef := range tor.Spec.ConfigMapKeyRef {
+
+		volumeName := fmt.Sprintf("custom-%d", i)
+		fileName := fmt.Sprintf("custom-%d.conf", i)
+
+		volumes = append(volumes, corev1.Volume{
+			Name: volumeName,
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: ConfigMapKeyRef.LocalObjectReference,
+					Items: []corev1.KeyToPath{
+						{
+							Key:  ConfigMapKeyRef.Key,
+							Path: fileName,
+						},
+					},
+				},
+			},
+		})
+
+		torVolumeMounts = append(torVolumeMounts, corev1.VolumeMount{
+			Name:      volumeName,
+			MountPath: fmt.Sprintf("/config/%s", volumeName),
+		})
+
+	}
+
+	// Fetch Pod Template
+	podTemplate := tor.PodTemplate()
+
+	// Add Labels to template
+	if podTemplate.ObjectMeta.Labels == nil {
+		// Set deployment labels
+		podTemplate.ObjectMeta.Labels = tor.DeploymentLabels()
+	} else {
+		// Add tor labels to existing template labels
+		for k, v := range tor.DeploymentLabels() {
+			// TODO: should we throw an error if a label was already set?
+			podTemplate.ObjectMeta.Labels[k] = v
+		}
+	}
+
+	podTemplate.Spec.ServiceAccountName = tor.ServiceAccountName()
+	podTemplate.Spec.Volumes = append(podTemplate.Spec.Volumes, volumes...)
+	podTemplate.Spec.Containers = append(podTemplate.Spec.Containers, corev1.Container{
+		Name:            "tor",
+		Image:           projectConfig.TorDaemon.Image,
+		Args:            torArgs,
+		ImagePullPolicy: corev1.PullAlways,
+		VolumeMounts:    torVolumeMounts,
+		Ports:           getTorContainerPortList(tor),
+		Resources:       tor.Resources(),
+	})
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      tor.DeploymentName(),
@@ -137,25 +192,7 @@ func torDeployment(tor *torv1alpha2.Tor, projectConfig configv2.ProjectConfig) *
 				MatchLabels: tor.DeploymentLabels(),
 			},
 			Replicas: &tor.Spec.Replicas,
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: tor.DeploymentLabels(),
-				},
-				Spec: corev1.PodSpec{
-					// ServiceAccountName: tor.ServiceAccountName(),
-					Containers: []corev1.Container{
-						{
-							Name:            "tor",
-							Image:           projectConfig.TorDaemon.Image,
-							Args:            torArgs,
-							ImagePullPolicy: corev1.PullAlways,
-							VolumeMounts:    torVolumeMounts,
-							Ports:           getTorContainerPortList(tor),
-						},
-					},
-					Volumes: volumes,
-				},
-			},
+			Template: podTemplate,
 		},
 	}
 }

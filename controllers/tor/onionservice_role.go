@@ -47,7 +47,7 @@ func (r *OnionServiceReconciler) reconcileRole(ctx context.Context, onionService
 	var role rbacv1.Role
 	err := r.Get(ctx, types.NamespacedName{Name: roleName, Namespace: namespace}, &role)
 
-	newRole := torRole(onionService)
+	newRole := torOnionRole(onionService)
 	if errors.IsNotFound(err) {
 		err := r.Create(ctx, newRole)
 		if err != nil {
@@ -74,7 +74,7 @@ func (r *OnionServiceReconciler) reconcileRole(ctx context.Context, onionService
 	return nil
 }
 
-func torRole(onion *torv1alpha2.OnionService) *rbacv1.Role {
+func torOnionRole(onion *torv1alpha2.OnionService) *rbacv1.Role {
 	return &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      onion.RoleName(),

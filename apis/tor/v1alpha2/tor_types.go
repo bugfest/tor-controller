@@ -17,42 +17,73 @@ limitations under the License.
 package v1alpha2
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+type TorPodTemplate struct {
+	// Metadata of the pods created from this template.
+	// +optional
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	// Spec defines the behavior of a pod.
+	// +optional
+	Spec corev1.PodSpec `json:"spec,omitempty"`
+
+	// Default resources for containers
+	// +optional
+	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,8,opt,name=resources"`
+}
 
 // TorSpec defines the desired state of Tor
 type TorSpec struct {
 
-	// Replicas
+	// Replicas.
 	// +kubebuilder:default:=1
 	Replicas int32 `json:"replicas,omitempty"`
 
-	// Client
+	// Template describes the pods that will be created.
+	// +optional
+	Template TorPodTemplate `json:"template,omitempty"`
+
+	// Client type. Enabled by default if server options are not set.
+	// +optional
 	Client TorClientSpec `json:"client,omitempty"`
 
-	// Server
+	// Server (ORPort)
 	// +optional
 	Server TorServerSpec `json:"server,omitempty"`
 
-	// Control
+	// Control. Enabled by default.
 	// +optional
 	Control TorControlSpec `json:"control,omitempty"`
 
-	// Metrics
+	// TODO: Secrets to be used as Control Port HashedControlPassword.
+	// If not specified one will be created automatically.
 	// +optional
-	Metrics TorMetricsSpec `json:"metrics,omitempty"`
+	// ControlSecretRef []corev1.SecretKeySelector `json:"ControlSecretRef,omitempty"`
 
+	// Metrics. Enabled by default.
+	// +optional
+	Metrics TorGenericPortWithFlagSpec `json:"metrics,omitempty"`
+
+	// Create service monitor.
 	// +optional
 	// +kubebuilder:default:=false
 	ServiceMonitor bool `json:"serviceMonitor,omitempty"`
 
-	// Other options
+	// Custom/advanced options.
 	// Tor latest man page (asciidoc): https://gitlab.torproject.org/tpo/core/tor/-/blob/main/doc/man/tor.1.txt
 	// +optional
 	Config string `json:"config,omitempty"`
 
+	// Custom/advanced options read from a ConfigMaps.
 	// +optional
-	Args []string `json:"args,omitempty"`
+	ConfigMapKeyRef []corev1.ConfigMapKeySelector `json:"configMapKeyRef,omitempty"`
+
+	// Extra arguments to pass Tor's executable
+	// +optional
+	ExtraArgs []string `json:"extraArgs,omitempty"`
 }
 
 // TorStatus defines the observed state of Tor
@@ -105,7 +136,7 @@ type TorClientSpec struct {
 
 	// HTTPTunnelPort [address:]port|auto [isolation flags]
 	// +optional
-	HTTPtunnel TorGenericPortWithFlagSpec `json:"httptunnel,omitempty"`
+	HTTPTunnel TorGenericPortWithFlagSpec `json:"httptunnel,omitempty"`
 
 	// TransPort [address:]port|auto [isolation flags]
 	// +optional
@@ -132,6 +163,11 @@ type TorGenericPortSpec struct {
 type TorGenericPortWithFlagSpec struct {
 	TorGenericPortSpec `json:",inline"`
 	Flags              []string `json:"flags,omitempty"`
+
+	// Policy [address:]port|unix:path|auto [flags]
+	// default: accept 0.0.0.0
+	// +optional
+	Policy []string `json:"policy,omitempty"`
 }
 
 type TorServerSpec struct {
@@ -139,17 +175,21 @@ type TorServerSpec struct {
 }
 
 type TorControlSpec struct {
-	TorGenericPortSpec `json:",inline"`
-}
-
-type TorMetricsSpec struct {
 	TorGenericPortWithFlagSpec `json:",inline"`
 
-	// MetricsPortPolicy [address:]port|unix:path|auto [flags]
+	// Allowed control passwords as string
 	// +optional
-	// +kubebuilder:default:="accept 0.0.0.0/0"
-	Policy string `json:"policy,omitempty"`
+	Secret []string `json:"secret,omitempty"`
+
+	// Allowed Control passwords as Secret object references
+	// Reference to a key of a secret containing the hashed password
+	// +optional
+	SecretRef []corev1.SecretKeySelector `json:"secretRef,omitempty"`
 }
+
+// type TorMetricsSpec struct {
+// 	TorGenericPortWithFlagSpec `json:",inline"`
+// }
 
 type TorGenericPortDef struct {
 	Name     string
