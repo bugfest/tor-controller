@@ -118,12 +118,12 @@ func (tor *Tor) SetTorDefaults() {
 
 // Set default values for port number, address and policy
 func (torPort *TorGenericPortWithFlagSpec) setPortsDefaults(portDefault int32) {
-	defaultAddress := "0.0.0.0"
-	if torPort.Address == "" {
+	defaultAddress := []string{"0.0.0.0", "::"}
+	if len(torPort.Address) == 0 {
 		torPort.Address = defaultAddress
 	}
 	if len(torPort.Policy) == 0 {
-		torPort.Policy = []string{"accept 0.0.0.0"}
+		torPort.Policy = []string{"accept 0.0.0.0/0", "accept ::/0"}
 	}
 	if torPort.Port == 0 {
 		torPort.Port = portDefault

@@ -156,8 +156,8 @@ type TorGenericPortSpec struct {
 	Port int32 `json:"port,omitempty"`
 
 	// +optional
-	// +kubebuilder:default:="0.0.0.0"
-	Address string `json:"address,omitempty"`
+	// +kubebuilder:default:={"0.0.0.0","::"}
+	Address []string `json:"address,omitempty"`
 }
 
 type TorGenericPortWithFlagSpec struct {
@@ -165,7 +165,7 @@ type TorGenericPortWithFlagSpec struct {
 	Flags              []string `json:"flags,omitempty"`
 
 	// Policy [address:]port|unix:path|auto [flags]
-	// default: accept 0.0.0.0
+	// +kubebuilder:default:={"accept 0.0.0.0/0","accept ::/0"}
 	// +optional
 	Policy []string `json:"policy,omitempty"`
 }

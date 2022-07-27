@@ -39,50 +39,64 @@ const torConfigFormat = `# Config automatically generated
 
 {{- if .Tor.Spec.Client.DNS.Enable }}
 # Client:DNS
-DNSPort {{ .Tor.Spec.Client.DNS.Address }}:{{ .Tor.Spec.Client.DNS.Port }} {{ StringsJoin .Tor.Spec.Client.DNS.Flags "," }}
-{{ end }}
+{{- range $idx, $addr := .Tor.Spec.Client.DNS.Address }}
++DNSPort {{ $addr }}:{{ $.Tor.Spec.Client.DNS.Port }} {{ StringsJoin $.Tor.Spec.Client.DNS.Flags "," }}
+{{- end }}
+{{- end }}
 {{- if .Tor.Spec.Client.NATD.Enable }}
 # Client:NATD
-NATDPort {{ .Tor.Spec.Client.NATD.Address }}:{{ .Tor.Spec.Client.NATD.Port }} {{ StringsJoin .Tor.Spec.Client.NATD.Flags "," }}
-{{ end }}
+{{- range $idx, $addr := .Tor.Spec.Client.NATD.Address }}
++NATDPort {{ $addr }}:{{ $.Tor.Spec.Client.NATD.Port }} {{ StringsJoin $.Tor.Spec.Client.NATD.Flags "," }}
+{{- end }}
+{{- end }}
 {{- if .Tor.Spec.Client.HTTPTunnel.Enable }}
 # Client:HTTPTunnel
-HTTPTunnelPort {{ .Tor.Spec.Client.HTTPTunnel.Address }}:{{ .Tor.Spec.Client.HTTPTunnel.Port }} {{ StringsJoin .Tor.Spec.Client.HTTPTunnel.Flags "," }}
-{{ end }}
+{{- range $idx, $addr := .Tor.Spec.Client.HTTPTunnel.Address }}
++HTTPTunnelPort {{ $addr }}:{{ $.Tor.Spec.Client.HTTPTunnel.Port }} {{ StringsJoin $.Tor.Spec.Client.HTTPTunnel.Flags "," }}
+{{- end }}
+{{- end }}
 {{- if .Tor.Spec.Client.Trans.Enable }}
 # Client:Trans
-TransPort {{ .Tor.Spec.Client.Trans.Address }}:{{ .Tor.Spec.Client.Trans.Port }} {{ StringsJoin .Tor.Spec.Client.Trans.Flags "," }}
-TransProxyType {{ .Tor.Spec.Client.TransProxyType }}
-{{ end }}
+{{- range $idx, $addr := .Tor.Spec.Client.Trans.Address }}
++TransPort {{ $addr }}:{{ $.Tor.Spec.Client.Trans.Port }} {{ StringsJoin $.Tor.Spec.Client.Trans.Flags "," }}
+{{- end }}
++TransProxyType {{ .Tor.Spec.Client.TransProxyType }}
+{{- end }}
 {{- if .Tor.Spec.Client.Socks.Enable }}
 # Client:Socks
-SocksPort {{ .Tor.Spec.Client.Socks.Address }}:{{ .Tor.Spec.Client.Socks.Port }} {{ StringsJoin .Tor.Spec.Client.Socks.Flags "," }}
-SocksPolicy {{ StringsJoin .Tor.Spec.Client.Socks.Policy "," }}
-{{ end }}
+{{- range $idx, $addr := .Tor.Spec.Client.Socks.Address }}
++SocksPort {{ $addr }}:{{ $.Tor.Spec.Client.Socks.Port }} {{ StringsJoin $.Tor.Spec.Client.Socks.Flags "," }}
+{{- end }}
++SocksPolicy {{ StringsJoin .Tor.Spec.Client.Socks.Policy "," }}
+{{- end }}
 
 {{- if .Tor.Spec.Control.Enable }}
 # Control
-ControlPort {{ .Tor.Spec.Control.Address }}:{{ .Tor.Spec.Control.Port }} {{ StringsJoin .Tor.Spec.Control.Flags "," }}
+{{- range $idx, $addr := .Tor.Spec.Control.Address }}
++ControlPort {{ $addr }}:{{ $.Tor.Spec.Control.Port }} {{ StringsJoin $.Tor.Spec.Control.Flags "," }}
+{{- end }}
 {{- range .ControlHashedPasswords }}
-HashedControlPassword {{ . }}
-{{ end }}
-{{ end }}
++HashedControlPassword {{ . }}
+{{- end }}
+{{- end }}
 
 {{- if .Tor.Spec.Metrics.Enable }}
 # Metrics
-MetricsPort {{ .Tor.Spec.Metrics.Address }}:{{ .Tor.Spec.Metrics.Port }} {{ StringsJoin .Tor.Spec.Metrics.Flags "," }}
-MetricsPortPolicy {{ StringsJoin .Tor.Spec.Metrics.Policy "," }}
-{{ end }}
+{{- range $idx, $addr := .Tor.Spec.Metrics.Address }}
++MetricsPort {{ $addr }}:{{ $.Tor.Spec.Metrics.Port }} {{ StringsJoin $.Tor.Spec.Metrics.Flags "," }}
+{{- end }}
++MetricsPortPolicy {{ StringsJoin .Tor.Spec.Metrics.Policy "," }}
+{{- end }}
 
 {{- if ne .Tor.Spec.Config "" }}
 # Tor Custom config
 {{ .Tor.Spec.Config }}
-{{ end }}
+{{- end }}
 
 {{- if ne (len .Tor.Spec.ConfigMapKeyRef) 0 }}
 # Include Custom Configs mounted by ConfigMapKeyRef
 %include /config/*/*.conf
-{{ end }}
+{{- end }}
 `
 
 type torConfig struct {

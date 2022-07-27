@@ -22725,8 +22725,12 @@ spec:
                     description: DNSPort [address:]port|auto [isolation flags]
                     properties:
                       address:
-                        default: 0.0.0.0
-                        type: string
+                        default:
+                        - 0.0.0.0
+                        - '::'
+                        items:
+                          type: string
+                        type: array
                       enable:
                         type: boolean
                       flags:
@@ -22734,8 +22738,10 @@ spec:
                           type: string
                         type: array
                       policy:
-                        description: 'Policy [address:]port|unix:path|auto [flags]
-                          default: accept 0.0.0.0'
+                        default:
+                        - accept 0.0.0.0/0
+                        - accept ::/0
+                        description: Policy [address:]port|unix:path|auto [flags]
                         items:
                           type: string
                         type: array
@@ -22748,8 +22754,12 @@ spec:
                     description: HTTPTunnelPort [address:]port|auto [isolation flags]
                     properties:
                       address:
-                        default: 0.0.0.0
-                        type: string
+                        default:
+                        - 0.0.0.0
+                        - '::'
+                        items:
+                          type: string
+                        type: array
                       enable:
                         type: boolean
                       flags:
@@ -22757,8 +22767,10 @@ spec:
                           type: string
                         type: array
                       policy:
-                        description: 'Policy [address:]port|unix:path|auto [flags]
-                          default: accept 0.0.0.0'
+                        default:
+                        - accept 0.0.0.0/0
+                        - accept ::/0
+                        description: Policy [address:]port|unix:path|auto [flags]
                         items:
                           type: string
                         type: array
@@ -22771,8 +22783,12 @@ spec:
                     description: NATDPort [address:]port|auto [isolation flags]
                     properties:
                       address:
-                        default: 0.0.0.0
-                        type: string
+                        default:
+                        - 0.0.0.0
+                        - '::'
+                        items:
+                          type: string
+                        type: array
                       enable:
                         type: boolean
                       flags:
@@ -22780,8 +22796,10 @@ spec:
                           type: string
                         type: array
                       policy:
-                        description: 'Policy [address:]port|unix:path|auto [flags]
-                          default: accept 0.0.0.0'
+                        default:
+                        - accept 0.0.0.0/0
+                        - accept ::/0
+                        description: Policy [address:]port|unix:path|auto [flags]
                         items:
                           type: string
                         type: array
@@ -22795,8 +22813,12 @@ spec:
                       flags]
                     properties:
                       address:
-                        default: 0.0.0.0
-                        type: string
+                        default:
+                        - 0.0.0.0
+                        - '::'
+                        items:
+                          type: string
+                        type: array
                       enable:
                         type: boolean
                       flags:
@@ -22804,8 +22826,10 @@ spec:
                           type: string
                         type: array
                       policy:
-                        description: 'Policy [address:]port|unix:path|auto [flags]
-                          default: accept 0.0.0.0'
+                        default:
+                        - accept 0.0.0.0/0
+                        - accept ::/0
+                        description: Policy [address:]port|unix:path|auto [flags]
                         items:
                           type: string
                         type: array
@@ -22818,8 +22842,12 @@ spec:
                     description: TransPort [address:]port|auto [isolation flags]
                     properties:
                       address:
-                        default: 0.0.0.0
-                        type: string
+                        default:
+                        - 0.0.0.0
+                        - '::'
+                        items:
+                          type: string
+                        type: array
                       enable:
                         type: boolean
                       flags:
@@ -22827,8 +22855,10 @@ spec:
                           type: string
                         type: array
                       policy:
-                        description: 'Policy [address:]port|unix:path|auto [flags]
-                          default: accept 0.0.0.0'
+                        default:
+                        - accept 0.0.0.0/0
+                        - accept ::/0
+                        description: Policy [address:]port|unix:path|auto [flags]
                         items:
                           type: string
                         type: array
@@ -22869,8 +22899,12 @@ spec:
                 description: Control. Enabled by default.
                 properties:
                   address:
-                    default: 0.0.0.0
-                    type: string
+                    default:
+                    - 0.0.0.0
+                    - '::'
+                    items:
+                      type: string
+                    type: array
                   enable:
                     type: boolean
                   flags:
@@ -22878,8 +22912,10 @@ spec:
                       type: string
                     type: array
                   policy:
-                    description: 'Policy [address:]port|unix:path|auto [flags] default:
-                      accept 0.0.0.0'
+                    default:
+                    - accept 0.0.0.0/0
+                    - accept ::/0
+                    description: Policy [address:]port|unix:path|auto [flags]
                     items:
                       type: string
                     type: array
@@ -22924,8 +22960,12 @@ spec:
                 description: Metrics. Enabled by default.
                 properties:
                   address:
-                    default: 0.0.0.0
-                    type: string
+                    default:
+                    - 0.0.0.0
+                    - '::'
+                    items:
+                      type: string
+                    type: array
                   enable:
                     type: boolean
                   flags:
@@ -22933,8 +22973,10 @@ spec:
                       type: string
                     type: array
                   policy:
-                    description: 'Policy [address:]port|unix:path|auto [flags] default:
-                      accept 0.0.0.0'
+                    default:
+                    - accept 0.0.0.0/0
+                    - accept ::/0
+                    description: Policy [address:]port|unix:path|auto [flags]
                     items:
                       type: string
                     type: array
@@ -22952,8 +22994,12 @@ spec:
                 description: Server (ORPort)
                 properties:
                   address:
-                    default: 0.0.0.0
-                    type: string
+                    default:
+                    - 0.0.0.0
+                    - '::'
+                    items:
+                      type: string
+                    type: array
                   enable:
                     type: boolean
                   flags:
@@ -22961,8 +23007,10 @@ spec:
                       type: string
                     type: array
                   policy:
-                    description: 'Policy [address:]port|unix:path|auto [flags] default:
-                      accept 0.0.0.0'
+                    default:
+                    - accept 0.0.0.0/0
+                    - accept ::/0
+                    description: Policy [address:]port|unix:path|auto [flags]
                     items:
                       type: string
                     type: array

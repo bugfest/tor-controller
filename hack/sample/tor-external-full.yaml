@@ -7,8 +7,9 @@ spec:
     socks:
       enable: true
       policy:
-        - "accept 1.2.3.4"
-        - "accept 5.6.7.8"
+        - "accept 1.2.3.4/32"
+        - "accept 5.6.7.0/24"
+        - "accept fe80::/0"
       flags:
         - IsolateClientAddr
         - IsolateSOCKSAuth
