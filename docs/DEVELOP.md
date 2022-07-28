@@ -89,6 +89,8 @@ To deploy in a test cluster
     helm upgrade --install \
         --set image.repository=onions:5000/tor-controller \
         --set image.tag=latest \
+        --set daemon.image.repository=onions:5000/tor-daemon \
+        --set daemon.image.tag=latest \
         --set manager.image.repository=onions:5000/tor-daemon-manager \
         --set manager.image.tag=latest \
         --set onionbalance.image.repository=onions:5000/tor-onionbalance-manager \

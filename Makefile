@@ -78,10 +78,10 @@ rundev: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go -no-leader-elect --config config/manager/controller_manager_config_dev.yaml
 
 .PHONY: docker-build-all
-docker-build-all: docker-build-daemon docker-build-daemon-manager docker-build-onionbalance-manager
+docker-build-all: docker-build docker-build-daemon docker-build-daemon-manager docker-build-onionbalance-manager
 
 .PHONY: docker-push-all
-docker-push-all: docker-push-daemon docker-push-daemon-manager docker-push-onionbalance-manager
+docker-push-all: docker-push docker-push-daemon docker-push-daemon-manager docker-push-onionbalance-manager
 
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
@@ -202,7 +202,7 @@ helm-readme:
 
 .PHONE: changelog
 changelog:
-	docker run -t -u ${UID} -v "${PWD}":/app/ orhunp/git-cliff:latest -c .cliff.toml -o CHANGELOG.md
+	docker run -t -v "${PWD}":/app/ orhunp/git-cliff:latest -c .cliff.toml -o CHANGELOG.md
 
 .PHONE: release
 release: installer changelog helm
