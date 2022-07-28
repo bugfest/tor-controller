@@ -202,7 +202,7 @@ helm-readme:
 
 .PHONE: changelog
 changelog:
-	docker run -t -v "${PWD}":/app/:ro orhunp/git-cliff:latest -c .cliff.toml > CHANGELOG.md
+	docker run -t -u ${UID} -v "${PWD}":/app/ orhunp/git-cliff:latest -c .cliff.toml -o CHANGELOG.md
 
 .PHONE: release
 release: installer changelog helm
