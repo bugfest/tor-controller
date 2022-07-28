@@ -92,14 +92,14 @@ func torRole(tor *torv1alpha2.Tor) *rbacv1.Role {
 				APIGroups: []string{torv1alpha2.GroupVersion.Group},
 				Verbs:     []string{"get", "list", "watch"},
 				Resources: []string{
-					"tor",
+					"tors",
 				},
 			},
 			{
 				APIGroups: []string{torv1alpha2.GroupVersion.Group},
 				Verbs:     []string{"update", "patch"},
 				Resources: []string{
-					"tor/status",
+					"tors/status",
 				},
 			},
 			{
