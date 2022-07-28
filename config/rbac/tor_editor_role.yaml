@@ -1,0 +1,24 @@
+# permissions for end users to edit tors.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tor-editor-role
+rules:
+- apiGroups:
+  - tor.k8s.torproject.org
+  resources:
+  - tors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tor.k8s.torproject.org
+  resources:
+  - tors/status
+  verbs:
+  - get

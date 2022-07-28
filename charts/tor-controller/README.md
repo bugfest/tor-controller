@@ -1,6 +1,6 @@
 # tor-controller
 
-![Version: 0.1.5](https://img.shields.io/badge/Version-0.1.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.6.0](https://img.shields.io/badge/AppVersion-0.6.0-informational?style=flat-square)
+![Version: 0.1.6](https://img.shields.io/badge/Version-0.1.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.6.1](https://img.shields.io/badge/AppVersion-0.6.1-informational?style=flat-square)
 
 Tor hidden services controller for kubernetes
 
@@ -9,15 +9,17 @@ Tor hidden services controller for kubernetes
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
+| daemon.image | object | `{"pullPolicy":"Always","repository":"quay.io/bugfest/tor-daemon","tag":""}` | tor-daemon image, it runs Tor client |
+| daemon.image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | fullnameOverride | string | `""` |  |
 | image | object | `{"pullPolicy":"Always","repository":"quay.io/bugfest/tor-controller","tag":""}` | tor-controller image, it watches onionservices objects |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` |  |
-| manager.image | object | `{"pullPolicy":"Always","repository":"quay.io/bugfest/tor-daemon-manager","tag":""}` | tor-controller-manager image, it runs Tor client |
+| manager.image | object | `{"pullPolicy":"Always","repository":"quay.io/bugfest/tor-daemon-manager","tag":""}` | tor-daemon-manager image, it runs Tor client with manager |
 | manager.image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
-| onionbalance.image | object | `{"pullPolicy":"Always","repository":"quay.io/bugfest/tor-onionbalance-manager","tag":""}` | tor-controller-manager image, it runs Tor client |
+| onionbalance.image | object | `{"pullPolicy":"Always","repository":"quay.io/bugfest/tor-onionbalance-manager","tag":""}` | tor-onionbalance-manager image, it runs Tor client |
 | onionbalance.image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | podAnnotations | object | `{}` |  |
 | podSecurityContext.runAsNonRoot | bool | `true` |  |

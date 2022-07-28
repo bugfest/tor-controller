@@ -31,11 +31,11 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+func (r *TorReconciler) reconcileRole(ctx context.Context, tor *torv1alpha2.Tor) error {
 	log := log.FromContext(ctx)
 
-	roleName := onionService.RoleName()
-	namespace := onionService.Namespace
+	roleName := tor.RoleName()
+	namespace := tor.Namespace
 	if roleName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
@@ -44,59 +44,69 @@ func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onion
 		return nil
 	}
 
-	var roleBinding rbacv1.RoleBinding
-	err := r.Get(ctx, types.NamespacedName{Name: roleName, Namespace: namespace}, &roleBinding)
+	var role rbacv1.Role
+	err := r.Get(ctx, types.NamespacedName{Name: roleName, Namespace: namespace}, &role)
 
-	newRolebinding := torOnionRolebinding(onionService)
+	newRole := torRole(tor)
 	if errors.IsNotFound(err) {
-		err := r.Create(ctx, newRolebinding)
+		err := r.Create(ctx, newRole)
 		if err != nil {
 			return err
 		}
-		roleBinding = *newRolebinding
+		role = *newRole
 	} else if err != nil {
 		return err
 	}
 
-	if !metav1.IsControlledBy(&roleBinding.ObjectMeta, onionService) {
-		log.Info(fmt.Sprintf("RoleBinding %s already exists and is not controlled by %s", roleBinding.Name, onionService.Name))
+	if !metav1.IsControlledBy(&role.ObjectMeta, tor) {
+		log.Info(fmt.Sprintf("Role %s already exists and is not controlled by %s", role.Name, tor.Name))
 		return nil
 	}
 
-	// If the rolebinding specs don't match, update
-	if !rolebindingEqual(&roleBinding, newRolebinding) {
-		err := r.Update(ctx, newRolebinding)
+	// If the role specs don't match, update
+	if !roleEqual(&role, newRole) {
+		err := r.Update(ctx, newRole)
 		if err != nil {
-			return fmt.Errorf("filed to update Rolebinding %#v", newRolebinding)
+			return fmt.Errorf("filed to update Role %#v", newRole)
 		}
 	}
 
 	return nil
 }
 
-func torOnionRolebinding(onion *torv1alpha2.OnionService) *rbacv1.RoleBinding {
-	return &rbacv1.RoleBinding{
+func torRole(tor *torv1alpha2.Tor) *rbacv1.Role {
+	return &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      onion.RoleName(),
-			Namespace: onion.Namespace,
+			Name:      tor.RoleName(),
+			Namespace: tor.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
+				*metav1.NewControllerRef(tor, schema.GroupVersionKind{
 					Group:   torv1alpha2.GroupVersion.Group,
 					Version: torv1alpha2.GroupVersion.Version,
-					Kind:    "OnionService",
+					Kind:    "Tor",
 				}),
 			},
 		},
-		Subjects: []rbacv1.Subject{
+		Rules: []rbacv1.PolicyRule{
 			{
-				Kind: rbacv1.ServiceAccountKind,
-				Name: onion.ServiceAccountName(),
+				APIGroups: []string{torv1alpha2.GroupVersion.Group},
+				Verbs:     []string{"get", "list", "watch"},
+				Resources: []string{
+					"tors",
+				},
+			},
+			{
+				APIGroups: []string{torv1alpha2.GroupVersion.Group},
+				Verbs:     []string{"update", "patch"},
+				Resources: []string{
+					"tors/status",
+				},
+			},
+			{
+				APIGroups: []string{""},
+				Verbs:     []string{"create", "update", "patch"},
+				Resources: []string{"events"},
 			},
 		},
-		RoleRef: rbacv1.RoleRef{
-			Kind: "Role",
-			Name: onion.RoleName(),
-		},
 	}
-
 }

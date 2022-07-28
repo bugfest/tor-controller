@@ -20,6 +20,7 @@ package tor
 
 import (
 	"fmt"
+	"strings"
 
 	// We use "github.com/cretz/bine/torutil/ed25519" instaad of "crypto/ed25519"
 	// More info: https://github.com/cathugger/mkp224o/issues/53#issuecomment-874621551
@@ -31,6 +32,11 @@ import (
 	// public key. The private keys in the Bittorrent document you are using are the 64
 	// byte result of the hash (or possibly just 64 random bytes that are used the same
 	// way as the hash result).
+
+	"crypto/rand"
+	"crypto/sha1"
+	"encoding/hex"
+
 	torutil "github.com/cretz/bine/torutil"
 	ed25519 "github.com/cretz/bine/torutil/ed25519"
 )
@@ -39,6 +45,7 @@ const (
 	onionBalanceSecretVolume = "ob-secret"
 	privateKeyVolume         = "private-key"
 	torConfigVolume          = "tor-config"
+	torConfigExtraVolume     = "tor-config-extra"
 	obConfigVolume           = "ob-config"
 	onionBalanceConfigVolume = "onionbalance-config"
 )
@@ -108,3 +115,69 @@ func GenerateOnionV3FromKeys(publicKey ed25519.PublicKey, privateKey ed25519.Pri
 // 	return strings.ToLower(onionAddress)
 
 // }
+
+// Source: https://gitlab.torproject.org/tpo/core/tor/-/blob/main/src/app/main/main.c#L781
+// static void
+// do_hash_password(void) {
+//   char output[256];
+//   char key[S2K_RFC2440_SPECIFIER_LEN+DIGEST_LEN];
+//   crypto_rand(key, S2K_RFC2440_SPECIFIER_LEN-1);
+//   key[S2K_RFC2440_SPECIFIER_LEN-1] = (uint8_t)96; /* Hash 64 K of data. */
+//   secret_to_key_rfc2440(key+S2K_RFC2440_SPECIFIER_LEN, DIGEST_LEN,
+//                 get_options()->command_arg, strlen(get_options()->command_arg),
+//                 key);
+//   base16_encode(output, sizeof(output), key, sizeof(key));
+//   printf("16:%s\n",output);
+// }
+
+// Source: https://gitlab.torproject.org/tpo/core/tor/-/blob/main/src/lib/crypt_ops/crypto_s2k.h#L21
+// /** Length of RFC2440-style S2K specifier: the first 8 bytes are a salt, the
+//  * 9th describes how much iteration to do. */
+//  #define S2K_RFC2440_SPECIFIER_LEN 9
+//  void secret_to_key_rfc2440(
+// 	char *key_out, size_t key_out_len, const char *secret,
+// 	size_t secret_len, const char *s2k_specifier);
+
+// Source: https://gitlab.torproject.org/tpo/core/tor/-/blob/main/src/lib/defs/digest_sizes.h#L20
+// #define DIGEST_LEN 20
+
+func doHashPassword(in string) (string, error) {
+	const OUTPUT_LEN = 256
+	const S2K_RFC2440_SPECIFIER_LEN = 9
+	const DIGEST_LEN = 20
+	const ITERATIONS = 96
+	// 1) Generate S2K_RFC2440_SPECIFIER_LEN-1 random bytes
+	// 2) Set last key byte to 96
+	//
+	// out := make([]byte, DIGEST_LEN)
+	salt := make([]byte, S2K_RFC2440_SPECIFIER_LEN-1)
+	_, err := rand.Read(salt)
+	if err != nil {
+		return "", err
+	}
+
+	// Inspired by: https://stackoverflow.com/questions/48054399/get-the-hashed-tor-password-automated-in-python
+	EXPBIAS := 6
+	c := ITERATIONS
+	count := (16 + (c & 15)) << ((c >> 4) + EXPBIAS)
+	d := sha1.New()
+
+	inb := []byte(in)
+	tmp := append(salt[:S2K_RFC2440_SPECIFIER_LEN-1], inb...)
+	slen := len(tmp)
+
+	for count > 0 {
+		if count > slen {
+			d.Write(tmp)
+			count -= slen
+		} else {
+			d.Write(tmp[:count])
+			count = 0
+		}
+	}
+	return fmt.Sprintf("16:%s%s%s",
+		strings.ToUpper((hex.EncodeToString(salt))),
+		strings.ToUpper((hex.EncodeToString([]byte{ITERATIONS}))),
+		strings.ToUpper((hex.EncodeToString(d.Sum(nil)))),
+	), nil
+}

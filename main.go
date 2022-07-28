@@ -32,12 +32,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+
 	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
 	torv1alpha1 "github.com/bugfest/tor-controller/apis/tor/v1alpha1"
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 	torcontrollers "github.com/bugfest/tor-controller/controllers/tor"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -112,6 +113,15 @@ func main() {
 		ProjectConfig: ctrlConfig,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OnionBalancedService")
+		os.Exit(1)
+	}
+
+	if err = (&torcontrollers.TorReconciler{
+		Client:        mgr.GetClient(),
+		Scheme:        mgr.GetScheme(),
+		ProjectConfig: ctrlConfig,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Tor")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

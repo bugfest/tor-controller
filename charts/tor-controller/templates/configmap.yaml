@@ -16,6 +16,8 @@ data:
     leaderElection:
       leaderElect: true
       resourceName: 59806307.k8s.torproject.org
+    torDaemon:
+      image: "{{ .Values.daemon.image.repository }}:{{ .Values.daemon.image.tag | default .Chart.AppVersion }}"
     torDaemonManager:
       image: "{{ .Values.manager.image.repository }}:{{ .Values.manager.image.tag | default .Chart.AppVersion }}"
     torOnionbalanceManager:

@@ -32,11 +32,11 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileService(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+func (r *TorReconciler) reconcileService(ctx context.Context, tor *torv1alpha2.Tor) error {
 	log := log.FromContext(ctx)
 
-	serviceName := onionService.ServiceName()
-	namespace := onionService.Namespace
+	serviceName := tor.ServiceName()
+	namespace := tor.Namespace
 	if serviceName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
@@ -48,8 +48,14 @@ func (r *OnionServiceReconciler) reconcileService(ctx context.Context, onionServ
 	var service corev1.Service
 	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
-	newService := OnionServiceService(onionService)
+	newService := torService(tor)
 	if errors.IsNotFound(err) {
+
+		if len(newService.Spec.Ports) == 0 {
+			log.Info("No ports enabled, skipping service for this tor instance")
+			return nil
+		}
+
 		err := r.Create(ctx, newService)
 		if err != nil {
 			return err
@@ -59,8 +65,8 @@ func (r *OnionServiceReconciler) reconcileService(ctx context.Context, onionServ
 		return err
 	}
 
-	if !metav1.IsControlledBy(&service.ObjectMeta, onionService) {
-		log.Info(fmt.Sprintf("Service %s already exists and is not controller by %s", service.Name, onionService.Name))
+	if !metav1.IsControlledBy(&service.ObjectMeta, tor) {
+		log.Info(fmt.Sprintf("Service %s already exists and is not controller by %s", service.Name, tor.Name))
 		return nil
 	}
 
@@ -75,32 +81,40 @@ func (r *OnionServiceReconciler) reconcileService(ctx context.Context, onionServ
 	return nil
 }
 
-func OnionServiceService(onion *torv1alpha2.OnionService) *corev1.Service {
-	ports := []corev1.ServicePort{}
-	for _, r := range onion.Spec.Rules {
-		port := corev1.ServicePort{
-			Name:       r.Port.Name,
-			TargetPort: intstr.FromInt(int(r.Port.Number)),
-			Port:       r.Port.Number,
-		}
-		ports = append(ports, port)
-	}
-
+func torService(tor *torv1alpha2.Tor) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      onion.ServiceName(),
-			Namespace: onion.Namespace,
+			Name:      tor.ServiceName(),
+			Namespace: tor.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
+				*metav1.NewControllerRef(tor, schema.GroupVersionKind{
 					Group:   torv1alpha2.GroupVersion.Group,
 					Version: torv1alpha2.GroupVersion.Version,
-					Kind:    "OnionService",
+					Kind:    "Tor",
 				}),
 			},
 		},
 		Spec: corev1.ServiceSpec{
-			Selector: onion.ServiceSelector(),
-			Ports:    ports,
+			Selector: tor.ServiceSelector(),
+			Ports:    getTorServicePortList(tor),
 		},
 	}
+}
+
+func getTorServicePortList(tor *torv1alpha2.Tor) []corev1.ServicePort {
+	ports := []corev1.ServicePort{}
+
+	for _, r := range tor.GetAllPorts() {
+		if r.Port.Enable {
+			port := corev1.ServicePort{
+				Name:       r.Name,
+				TargetPort: intstr.FromInt(int(r.Port.Port)),
+				Port:       r.Port.Port,
+				Protocol:   corev1.Protocol(r.Protocol),
+			}
+			ports = append(ports, port)
+		}
+	}
+
+	return ports
 }

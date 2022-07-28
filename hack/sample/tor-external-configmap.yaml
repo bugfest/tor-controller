@@ -1,0 +1,24 @@
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: Tor
+metadata:
+  name: example-tor-instance
+spec:
+  configMapKeyRef:
+    # Will be mounted at /config/custom1/custom-1.conf
+    - name: example-tor-instance-extraconfig
+      key: config1.conf
+    # Will be mounted at /config/custom2/custom-2.conf
+    - name: example-tor-instance-extraconfig
+      key: config2.conf
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: example-tor-instance-extraconfig
+data:
+  config1.conf: |
+    # config test1
+  config2.conf: |
+    # config test2

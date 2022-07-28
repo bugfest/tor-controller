@@ -20,83 +20,88 @@ import (
 	"context"
 	"fmt"
 
-	rbacv1 "k8s.io/api/rbac/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onionService *torv1alpha2.OnionService) error {
+func (r *TorReconciler) reconcileMetricsService(ctx context.Context, tor *torv1alpha2.Tor) error {
 	log := log.FromContext(ctx)
 
-	roleName := onionService.RoleName()
-	namespace := onionService.Namespace
-	if roleName == "" {
+	serviceName := tor.ServiceMetricsName()
+	namespace := tor.Namespace
+	if serviceName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("role name must be specified"))
+		runtime.HandleError(fmt.Errorf("service name must be specified"))
 		return nil
 	}
 
-	var roleBinding rbacv1.RoleBinding
-	err := r.Get(ctx, types.NamespacedName{Name: roleName, Namespace: namespace}, &roleBinding)
+	var service corev1.Service
+	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
-	newRolebinding := torOnionRolebinding(onionService)
+	newService := torMetricsService(tor)
 	if errors.IsNotFound(err) {
-		err := r.Create(ctx, newRolebinding)
+
+		if !tor.Spec.Metrics.Enable {
+			log.Info("No metrics enabled, skipping metrics service for this tor instance")
+			return nil
+		}
+
+		err := r.Create(ctx, newService)
 		if err != nil {
 			return err
 		}
-		roleBinding = *newRolebinding
+		service = *newService
 	} else if err != nil {
 		return err
 	}
 
-	if !metav1.IsControlledBy(&roleBinding.ObjectMeta, onionService) {
-		log.Info(fmt.Sprintf("RoleBinding %s already exists and is not controlled by %s", roleBinding.Name, onionService.Name))
+	if !metav1.IsControlledBy(&service.ObjectMeta, tor) {
+		log.Info(fmt.Sprintf("Service %s already exists and is not controller by %s", service.Name, tor.Name))
 		return nil
 	}
 
-	// If the rolebinding specs don't match, update
-	if !rolebindingEqual(&roleBinding, newRolebinding) {
-		err := r.Update(ctx, newRolebinding)
+	// If the service specs don't match, update
+	if !serviceEqual(&service, newService) {
+		err := r.Update(ctx, newService)
 		if err != nil {
-			return fmt.Errorf("filed to update Rolebinding %#v", newRolebinding)
+			return fmt.Errorf("filed to update Service %#v", newService)
 		}
 	}
 
 	return nil
 }
 
-func torOnionRolebinding(onion *torv1alpha2.OnionService) *rbacv1.RoleBinding {
-	return &rbacv1.RoleBinding{
+func torMetricsService(onion *torv1alpha2.Tor) *corev1.Service {
+	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      onion.RoleName(),
+			Name:      onion.ServiceMetricsName(),
 			Namespace: onion.Namespace,
+			Labels:    onion.ServiceMetricsSelector(),
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(onion, schema.GroupVersionKind{
 					Group:   torv1alpha2.GroupVersion.Group,
 					Version: torv1alpha2.GroupVersion.Version,
-					Kind:    "OnionService",
+					Kind:    "Tor",
 				}),
 			},
 		},
-		Subjects: []rbacv1.Subject{
-			{
-				Kind: rbacv1.ServiceAccountKind,
-				Name: onion.ServiceAccountName(),
-			},
-		},
-		RoleRef: rbacv1.RoleRef{
-			Kind: "Role",
-			Name: onion.RoleName(),
+		Spec: corev1.ServiceSpec{
+			Selector: onion.ServiceSelector(),
+			Ports: []corev1.ServicePort{{
+				Name:       "metrics",
+				TargetPort: intstr.FromInt(9035),
+				Port:       9035,
+			}},
 		},
 	}
-
 }

@@ -12,8 +12,16 @@ image:
   # -- Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
+daemon:
+  # -- tor-daemon image, it runs Tor client
+  image:
+    repository: quay.io/bugfest/tor-daemon
+    pullPolicy: Always
+    # -- Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
 manager:
-  # -- tor-controller-manager image, it runs Tor client
+  # -- tor-daemon-manager image, it runs Tor client with manager
   image:
     repository: quay.io/bugfest/tor-daemon-manager
     pullPolicy: Always
@@ -21,7 +29,7 @@ manager:
     tag: ""
 
 onionbalance:
-  # -- tor-controller-manager image, it runs Tor client
+  # -- tor-onionbalance-manager image, it runs Tor client
   image:
     repository: quay.io/bugfest/tor-onionbalance-manager
     pullPolicy: Always

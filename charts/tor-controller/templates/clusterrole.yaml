@@ -5,17 +5,17 @@ metadata:
   name: {{ include "tor-controller.fullname" . }}-manager-role
 rules:
   - apiGroups:
-    - ""
+      - ""
     resources:
-    - configmaps
+      - configmaps
     verbs:
-    - create
-    - delete
-    - get
-    - list
-    - patch
-    - update
-    - watch
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
   - apiGroups:
       - ""
     resources:
@@ -61,13 +61,13 @@ rules:
       - update
       - watch
   - apiGroups:
-    - apiextensions.k8s.io
+      - apiextensions.k8s.io
     resources:
-    - customresourcedefinitions
+      - customresourcedefinitions
     verbs:
-    - get
-    - list
-    - watch
+      - get
+      - list
+      - watch
   - apiGroups:
       - apps
     resources:
@@ -81,17 +81,17 @@ rules:
       - update
       - watch
   - apiGroups:
-    - monitoring.coreos.com
+      - monitoring.coreos.com
     resources:
-    - servicemonitors
+      - servicemonitors
     verbs:
-    - create
-    - delete
-    - get
-    - list
-    - watch
-    - patch
-    - update
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
   - apiGroups:
       - rbac.authorization.k8s.io
     resources:
@@ -164,6 +164,32 @@ rules:
       - tor.k8s.torproject.org
     resources:
       - onionservices/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - tor.k8s.torproject.org
+    resources:
+      - tors
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - tor.k8s.torproject.org
+    resources:
+      - tors/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - tor.k8s.torproject.org
+    resources:
+      - tors/status
     verbs:
       - get
       - patch

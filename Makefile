@@ -77,6 +77,12 @@ run: manifests generate fmt vet ## Run a controller from your host.
 rundev: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go -no-leader-elect --config config/manager/controller_manager_config_dev.yaml
 
+.PHONY: docker-build-all
+docker-build-all: docker-build docker-build-daemon docker-build-daemon-manager docker-build-onionbalance-manager
+
+.PHONY: docker-push-all
+docker-push-all: docker-push docker-push-daemon docker-push-daemon-manager docker-push-onionbalance-manager
+
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
 	docker build -t ${IMG} -f Dockerfile .
@@ -87,19 +93,27 @@ docker-push: ## Push docker image with the manager.
 
 .PHONY: docker-build-daemon
 docker-build-daemon:
-	docker build -t ${IMG_DAEMON} -f Dockerfile.tor-daemon-manager .
+	docker build -t ${IMG_DAEMON} -f Dockerfile.tor-daemon .
 
 .PHONY: docker-push-daemon
  docker-push-daemon:
 	docker push ${IMG_DAEMON}
 
-.PHONY: docker-build-onionbalance
-docker-build-onionbalance:
-	docker build -t ${IMG_ONIONBALANCE} -f Dockerfile.tor-onionbalance-manager .
+.PHONY: docker-build-daemon-manager
+docker-build-daemon-manager:
+	docker build -t ${IMG_DAEMON_MANAGER} -f Dockerfile.tor-daemon-manager .
 
-.PHONY: docker-push-onionbalance
-docker-push-onionbalance:
-	docker push ${IMG_ONIONBALANCE}
+.PHONY: docker-push-daemon-manager
+ docker-push-daemon-manager:
+	docker push ${IMG_DAEMON_MANAGER}
+
+.PHONY: docker-build-onionbalance-manager
+docker-build-onionbalance-manager:
+	docker build -t ${IMG_ONIONBALANCE_MANAGER} -f Dockerfile.tor-onionbalance-manager .
+
+.PHONY: docker-push-onionbalance-manager
+docker-push-onionbalance-manager:
+	docker push ${IMG_ONIONBALANCE_MANAGER}
 
 ##@ Deployment
 
@@ -170,7 +184,7 @@ installer: manifests kustomize ## Install CRDs into the K8s cluster specified in
 	$(KUSTOMIZE) build config/default --output $(INSTALLER)
 
 .PHONY: helm
-helm: installer yq
+helm: installer helm-readme yq
 	$(YQ) '. | select(.kind == "CustomResourceDefinition")' $(INSTALLER) > charts/tor-controller/templates/customresourcedefinition.yaml
 ##@ $(YQ) '. | select(.kind == "Namespace")' $(INSTALLER) > charts/tor-controller/templates/namespace.yaml
 ##@ $(YQ) '. | select(.kind == "ServiceAccount")' $(INSTALLER) > charts/tor-controller/templates/serviceaccount.yaml
@@ -181,3 +195,14 @@ helm: installer yq
 ##@ $(YQ) '. | select(.kind == "ConfigMap")' $(INSTALLER) > charts/tor-controller/templates/configmap.yaml
 ##@ $(YQ) '. | select(.kind == "Service")' $(INSTALLER) > charts/tor-controller/templates/service.yaml
 ##@ $(YQ) '. | select(.kind == "Deployment")' $(INSTALLER) > charts/tor-controller/templates/deployment.yaml
+
+.PHONE: helm-readme
+helm-readme:
+	docker run --rm --volume "${PWD}/charts":/helm-docs:ro jnorwood/helm-docs:latest --dry-run > charts/tor-controller/README.md
+
+.PHONE: changelog
+changelog:
+	docker run -t -v "${PWD}":/app/ orhunp/git-cliff:latest -c .cliff.toml -o CHANGELOG.md
+
+.PHONE: release
+release: installer changelog helm

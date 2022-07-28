@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/cretz/bine v0.2.0
+	github.com/m1/go-generate-password v0.2.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.54.0

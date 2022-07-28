@@ -1,0 +1,11 @@
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: Tor
+metadata:
+  name: example-tor-instance-custom
+spec:
+  config: |
+    # Socks policy:
+    SocksPolicy accept 0.0.0.0/0
+
+    # Exit nodes only in US:
+    ExitNodes {US}

@@ -47,7 +47,7 @@ func (r *OnionServiceReconciler) reconcileServiceAccount(ctx context.Context, on
 	var serviceAccount corev1.ServiceAccount
 	err := r.Get(ctx, types.NamespacedName{Name: serviceAccountName, Namespace: namespace}, &serviceAccount)
 
-	newServiceAccount := torServiceAccount(onionService)
+	newServiceAccount := torOnionServiceAccount(onionService)
 	if errors.IsNotFound(err) {
 		err := r.Create(ctx, newServiceAccount)
 		if err != nil {
@@ -74,7 +74,7 @@ func (r *OnionServiceReconciler) reconcileServiceAccount(ctx context.Context, on
 	return nil
 }
 
-func torServiceAccount(onion *torv1alpha2.OnionService) *corev1.ServiceAccount {
+func torOnionServiceAccount(onion *torv1alpha2.OnionService) *corev1.ServiceAccount {
 	return &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      onion.ServiceAccountName(),

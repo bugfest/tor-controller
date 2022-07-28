@@ -40,7 +40,7 @@ MetricsPort {{ .MetricsPort }}
 MetricsPortPolicy {{ .MetricsPortPolicy }}
 `
 
-type torConfig struct {
+type onionBalancedServiceTorConfig struct {
 	SocksPort         string
 	ControlPort       string
 	MetricsPort       string
@@ -89,7 +89,7 @@ func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context,
 
 func onionbalanceTorConfig(onion *torv1alpha2.OnionBalancedService) string {
 
-	s := torConfig{
+	s := onionBalancedServiceTorConfig{
 		SocksPort:         "0",
 		ControlPort:       "127.0.0.1:9051",
 		MetricsPort:       "0.0.0.0:9035",
