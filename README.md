@@ -9,30 +9,35 @@
 [![Release Charts](https://github.com/bugfest/tor-controller/actions/workflows/release.yml/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/release.yml)
 [![pages-build-deployment](https://github.com/bugfest/tor-controller/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/pages/pages-build-deployment)
 
-| **NOTICE** |
-| --- |
+| **NOTICE**                                                                                                                                                                                     |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | This project started as an exercise to update `kragniz`'s https://github.com/kragniz/tor-controller version. If you want to migrate to this implementation, update your OnionService manifests |
 
 # Table of Contents
-1. [Changes](#changes)
-1. [Roadmap](#roadmap)
-1. [Install](#install)
-1. [How to](#how-to)
-   1. [Quickstart with random address](#quickstart-with-random-address)
-   1. [Random service names](#random-service-names)
-   1. [Bring your own secret](#bring-your-own-secret)
-   1. [Specify pod template settings](#specify-pod-template-settings)
-   1. [Using with nginx-ingress](#using-with-nginx-ingress)
-   1. [HA Onionbalance Hidden Services](#ha-onionbalance-hidden-services)
-   1. [Service Monitors](#service-monitors)
-1. [Tor](#tor)
-1. [How it works](#how-it-works)
-1. [Builds](#builds)
-1. [Versions](#versions)
-1. [References](#references)
-   1. [Tor Documentation](#tor-documentation)
-   1. [Utils](#utils)
-   1. [Other projects](#other-projects)
+- [Table of Contents](#table-of-contents)
+  - [Changes](#changes)
+  - [Roadmap / TODO](#roadmap--todo)
+  - [Install](#install)
+  - [Resources](#resources)
+  - [How to](#how-to)
+  - [Quickstart with random onion address](#quickstart-with-random-onion-address)
+  - [Random service names](#random-service-names)
+  - [Bring your own secret](#bring-your-own-secret)
+  - [Onion service versions](#onion-service-versions)
+  - [Specify Pod Template Settings](#specify-pod-template-settings)
+  - [OnionBalancedService Pod Template](#onionbalancedservice-pod-template)
+  - [Using with nginx-ingress](#using-with-nginx-ingress)
+  - [HA Onionbalance Hidden Services](#ha-onionbalance-hidden-services)
+  - [Tor Instances](#tor-instances)
+  - [Service Monitors](#service-monitors)
+- [Tor](#tor)
+- [How it works](#how-it-works)
+  - [Builds](#builds)
+  - [Versions](#versions)
+  - [References](#references)
+  - [Documentation](#documentation)
+  - [Utils](#utils)
+  - [Other projects](#other-projects)
 
 Changes
 -------
@@ -81,12 +86,12 @@ Install tor-controller directly using the manifest:
 Resources
 ---------
 
-| Name | Shortnames | Api Version | Namespaced | Kind |
-| ---- | ---------- | ----------- | ---------- | ---- |
-|tor|tor|onion,os|tor.k8s.torproject.org/v1alpha2|true|Tor|
-|onionservices|onion,os|tor.k8s.torproject.org/v1alpha2|true|OnionService|
-|onionbalancedservices|onionha,oha,obs|tor.k8s.torproject.org/v1alpha2|true|OnionBalancedService|
-|projectconfigs| | config.k8s.torproject.org/v2|true|ProjectConfig|
+| Name                  | Shortnames      | Api Version                     | Namespaced | Kind                 |
+| --------------------- | --------------- | ------------------------------- | :--------: | -------------------- |
+| tors                  | tor             | tor.k8s.torproject.org/v1alpha2 |    true    | Tor                  |
+| onionservices         | onion,os        | tor.k8s.torproject.org/v1alpha2 |    true    | OnionService         |
+| onionbalancedservices | onionha,oha,obs | tor.k8s.torproject.org/v1alpha2 |    true    | OnionBalancedService |
+| projectconfigs        |                 | config.k8s.torproject.org/v2    |    true    | ProjectConfig        |
 
 
 ***Tor***: Tor instance you can use to route traffic to/thru Tor network
@@ -260,19 +265,19 @@ spec:
         memory: 128Mi
 ```
 
-| Template Property | Description |
-| -------- | ----------- |
-| `metadata.annotations` | Add pod [Annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/). |
-| `metadata.labels` | Add pod [Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/). NOTE: `tor-controller` automatically adds the labels `app` and `controller`, so you should not set these labels |
-| `spec.nodeSelector` | Set specific [Node Selectors](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) for the pod. |
-| `spec.affinity` | Add pod or node [affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules here. |
-| `spec.schedulerName` | Select a specific [scheduler](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/) to be used for service pods |
-| `spec.tolerations` | Add [tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core) to the pods. |
-| `spec.runtimeClassName` | Set the pods [Runtime Class](https://kubernetes.io/docs/concepts/containers/runtime-class/). |
-| `spec.priorityClassName` | Set the pods [Priority Class](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass) |
-| `spec.resources` | Set [Resource Requirements](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container) for the running containers. |
-| `spec.topologySpreadConstraints` | Add [Topology Spread Constraints](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/). |
-| `resources` | Set [Resource Requirements](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container) for the running containers. |
+| Template Property                | Description                                                                                                                                                                                                  |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `metadata.annotations`           | Add pod [Annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/).                                                                                                       |
+| `metadata.labels`                | Add pod [Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/). NOTE: `tor-controller` automatically adds the labels `app` and `controller`, so you should not set these labels |
+| `spec.nodeSelector`              | Set specific [Node Selectors](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) for the pod.                                                                            |
+| `spec.affinity`                  | Add pod or node [affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules here.                                                                  |
+| `spec.schedulerName`             | Select a specific [scheduler](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/) to be used for service pods                                                                           |
+| `spec.tolerations`               | Add [tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core) to the pods.                                                                                      |
+| `spec.runtimeClassName`          | Set the pods [Runtime Class](https://kubernetes.io/docs/concepts/containers/runtime-class/).                                                                                                                 |
+| `spec.priorityClassName`         | Set the pods [Priority Class](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass)                                                                                |
+| `spec.resources`                 | Set [Resource Requirements](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container) for the running containers.                    |
+| `spec.topologySpreadConstraints` | Add [Topology Spread Constraints](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/).                                                                                      |
+| `resources`                      | Set [Resource Requirements](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container) for the running containers.                    |
 
 
 OnionBalancedService Pod Template
@@ -483,13 +488,14 @@ tor-controller creates the following resources for each OnionService:
 Builds
 ------
 
-| Name                     | Type  | URL                                                         | Comment     |
-| -------------------------| ----- | ----------------------------------------------------------- | ----------- |
-| helm release             | helm  | https://bugfest.github.io/tor-controller                    |             |
-| tor-controller           | image | https://quay.io/repository/bugfest/tor-controller           |             |
+| Name                     | Type  | URL                                                         | Comment                    |
+| ------------------------ | :---: | ----------------------------------------------------------- | -------------------------- |
+| helm release             | helm  | https://bugfest.github.io/tor-controller                    |                            |
+| tor-controller           | image | https://quay.io/repository/bugfest/tor-controller           |                            |
+| tor-daemon               | image | https://quay.io/repository/bugfest/tor-daemon               | Build requires bugfest/tor |
 | tor-daemon-manager       | image | https://quay.io/repository/bugfest/tor-daemon-manager       | Build requires bugfest/tor |
-| tor-onionbalance-manager | image | https://quay.io/repository/bugfest/tor-onionbalance-manager |             |
-| tor                      | image | https://quay.io/repository/bugfest/tor                      |             |
+| tor-onionbalance-manager | image | https://quay.io/repository/bugfest/tor-onionbalance-manager |                            |
+| tor                      | image | https://quay.io/repository/bugfest/tor                      |                            |
 
 Dependencies:
 - tor-daemon-manager Dockerfile uses bugfest/tor image (built from source). It is built in a separate project to speed up the compilation: [https://github.com/bugfest/tor-docker](https://github.com/bugfest/tor-docker)
