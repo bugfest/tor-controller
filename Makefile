@@ -184,7 +184,7 @@ installer: manifests kustomize ## Install CRDs into the K8s cluster specified in
 	$(KUSTOMIZE) build config/default --output $(INSTALLER)
 
 .PHONY: helm
-helm: installer yq
+helm: installer helm-readme yq
 	$(YQ) '. | select(.kind == "CustomResourceDefinition")' $(INSTALLER) > charts/tor-controller/templates/customresourcedefinition.yaml
 ##@ $(YQ) '. | select(.kind == "Namespace")' $(INSTALLER) > charts/tor-controller/templates/namespace.yaml
 ##@ $(YQ) '. | select(.kind == "ServiceAccount")' $(INSTALLER) > charts/tor-controller/templates/serviceaccount.yaml
@@ -195,3 +195,14 @@ helm: installer yq
 ##@ $(YQ) '. | select(.kind == "ConfigMap")' $(INSTALLER) > charts/tor-controller/templates/configmap.yaml
 ##@ $(YQ) '. | select(.kind == "Service")' $(INSTALLER) > charts/tor-controller/templates/service.yaml
 ##@ $(YQ) '. | select(.kind == "Deployment")' $(INSTALLER) > charts/tor-controller/templates/deployment.yaml
+
+.PHONE: helm-readme
+helm-readme:
+	docker run --rm --volume "${PWD}/charts":/helm-docs:ro jnorwood/helm-docs:latest --dry-run > charts/tor-controller/README.md
+
+.PHONE: changelog
+changelog:
+	docker run -t -v "${PWD}":/app/:ro orhunp/git-cliff:latest -c .cliff.toml > CHANGELOG.md
+
+.PHONE: release
+release: installer changelog helm

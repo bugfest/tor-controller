@@ -121,7 +121,7 @@ To deploy in a test cluster
 # Changelog
 
     # Update changelog
-    docker run -it --rm -v "$(pwd)":/usr/local/src/your-app githubchangeloggenerator/github-changelog-generator -u bugfest -p tor-controller
+    make changelog
 
 # Arm64 emulation with QEMU
 
