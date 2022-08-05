@@ -1,19 +1,52 @@
-<p align="center">
-  <img height="100" src="https://sr.ht/2mc0.png">
-</p>
-
-<h1 align="center">tor-controller</h1>
+<div style="text-align: center;">
+<h1><b>tor-controller</b></h1>    
+    <img 
+    style="display: block; 
+           margin-left: auto;
+           margin-right: auto;
+           width: 30%;"
+    src="assets/web/logo.svg" 
+    alt="tor-controller logo">
+</img>
+</div>
 
 [![Build multiarch image - latest](https://github.com/bugfest/tor-controller/actions/workflows/main.yml/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/main.yml)
 [![Build multiarch image - tag](https://github.com/bugfest/tor-controller/actions/workflows/main-tag.yml/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/main-tag.yml)
 [![Release Charts](https://github.com/bugfest/tor-controller/actions/workflows/release.yml/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/release.yml)
 [![pages-build-deployment](https://github.com/bugfest/tor-controller/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/pages/pages-build-deployment)
 
-| **NOTICE**                                                                                                                                                                                     |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| This project started as an exercise to update `kragniz`'s https://github.com/kragniz/tor-controller version. If you want to migrate to this implementation, update your OnionService manifests |
+`Tor-controller` let you define Tor instances in your k8s using a set of provided custom manifests (`tor`, `onion`, `onionha`). 
+
+Compatible architectures: `amd64`, `arm64`, `arm`
+
+Usage examples: 
+- Deploy a Tor daemon that listen for socks connections so you can let your k8s applications fetch resources through the Tor network.
+- Run a `bridge`, `relay` or `exit` node 
+- Expose your k8s service in Tor network as onion service.
+    - If you want HA you can expose it with an onion balancer (allowing you to run up to 10 onion virtual services behind a single `.onion` address)  
+    - Enable metrics and visualize them via prometheus/grafana 
+
+**NOTE**: This project started as an exercise to update `kragniz`'s https://github.com/kragniz/. This version is a complete reimplementation. 
+
+# Quick start
+
+```shell
+$ helm repo add bugfest https://bugfest.github.io/tor-controller
+
+$ helm repo update
+
+$ helm upgrade \
+  --install \
+  --create-namespace \
+  --namespace tor-controller \
+  tor-controller \
+  bugfest/tor-controller
+```
+
+Check [install section](#install) bellow for more information.
 
 # Table of Contents
+- [Quick start](#quick-start)
 - [Table of Contents](#table-of-contents)
   - [Changes](#changes)
   - [Roadmap / TODO](#roadmap--todo)
