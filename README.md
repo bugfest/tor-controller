@@ -100,6 +100,7 @@ Roadmap / TODO
   - Non exit: Bridge, Snowflake, Middle/Guard
   - Exit relay: Tor Exit
 - Tor-Istio plugin/extension to route pod egress traffic thru Tor
+- Automated Vanguards Tor Addon deploy/setup
 
 Install
 -------
