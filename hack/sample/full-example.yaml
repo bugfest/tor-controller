@@ -1,3 +1,5 @@
+# Example: exposing ingress as .onion via OnionService
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -35,10 +37,13 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: http-app
+  name: http-app-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
+  # Need to specify the ingress class if you don't have a default one
+  # $ kubectl get ingressclass
+  ingressClassName: nginx
   defaultBackend:
     service:
       name: default-http-backend
@@ -55,3 +60,25 @@ spec:
             name: http-app
             port:
               number: 8080
+---
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionService
+metadata:
+  name: ingress-example-onion-service
+spec:
+  version: 3
+  rules:
+    - port:
+        number: 80
+      backend:
+        service:
+          # This name will depend on your ingress installation
+          # For example, for nginx's ingress installation using helm
+          # the name template is [release-name]-nginx-ingress
+          #
+          # I used this commands:
+          # $ helm repo add nginx-stable https://helm.nginx.com/stable
+          # $ helm install nginx-ingress nginx-stable/nginx-ingress
+          name: nginx-ingress-nginx-ingress
+          port:
+            number: 80

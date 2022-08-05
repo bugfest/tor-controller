@@ -331,13 +331,13 @@ If you want to serve HTTP stuff, you'll probably want to pair it with
 nginx-ingress or some other ingress controller.
 
 To do this, first install nginx-ingress normally. Then point an onion service
-at the nginx-ingress-controller, for example:
+to yor nginx-ingress' controller (find it with `kubectl get svc`), for example:
 
 ```yaml
 apiVersion: tor.k8s.torproject.org/v1alpha2
 kind: OnionService
 metadata:
-  name: example-onion-service
+  name: ingress-example-onion-service
 spec:
   version: 3
   rules:
@@ -345,9 +345,16 @@ spec:
         number: 80
       backend:
         service:
-          name: http-app
+          # This name will depend on your ingress installation
+          # For example, for nginx's ingress installation using helm
+          # the name template is [release-name]-nginx-ingress
+          #
+          # I used this commands:
+          # $ helm repo add nginx-stable https://helm.nginx.com/stable
+          # $ helm install nginx-ingress nginx-stable/nginx-ingress
+          name: nginx-ingress-nginx-ingress
           port:
-            number: 8080
+            number: 80
 ```
 
 This can then be used in the same way any other ingress is. You can find a full
