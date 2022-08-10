@@ -1,14 +1,8 @@
-<div style="text-align: center;">
-<h1><b>tor-controller</b></h1>    
-    <img 
-    style="display: block; 
-           margin-left: auto;
-           margin-right: auto;
-           width: 30%;"
-    src="assets/web/logo.svg" 
-    alt="tor-controller logo">
-</img>
-</div>
+<h1 align="center"><b>tor-controller</b></h1>
+
+<p align="center">
+  <img height="100" src="assets/web/logo.svg">
+</p>
 
 [![Build multiarch image - latest](https://github.com/bugfest/tor-controller/actions/workflows/main.yml/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/main.yml)
 [![Build multiarch image - tag](https://github.com/bugfest/tor-controller/actions/workflows/main-tag.yml/badge.svg)](https://github.com/bugfest/tor-controller/actions/workflows/main-tag.yml)
