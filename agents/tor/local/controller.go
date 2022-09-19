@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -117,6 +118,35 @@ func (c *Controller) sync(key string) error {
 			fmt.Sprintf("/run/tor/service/key/%s", privateKeyFileName),
 			fmt.Sprintf("/run/tor/service/%s", privateKeyFileName),
 		)
+
+		// copy authorized keys to the correct directory (/run/tor/service/authorized_keys)
+		// as Tor requires this directory to be only accessible for the current user (0700)
+		// and k8s does not allow to set the permissions of the directory where the projected
+		// secrets are mounted
+		files, err := ioutil.ReadDir("/run/tor/service/.authorized_clients/")
+		if err != nil {
+			log.Info("No authorized keys found")
+		} else {
+			authorized_clients_dir := "/run/tor/service/authorized_clients"
+
+			// Create `authorized_clients_dir` directory if it does not exist
+			if _, err := os.Stat(authorized_clients_dir); errors.Is(err, os.ErrNotExist) {
+				err := os.Mkdir(authorized_clients_dir, os.ModePerm)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			// Copy *.auth files from mounted secrets into `authorized_clients_dir` directory
+			for _, file := range files {
+				if !file.IsDir() && strings.HasSuffix(file.Name(), ".auth") {
+					copyIfNotExist(
+						fmt.Sprintf("/run/tor/service/.authorized_clients/%s", file.Name()),
+						fmt.Sprintf("/run/tor/service/authorized_clients/%s", file.Name()),
+					)
+				}
+			}
+		}
 
 		// ob_config needs to be created if this Hidden Service have a Master one in front
 		if len(onionService.Spec.MasterOnionAddress) > 0 {

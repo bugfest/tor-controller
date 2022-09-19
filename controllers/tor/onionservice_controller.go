@@ -107,6 +107,11 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		}
 	}
 
+	err = r.reconcileSecretAuthorizedClients(ctx, &onionService)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	err = r.reconcileSecret(ctx, &onionService)
 	if err != nil {
 		return ctrl.Result{}, err

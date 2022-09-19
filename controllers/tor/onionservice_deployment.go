@@ -86,6 +86,7 @@ func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionS
 func torOnionServiceDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.ProjectConfig) *appsv1.Deployment {
 
 	privateKeyMountPath := "/run/tor/service/key"
+	authorizedClientsMountPath := "/run/tor/service/.authorized_clients"
 
 	publicKeyFileName := "hs_ed25519_public_key"
 	privateKeyFileName := "hs_ed25519_secret_key"
@@ -122,6 +123,7 @@ func torOnionServiceDeployment(onion *torv1alpha2.OnionService, projectConfig co
 		}
 	}
 
+	defaultMode := int32(0400)
 	volumes := []corev1.Volume{
 		{
 			Name: privateKeyVolume,
@@ -132,12 +134,27 @@ func torOnionServiceDeployment(onion *torv1alpha2.OnionService, projectConfig co
 				},
 			},
 		},
+		{
+			Name: authorizedClientsVolume,
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName:  onion.AuthorizedClientsSecretName(),
+					DefaultMode: &defaultMode,
+				},
+			},
+		},
 	}
 
 	volumeMounts := []corev1.VolumeMount{
 		{
 			Name:      privateKeyVolume,
 			MountPath: privateKeyMountPath,
+			ReadOnly:  true,
+		},
+		{
+			Name:      authorizedClientsVolume,
+			MountPath: authorizedClientsMountPath,
+			ReadOnly:  true,
 		},
 	}
 

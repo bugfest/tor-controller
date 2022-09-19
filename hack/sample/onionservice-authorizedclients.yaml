@@ -1,0 +1,56 @@
+---
+# Check https://community.torproject.org/onion-services/advanced/client-auth/
+# to learn how to generate client keypairs for your hidden services 
+
+# kubectl create secret generic --dry-run=client -o yaml onion-service-client-secret-a \
+#   --from-literal=publicKey=N2NU7BSRL6YODZCYPN4CREB54TYLKGIE2KYOQWLFYC23ZJVCE5DQ \
+#   --from-literal=privateKey=ZDUVQQ7IKBXSGR2WWOBNM3VP5ELNOYSSINDK7CAUN2WD7A3EKZWQ
+apiVersion: v1
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: onion-service-client-secret-a
+data:
+  publicKey: TjJOVTdCU1JMNllPRFpDWVBONENSRUI1NFRZTEtHSUUyS1lPUVdMRllDMjNaSlZDRTVEUQ==
+  privateKey: TjJOVTdCU1JMNllPRFpDWVBONENSRUI1NFRZTEtHSUUyS1lPUVdMRllDMjNaSlZDRTVEUQ==
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: onion-service-client-secret-b
+data:
+  authKey: ZGVzY3JpcHRvcjp4MjU1MTk6TjJOVTdCU1JMNllPRFpDWVBONENSRUI1NFRZTEtHSUUyS1lPUVdMRllDMjNaSlZDRTVEUQ==
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: onion-service-client-secret-c
+data:
+  otherAuthKey: ZGVzY3JpcHRvcjp4MjU1MTk6TjJOVTdCU1JMNllPRFpDWVBONENSRUI1NFRZTEtHSUUyS1lPUVdMRllDMjNaSlZDRTVEUQ==
+
+---
+
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionService
+metadata:
+  name: example-onion-service
+spec:
+  version: 3  
+  rules:
+    - port:
+        number: 80
+      backend:
+        service:
+          name: http-app
+          port:
+            number: 8080
+  authorizedClients:
+  - name: onion-service-client-secret-a
+  - name: onion-service-client-secret-b
+  - name: onion-service-client-secret-c
+    key: otherAuthKey
