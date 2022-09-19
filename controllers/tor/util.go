@@ -44,6 +44,7 @@ import (
 const (
 	onionBalanceSecretVolume = "ob-secret"
 	privateKeyVolume         = "private-key"
+	authorizedClientsVolume  = "authorized-clients"
 	torConfigVolume          = "tor-config"
 	torConfigExtraVolume     = "tor-config-extra"
 	obConfigVolume           = "ob-config"

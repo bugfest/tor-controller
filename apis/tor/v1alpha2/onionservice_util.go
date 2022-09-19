@@ -7,13 +7,14 @@ import (
 )
 
 const (
-	osDeploymentNameFmt     = "%s-tor-daemon"
-	osSecretNameFmt         = "%s-tor-secret"
-	osServiceNameFmt        = "%s-tor-svc"
-	osMetricsServiceNameFmt = "%s-tor-metrics-svc"
-	osRoleNameFmt           = "%s-tor-role"
-	osServiceAccountNameFmt = "%s-tor-sa"
-	osServiceBackendNameFmt = "%s-tor-obb-%d"
+	osDeploymentNameFmt              = "%s-tor-daemon"
+	osSecretNameFmt                  = "%s-tor-secret"
+	osAuthorizedClientsSecretNameFmt = "%s-tor-auth"
+	osServiceNameFmt                 = "%s-tor-svc"
+	osMetricsServiceNameFmt          = "%s-tor-metrics-svc"
+	osRoleNameFmt                    = "%s-tor-role"
+	osServiceAccountNameFmt          = "%s-tor-sa"
+	osServiceBackendNameFmt          = "%s-tor-obb-%d"
 )
 
 func (s *OnionServiceSpec) GetVersion() int {
@@ -52,6 +53,10 @@ func (s *OnionService) SecretName() string {
 		return s.Spec.PrivateKeySecret.Name
 	}
 	return fmt.Sprintf(osSecretNameFmt, s.Name)
+}
+
+func (s *OnionService) AuthorizedClientsSecretName() string {
+	return fmt.Sprintf(osAuthorizedClientsSecretNameFmt, s.Name)
 }
 
 func (s *OnionService) ServiceSelector() map[string]string {

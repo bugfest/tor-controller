@@ -48,9 +48,10 @@ Check [install section](#install) bellow for more information.
   - [Resources](#resources)
   - [How to](#how-to)
   - [Quickstart with random onion address](#quickstart-with-random-onion-address)
+  - [Onion service versions](#onion-service-versions)
   - [Random service names](#random-service-names)
   - [Bring your own secret](#bring-your-own-secret)
-  - [Onion service versions](#onion-service-versions)
+  - [Enable Onion Service protection with Authorization Clients](#enable-onion-service-protection-with-authorization-clients)
   - [Specify Pod Template Settings](#specify-pod-template-settings)
   - [OnionBalancedService Pod Template](#onionbalancedservice-pod-template)
   - [Using with nginx-ingress](#using-with-nginx-ingress)
@@ -81,7 +82,8 @@ Changes
 - **(v0.5.0)** Tor & OnionBalance metric exporters. Prometheus ServiceMonitor integration
 - **(v0.5.1)** Bring your own secret key
 - **(v0.6.0)** Support specifying PodSpec properties on the OnionService/OnionBalancer pods
-- **(v0.6.1)** Tor instance CRD supporting custom config and Client/Server/Metrics/Control ports  
+- **(v0.6.1)** Tor instance CRD supporting custom config and Client/Server/Metrics/Control ports
+- **(v0.7.0)** Added Onion Service's authorized clients support
 
 Changelog: [CHANGELOG](CHANGELOG.md)
 
@@ -182,6 +184,15 @@ example-onion-service   cfoj4552cvq7fbge6k22qmkun3jl37oz273hndr7ktvoahnqg5kdnzqd
 This service should now be accessable from any tor client,
 for example [Tor Browser](https://www.torproject.org/projects/torbrowser.html.en):
 
+
+Onion service versions
+----------------------
+
+The `spec.version` field specifies which onion protocol to use.
+Only v3 is supported. 
+
+tor-controller defaults to using v3 if `spec.version` is not specified.
+
 Random service names
 --------------------
 
@@ -254,19 +265,51 @@ spec:
     key: mykeyname
 ```
 
-Onion service versions
-----------------------
+Enable Onion Service protection with Authorization Clients
+----------------------------------------------------------
 
-The `spec.version` field specifies which onion protocol to use.
-Only v3 is supported. 
+(Available since v0.7.0)
 
-tor-controller defaults to using v3 if `spec.version` is not specified.
+Use `spec.authorizedClients` to set a list of references to secrets objects containing valid authentication credentials:
+
+```yaml
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionService
+metadata:
+  name: example-onion-service
+spec:
+  ...
+  authorizedClients:
+  - name: my-authorized-client-secret
+```
+
+A valid secret that can be used for this purpose has the following format:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-authorized-client-secret
+data:
+  publicKey: ...
+  # authKey: ...
+```
+
+Where `publicKey` is a x25519 public key encoded in base32 (`<base32-encoded-public-key>`).
+
+Alternatively, you can set `authKey` instead with the long form `<auth-type>:<key-type>:<base32-encoded-public-key>`,
+where `<auth-type>` is: `descriptor` and `<key-type>` is: `x25519`.
+
+A more complete example can be found at [hack/sample/onionservice-authorizedclients.yaml](hack/sample/onionservice-authorizedclients.yaml).
+
+Check https://community.torproject.org/onion-services/advanced/client-auth/
+to learn how to create valid key pairs for client authorization.
 
 Specify Pod Template Settings
 -----------------------------
 
-The `template` field can be used to specify properties for the running tor-service pods.
-Use `template.resources` to specify the compute resources required by the tor containers that will be created.
+The `spec.template` field can be used to specify properties for the running tor-service pods.
+Use `spec.template.resources` to specify the compute resources required by the tor containers that will be created.
 
 ```yaml
 apiVersion: tor.k8s.torproject.org/v1alpha2
@@ -330,7 +373,7 @@ spec:
       # runtimeClassName:
 ```
 
-Additionally, the Onion Balancer pod contains two separate containers, which can each have their resource requirements set via `balancerTemplate.torResources` and `balancerTemplate.balancerResources`.
+Additionally, the Onion Balancer pod contains two separate containers, which can each have their resource requirements set via `spec.balancerTemplate.torResources` and `spec.balancerTemplate.balancerResources`.
 
 ```yaml
 apiVersion: tor.k8s.torproject.org/v1alpha2
@@ -547,6 +590,7 @@ Versions
 | 0.1.4              | 0.5.1                  | 0.4.6.10   |
 | 0.1.5              | 0.6.0                  | 0.4.6.10   |
 | 0.1.6              | 0.6.1                  | 0.4.6.10   |
+| 0.1.7              | 0.7.0                  | 0.4.6.10   |
 
 References
 ----------

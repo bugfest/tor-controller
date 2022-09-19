@@ -7169,6 +7169,18 @@ spec:
                   spec:
                     description: OnionServiceSpec defines the desired state of OnionService
                     properties:
+                      authorizedClients:
+                        items:
+                          description: SecretReference represents a Secret Reference
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              description: Name is unique within a namespace to reference
+                                a secret resource.
+                              type: string
+                          type: object
+                        type: array
                       extraConfig:
                         type: string
                       masterOnionAddress:
@@ -15303,6 +15315,18 @@ spec:
           spec:
             description: OnionServiceSpec defines the desired state of OnionService
             properties:
+              authorizedClients:
+                items:
+                  description: SecretReference represents a Secret Reference
+                  properties:
+                    key:
+                      type: string
+                    name:
+                      description: Name is unique within a namespace to reference
+                        a secret resource.
+                      type: string
+                  type: object
+                type: array
               extraConfig:
                 type: string
               masterOnionAddress:

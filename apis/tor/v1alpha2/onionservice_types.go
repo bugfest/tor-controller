@@ -53,6 +53,9 @@ type OnionServiceSpec struct {
 	PrivateKeySecret SecretReference `json:"privateKeySecret,omitempty"`
 
 	// +optional
+	AuthorizedClients []SecretReference `json:"authorizedClients,omitempty"`
+
+	// +optional
 	// +kubebuilder:validation:Enum=0;2;3
 	// +kubebuilder:default:=3
 	Version int32 `json:"version,omitempty"`
