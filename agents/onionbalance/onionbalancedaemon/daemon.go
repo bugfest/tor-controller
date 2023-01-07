@@ -43,13 +43,25 @@ func (t *OnionBalance) Start() {
 	}()
 }
 
+func (t *OnionBalance) IsRunning() bool {
+	return t.cmd != nil && (t.cmd.ProcessState == nil || !t.cmd.ProcessState.Exited())
+}
+
+func (t *OnionBalance) EnsureRunning() {
+	if !t.IsRunning() {
+		fmt.Println("onionbalance is not running...")
+		t.Start()
+	}
+}
+
 func (t *OnionBalance) Reload() {
 	fmt.Println("reloading onionbalance...")
 
-	// start if not already running
-	if t.cmd == nil || (t.cmd.ProcessState != nil && t.cmd.ProcessState.Exited()) {
-		t.Start()
-	} else {
+	if t.IsRunning() {
+		fmt.Println("stopping existing onionbalance...")
 		t.cmd.Process.Signal(syscall.SIGHUP)
+		t.cmd.Wait()
 	}
+
+	t.Start()
 }
