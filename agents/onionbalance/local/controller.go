@@ -73,20 +73,14 @@ func (c *Controller) sync(key string) error {
 			return err
 		}
 
-		reload := false
-
 		torfile, err := ioutil.ReadFile("/run/onionbalance/config.yaml")
-		if os.IsNotExist(err) {
-			reload = true
-		} else if err != nil {
+		if err != nil && !os.IsNotExist(err) {
+			log.Error(fmt.Sprintf("Failed to read config file: %v", err))
 			return err
 		}
 
 		if string(torfile) != torConfig {
-			reload = true
-		}
-
-		if reload {
+			// Configuration has changed, save new configs and reload the daemon.
 			log.Info(fmt.Sprintf("Updating onionbalance config for %s/%s", onionBalancedService.Namespace, onionBalancedService.Name))
 
 			err = ioutil.WriteFile("/run/onionbalance/config.yaml", []byte(torConfig), 0644)
@@ -96,6 +90,9 @@ func (c *Controller) sync(key string) error {
 			}
 
 			c.localManager.daemon.Reload()
+		} else {
+			// Config was already set correctly, lets just ensure the daemon is (still) running.
+			c.localManager.daemon.EnsureRunning()
 		}
 
 		// err = c.updateOnionBalancedServiceStatus(&onionBalancedService)
