@@ -84,6 +84,7 @@ Changes
 - **(v0.6.0)** Support specifying PodSpec properties on the OnionService/OnionBalancer pods
 - **(v0.6.1)** Tor instance CRD supporting custom config and Client/Server/Metrics/Control ports
 - **(v0.7.0)** Added Onion Service's authorized clients support
+- **(v0.7.1)** Fix onion balance reload
 
 Changelog: [CHANGELOG](CHANGELOG.md)
 
@@ -591,6 +592,7 @@ Versions
 | 0.1.5              | 0.6.0                  | 0.4.6.10   |
 | 0.1.6              | 0.6.1                  | 0.4.6.10   |
 | 0.1.7              | 0.7.0                  | 0.4.6.10   |
+| 0.1.8              | 0.7.1                  | 0.4.6.10   |
 
 References
 ----------

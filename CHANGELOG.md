@@ -2,28 +2,69 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.6.1] - 2022-07-28
+## [0.7.1] - 2023-01-15
 
 ### Bug Fixes
 
-- Tor-controller service account ref in Tor-pod instance
-- Helm chart project config. ClusterRole update. Default Tor daemon image
+- Ensure daemon starts, even if reload not required ([#29](https://github.com/bugfest/tor-controller/issues/29))
+
+### Generic
+
+- Release 0.7.1
+
+
+## [0.7.0] - 2022-09-19
+
+### Bug Fixes
+
+- Update build actions to build bugfest/tor-daemon:latest
+
+### Features
+
+- Onion service authorized clients ([#26](https://github.com/bugfest/tor-controller/issues/26))
+
+### Generic
+
+- [ci-skip] Fix logo aligment
+
+
+## [0.6.1] - 2022-08-05
+
+### Bug Fixes
+
+- Missing tor-daemon build :_)
+- Update ingress example - fixes #24
+- Add Vanguards addon deploy/setup to TODO - fixes #23
+
+### Documentation
+
+- New logo
 
 ### Generic
 
 - [ci-skip] Updated helm chart to use version 0.6.0
 
-- Merge branch 'tor-crd' into tor-crd-0.6.1
+- Tor crd 0.6.1 ([#20](https://github.com/bugfest/tor-controller/issues/20))
 
-- Tor spec and controller implementation alpha
+* Tor Spec
 
-- Tor daemon services multiple address support. Listen address and policies using IPv4/IPv6 dual stack.
+* tor_controller schematic
 
+* Controller implementation
 
-### Miscellaneous Tasks
+* Tor daemon services multiple address support. Listen address and policies using IPv4/IPv6 dual stack.
 
-- Use git-cliff to generate CHANGELOG
-- Better git-cliff docker command
+* chore: use git-cliff to generate CHANGELOG
+
+* chore: better git-cliff docker command
+
+* fix: tor-controller service account ref in Tor-pod instance
+
+* fix: helm chart project config. ClusterRole update. Default Tor daemon image
+
+* chore(release): prepare for 0.6.1
+- [ci-skip] Reformat README. Fix some typos
+
 
 ## [0.6.0] - 2022-07-12
 
@@ -34,12 +75,6 @@ All notable changes to this project will be documented in this file.
 ### Generic
 
 - [ci-skip] Updated helm chart to use version 0.5.1
-
-- Tor Spec draft
-
-- WIP - tor_controller schematic
-
-- Tor-crd WIP
 
 - * Updating dependencies - version v0.6.0
 * Updating Helm Chart - preparing helm chart version v0.1.5
@@ -58,10 +93,6 @@ Added QEMU/arm64 how to
 
 - [skip-ci] Fixes #12 Use bugfest/echoserver (multiarch) instead of google's
 Add QEMU arm64 instructions to get a k3s sanbox
-
-- Tor-crd WIP
-
-- WIP
 
 - Fixes #13 - Bring your own key ([#14](https://github.com/bugfest/tor-controller/issues/14))
 
