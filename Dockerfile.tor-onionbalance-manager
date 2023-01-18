@@ -9,7 +9,7 @@ RUN --mount=target=. \
     --mount=type=cache,target=/go/pkg \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -o /out/onionbalance-local-manager ./agents/onionbalance/main.go
 
-FROM alpine:latest
+FROM alpine:3.16.2
 
 ARG VERSION=0.2.2
 
