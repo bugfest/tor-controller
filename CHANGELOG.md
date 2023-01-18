@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.2] - 2023-01-18
+
+### Bug Fixes
+
+- Peg alpine version to avoid error with deprecated cryptography dependency ([#31](https://github.com/bugfest/tor-controller/issues/31))
+
+### Generic
+
+- Release 0.7.2
+
+
 ## [0.7.1] - 2023-01-15
 
 ### Bug Fixes
@@ -11,6 +22,12 @@ All notable changes to this project will be documented in this file.
 ### Generic
 
 - Release 0.7.1
+
+- Upgrade release actions version
+
+- [ci-skip] build release
+
+- [ci-skip] build help release
 
 
 ## [0.7.0] - 2022-09-19

@@ -70,23 +70,28 @@ Check [install section](#install) bellow for more information.
 Changes
 -------
 
-- **(v0.0.0)** Go updated to `1.17`
-- **(v0.0.0)** Code ported to kubebuilder version `3`
-- **(v0.0.0)** Domain updated moved from `tor.k8s.io` (protected) to `k8s.torproject.org` (see https://github.com/kubernetes/enhancements/pull/1111)
-- **(v0.0.0)** Added `OnionBalancedService` type
-- **(v0.0.0)** New OnionService version v1alpha2
-- **(v0.0.0)** Migrate clientset code to controller-runtime
-- **(v0.3.1)** Helm chart
-- **(v0.3.2)** MultiArch images. Supported architectures: amd64, arm, arm64
-- **(v0.4.0)** Implement `OnionBalancedService` resource (HA Onion Services)
-- **(v0.5.0)** Tor & OnionBalance metric exporters. Prometheus ServiceMonitor integration
-- **(v0.5.1)** Bring your own secret key
-- **(v0.6.0)** Support specifying PodSpec properties on the OnionService/OnionBalancer pods
-- **(v0.6.1)** Tor instance CRD supporting custom config and Client/Server/Metrics/Control ports
-- **(v0.7.0)** Added Onion Service's authorized clients support
-- **(v0.7.1)** Fix onion balance reload
+Full changelog: [CHANGELOG](CHANGELOG.md)
 
-Changelog: [CHANGELOG](CHANGELOG.md)
+- **v0.0.x**
+  - Go updated to `1.17`
+  - Code ported to kubebuilder version `3`
+  - Domain updated moved from `tor.k8s.io` (protected) to `k8s.torproject.org` (see https://github.com/kubernetes/enhancements/pull/1111)
+  - Added `OnionBalancedService` type
+  - New OnionService version v1alpha2
+  - Migrate clientset code to controller-runtime
+- **v0.3.x**
+  - Helm chart
+  - MultiArch images. Supported architectures: amd64, arm, arm64
+- **v0.4.x**
+  - Implement `OnionBalancedService` resource (HA Onion Services)
+- **v0.5.x**
+  - Tor & OnionBalance metric exporters. Prometheus ServiceMonitor integration
+  - Bring your own secret key
+- **v0.6.x**
+  - Support specifying PodSpec properties on the OnionService/OnionBalancer pods
+  - Tor instance CRD supporting custom config and Client/Server/Metrics/Control ports
+- **v0.7.x**
+  - Onion Service's authorized clients support
 
 Roadmap / TODO
 --------------
@@ -593,6 +598,7 @@ Versions
 | 0.1.6              | 0.6.1                  | 0.4.6.10   |
 | 0.1.7              | 0.7.0                  | 0.4.6.10   |
 | 0.1.8              | 0.7.1                  | 0.4.6.10   |
+| 0.1.9              | 0.7.2                  | 0.4.6.10   |
 
 References
 ----------

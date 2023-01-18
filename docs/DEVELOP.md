@@ -1,5 +1,6 @@
 # requirements
 
+    - go 1.17
     - kubebuilder
 
 optional:
