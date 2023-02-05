@@ -71,11 +71,15 @@ build: generate fmt vet ## Build manager binary.
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go -no-leader-elect --config config/manager/controller_manager_config.yaml
+	go run ./main.go -no-leader-elect --config config/manager/bases/controller_manager_config.yaml
 
 .PHONY: rundev
 rundev: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go -no-leader-elect --config config/manager/controller_manager_config_dev.yaml
+	go run ./main.go -no-leader-elect --config config/manager/bases/controller_manager_config_dev.yaml
+
+.PHONY: rundev_namespaced
+rundev_namespaced: manifests generate fmt vet ## Run a controller from your host.
+	go run ./main.go -no-leader-elect --config config/manager/bases/controller_manager_config_dev_namespaced.yaml
 
 .PHONY: docker-build-all
 docker-build-all: docker-build docker-build-daemon docker-build-daemon-manager docker-build-onionbalance-manager

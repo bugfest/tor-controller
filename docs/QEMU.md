@@ -106,7 +106,7 @@ Docs
 
 - qemu docs: https://qemu.readthedocs.io/en/latest/system/invocation.html#hxtool-1
 - alpine downloads: https://alpinelinux.org/downloads/
-- determine bin architecture: https://exceptionshub.com/determine-target-architecture-of-binary-file-in-linux-library-or-executable.html
+- determine bin architecture: https://exceptionshub.com/determine-target-architecture-of-binary-file-in-linux-li  ary-or-executable.html
 - fix blkio cgroup issue: https://www.programmerall.com/article/5933169238/
 - fix alpine repos: https://github.com/alpinelinux/docker-alpine/issues/98
 - fix alpine time: https://wiki.alpinelinux.org/wiki/Alpine_Linux:FAQ#Time_and_timezones

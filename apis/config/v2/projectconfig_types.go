@@ -47,6 +47,9 @@ type ProjectConfig struct {
 
 	// +optional
 	TorOnionbalanceManager TorOnionbalanceManagerType `json:"torOnionbalanceManager,omitempty"`
+
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
 }
 
 type TorDaemonType struct {

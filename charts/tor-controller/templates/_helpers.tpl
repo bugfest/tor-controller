@@ -60,3 +60,25 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Helper to dynamically create cluster-wide or namespaced roles & rolebindings
+*/}}
+{{- define "tor-controller.roleKind" -}}
+{{- if .Values.namespaced }}
+{{- "Role" }}
+{{- else }}
+{{- "ClusterRole" }}
+{{- end }}
+{{- end }}
+
+{{/*
+Helper to dynamically create cluster-wide or namespaced roles & rolebindings
+*/}}
+{{- define "tor-controller.roleBindingKind" -}}
+{{- if .Values.namespaced }}
+{{- "RoleBinding" }}
+{{- else }}
+{{- "ClusterRoleBinding" }}
+{{- end }}
+{{- end }}

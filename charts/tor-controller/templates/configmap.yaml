@@ -22,3 +22,6 @@ data:
       image: "{{ .Values.manager.image.repository }}:{{ .Values.manager.image.tag | default .Chart.AppVersion }}"
     torOnionbalanceManager:
       image: "{{ .Values.onionbalance.image.repository }}:{{ .Values.onionbalance.image.tag | default .Chart.AppVersion }}"
+    {{- if .Values.namespaced }}
+    namespace: {{ .Release.Namespace }}
+    {{- end }}

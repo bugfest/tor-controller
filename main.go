@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -90,6 +91,12 @@ func main() {
 	if disableLeaderElection && options.LeaderElection {
 		options.LeaderElection = false
 		setupLog.Info("Overriding LeaderElection (no-leader-elect)")
+	}
+
+	// Setup namespace if running in namespaced mode
+	if ctrlConfig.Namespace != "" {
+		setupLog.Info(fmt.Sprintf("Namespaced mode. Namespace=%s", ctrlConfig.Namespace))
+		options.Namespace = ctrlConfig.Namespace
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)

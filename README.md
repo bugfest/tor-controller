@@ -92,12 +92,14 @@ Full changelog: [CHANGELOG](CHANGELOG.md)
   - Tor instance CRD supporting custom config and Client/Server/Metrics/Control ports
 - **v0.7.x**
   - Onion Service's authorized clients support
+- **v0.8.x**
+  - Namespaced deployments
 
 Roadmap / TODO
 --------------
 
 - Tor daemon management via socket (e.g: config reload)
-- Manage Tor Server fingerpting (ed25519_master_id_secret_key, secret_id_key) and automatic family and nikname management 
+- Manage Tor Server fingerpting (ed25519_master_id_secret_key, secret_id_key) and automatic family and nickname management 
 - Tor relays:
   - Non exit: Bridge, Snowflake, Middle/Guard
   - Exit relay: Tor Exit
@@ -115,9 +117,12 @@ Using helm (recommended):
       --create-namespace --namespace tor-controller \
       tor-controller bugfest/tor-controller
 
-Install tor-controller directly using the manifest:
+For namespaced deployments add `--set namespaced=true` to helm's command when deploying.
+Check [charts/tor-controller/README.md](charts/tor-controller/README.md) for a full set of available options.
 
-    $ kubectl apply -f hack/install.yaml
+Install tor-controller directly using the manifest (cluster-scoped):
+
+    $ kubectl apply -f https://raw.githubusercontent.com/bugfest/tor-controller/master/hack/install.yaml
 
 Resources
 ---------
@@ -599,6 +604,7 @@ Versions
 | 0.1.7              | 0.7.0                  | 0.4.6.10   |
 | 0.1.8              | 0.7.1                  | 0.4.6.10   |
 | 0.1.9              | 0.7.2                  | 0.4.6.10   |
+| 0.1.10             | 0.8.0                  | 0.5.6.10   |
 
 References
 ----------
