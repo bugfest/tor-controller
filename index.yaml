@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   tor-controller:
   - apiVersion: v2
+    appVersion: 0.8.0
+    created: "2023-02-05T23:50:22.376679227Z"
+    description: Tor hidden services controller for kubernetes
+    digest: 6fd5151ffda9ca59a6b2c7945ec8cdd665a8218035ceda4ea852d4a47ed013fe
+    name: tor-controller
+    type: application
+    urls:
+    - https://github.com/bugfest/tor-controller/releases/download/tor-controller-0.1.10/tor-controller-0.1.10.tgz
+    version: 0.1.10
+  - apiVersion: v2
     appVersion: 0.7.2
     created: "2023-01-18T21:13:40.799202584Z"
     description: Tor hidden services controller for kubernetes
@@ -101,4 +111,4 @@ entries:
     urls:
     - https://github.com/bugfest/tor-controller/releases/download/tor-controller-0.1.0/tor-controller-0.1.0.tgz
     version: 0.1.0
-generated: "2023-01-18T21:13:40.799233885Z"
+generated: "2023-02-05T23:50:22.376844027Z"
