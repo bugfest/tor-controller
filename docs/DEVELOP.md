@@ -101,6 +101,58 @@ To deploy in a test cluster
     # Update helm chart README
     docker run --rm --volume "$(pwd)/charts:/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
 
+# Namespaced deployment
+
+1. Use controller's SA to impersonate its permissions
+
+```shell
+cat <<EOF | kubectl apply -f - 
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/service-account-token
+metadata:
+  name: tor-controller
+  annotations:
+    kubernetes.io/service-account.name: tor-controller
+EOF
+
+# your server name goes here
+server=$(kubectl config view -o jsonpath='{.clusters[0].cluster.server}')
+# the name of the secret containing the service account token goes here
+name=tor-controller
+
+ca=$(kubectl get secret/$name -o jsonpath='{.data.ca\.crt}')
+token=$(kubectl get secret/$name -o jsonpath='{.data.token}' | base64 --decode)
+namespace=$(kubectl get secret/$name -o jsonpath='{.data.namespace}' | base64 --decode)
+mysa=$(mktemp)
+
+echo "
+apiVersion: v1
+kind: Config
+clusters:
+- name: default-cluster
+  cluster:
+    certificate-authority-data: ${ca}
+    server: ${server}
+contexts:
+- name: default-context
+  context:
+    cluster: default-cluster
+    namespace: default
+    user: default-user
+current-context: default-context
+users:
+- name: default-user
+  user:
+    token: ${token}
+" > $mysa
+
+echo using KUBECONFIG=$mysa
+export KUBECONFIG=$mysa
+```
+
+[Steps' source](https://stackoverflow.com/questions/47770676/how-to-create-a-kubectl-config-file-for-serviceaccount)
+
 # Prometheus/Grafana
 
     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
