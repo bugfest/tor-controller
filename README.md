@@ -52,6 +52,8 @@ Check [install section](#install) bellow for more information.
   - [Random service names](#random-service-names)
   - [Bring your own secret](#bring-your-own-secret)
   - [Enable Onion Service protection with Authorization Clients](#enable-onion-service-protection-with-authorization-clients)
+  - [Custom settings for Tor daemon](#custom-settings-for-tor-daemon)
+  - [Specifiying Tor network bridges](#specifiying-tor-network-bridges)
   - [Specify Pod Template Settings](#specify-pod-template-settings)
   - [OnionBalancedService Pod Template](#onionbalancedservice-pod-template)
   - [Using with nginx-ingress](#using-with-nginx-ingress)
@@ -319,6 +321,39 @@ A more complete example can be found at [hack/sample/onionservice-authorizedclie
 
 Check https://community.torproject.org/onion-services/advanced/client-auth/
 to learn how to create valid key pairs for client authorization.
+
+Custom settings for Tor daemon
+------------------------------
+
+Tor Controller CRDs allows adding extra parameters that will be passed to the Tor daemon:
+
+- Tor daemons: use `spec.config` field
+- Onion Services: use `spec.extraConfig` field
+- Onion Balanced Services: use `spec.template.extraConfig` field
+
+Specifiying Tor network bridges
+-------------------------------
+
+Prerequisite: bridges information. You can get obfs4 bridges visiting https://bridges.torproject.org/bridges/?transport=obfs4
+
+Tor daemon instance [example](./hack/sample/tor-custom-config-bridges.yaml). Set the `config` field with the following content:
+1. Enable bridges adding the line `UseBridges 1`
+2. Place your bridges configuration
+
+```yaml
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: Tor
+metadata:
+  name: example-tor-instance-custom-bridges
+spec:
+  config: |
+    UseBridges 1
+    # Bridge obfs4 xxx.xxx.xxx.xxxx:xxxx C2541... cert=7V57Z... iat-mode=0
+    # Bridge obfs4 xxx.xxx.xxx.xxxx:xxxx C1CCA... cert=RTTE2... iat-mode=0
+    # Bridge obfs4 xxx.xxx.xxx.xxxx:xxxx B6432... cert=hoGth... iat-mode=0
+
+    # ... other configurations
+```
 
 Specify Pod Template Settings
 -----------------------------
