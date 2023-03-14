@@ -8,6 +8,9 @@ namespaced: false
 # -- Daemonset replica count
 replicaCount: 1
 
+# -- Automatically rollout controller deployment after upgrade
+upgradeRollout: true
+
 # -- tor-controller image, it watches onionservices objects
 image:
   repository: quay.io/bugfest/tor-controller

@@ -52,6 +52,8 @@ Check [install section](#install) bellow for more information.
   - [Random service names](#random-service-names)
   - [Bring your own secret](#bring-your-own-secret)
   - [Enable Onion Service protection with Authorization Clients](#enable-onion-service-protection-with-authorization-clients)
+  - [Custom settings for Tor daemon](#custom-settings-for-tor-daemon)
+  - [Specifiying Tor network bridges](#specifiying-tor-network-bridges)
   - [Specify Pod Template Settings](#specify-pod-template-settings)
   - [OnionBalancedService Pod Template](#onionbalancedservice-pod-template)
   - [Using with nginx-ingress](#using-with-nginx-ingress)
@@ -94,6 +96,10 @@ Full changelog: [CHANGELOG](CHANGELOG.md)
   - Onion Service's authorized clients support
 - **v0.8.x**
   - Namespaced deployments
+- **v0.9.x**
+  - Controller deployment automatic rollout on chart upgrade
+  - Upgraded Tor daemon to 0.4.7.x
+  - Bridges support (obfs4 pluggable transport shipped alongside Tor daemon)
 
 Roadmap / TODO
 --------------
@@ -315,6 +321,39 @@ A more complete example can be found at [hack/sample/onionservice-authorizedclie
 
 Check https://community.torproject.org/onion-services/advanced/client-auth/
 to learn how to create valid key pairs for client authorization.
+
+Custom settings for Tor daemon
+------------------------------
+
+Tor Controller CRDs allows adding extra parameters that will be passed to the Tor daemon:
+
+- Tor daemons: use `spec.config` field
+- Onion Services: use `spec.extraConfig` field
+- Onion Balanced Services: use `spec.template.extraConfig` field
+
+Specifiying Tor network bridges
+-------------------------------
+
+Prerequisite: bridges information. You can get obfs4 bridges visiting https://bridges.torproject.org/bridges/?transport=obfs4
+
+Tor daemon instance [example](./hack/sample/tor-custom-config-bridges.yaml). Set the `config` field with the following content:
+1. Enable bridges adding the line `UseBridges 1`
+2. Place your bridges configuration
+
+```yaml
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: Tor
+metadata:
+  name: example-tor-instance-custom-bridges
+spec:
+  config: |
+    UseBridges 1
+    # Bridge obfs4 xxx.xxx.xxx.xxxx:xxxx C2541... cert=7V57Z... iat-mode=0
+    # Bridge obfs4 xxx.xxx.xxx.xxxx:xxxx C1CCA... cert=RTTE2... iat-mode=0
+    # Bridge obfs4 xxx.xxx.xxx.xxxx:xxxx B6432... cert=hoGth... iat-mode=0
+
+    # ... other configurations
+```
 
 Specify Pod Template Settings
 -----------------------------
@@ -592,19 +631,20 @@ Dependencies:
 Versions
 --------
 
-| Helm Chart version | Tor-Controller version | Tor daemon |
-| ------------------ | ---------------------- | ---------- |
-| 0.1.0              | 0.3.1                  | 0.4.6.8    |
-| 0.1.1              | 0.3.2                  | 0.4.6.8    |
-| 0.1.2              | 0.4.0                  | 0.4.6.8    |
-| 0.1.3              | 0.5.0                  | 0.4.6.10   |
-| 0.1.4              | 0.5.1                  | 0.4.6.10   |
-| 0.1.5              | 0.6.0                  | 0.4.6.10   |
-| 0.1.6              | 0.6.1                  | 0.4.6.10   |
-| 0.1.7              | 0.7.0                  | 0.4.6.10   |
-| 0.1.8              | 0.7.1                  | 0.4.6.10   |
-| 0.1.9              | 0.7.2                  | 0.4.6.10   |
-| 0.1.10             | 0.8.0                  | 0.5.6.10   |
+| Helm Chart version | Tor-Controller version | Tor daemon | Pluggable transports |
+| ------------------ | ---------------------- | ---------- | -------------------- |
+| 0.1.0              | 0.3.1                  | 0.4.6.8    |                      |
+| 0.1.1              | 0.3.2                  | 0.4.6.8    |                      |
+| 0.1.2              | 0.4.0                  | 0.4.6.8    |                      |
+| 0.1.3              | 0.5.0                  | 0.4.6.10   |                      |
+| 0.1.4              | 0.5.1                  | 0.4.6.10   |                      |
+| 0.1.5              | 0.6.0                  | 0.4.6.10   |                      |
+| 0.1.6              | 0.6.1                  | 0.4.6.10   |                      |
+| 0.1.7              | 0.7.0                  | 0.4.6.10   |                      |
+| 0.1.8              | 0.7.1                  | 0.4.6.10   |                      |
+| 0.1.9              | 0.7.2                  | 0.4.6.10   |                      |
+| 0.1.10             | 0.8.0                  | 0.4.6.10   |                      |
+| 0.1.11             | 0.9.0                  | 0.4.7.13   | Obfs4-0.0.14         |
 
 References
 ----------
@@ -613,6 +653,7 @@ References
 - Tor man pages: https://manpages.debian.org/testing/tor/tor.1.en.html
 - Onionbalance: https://gitlab.torproject.org/tpo/core/onionbalance
 - Onionbalance tutorial: https://onionbalance.readthedocs.io/en/latest/v3/tutorial-v3.html
+- Obfs4 pluggable transport: https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/obfs4
 
 ## Utils
 - Helm docs updated with https://github.com/norwoodj/helm-docs

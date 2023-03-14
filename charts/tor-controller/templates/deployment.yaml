@@ -12,10 +12,13 @@ spec:
       {{- include "tor-controller.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
         kubectl.kubernetes.io/default-container: manager
-        {{- toYaml . | nindent 8 }}
+        {{- if .Values.upgradeRollout }}
+        rollme: {{ randAlphaNum 5 | quote }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
       {{- end }}
       labels:
         {{- include "tor-controller.selectorLabels" . | nindent 8 }}
