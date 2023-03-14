@@ -1,0 +1,16 @@
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: Tor
+metadata:
+  name: example-tor-instance-custom-bridges
+spec:
+  config: |
+    # Socks policy:
+    SocksPolicy accept 0.0.0.0/0
+
+    UseBridges 1
+    ClientTransportPlugin obfs4 exec /usr/local/bin/obfs4proxy
+
+    # Get bridges from https://bridges.torproject.org/bridges/?transport=obfs4
+    # Bridge obfs4 xxx.xxx.xxx.xxxx:xxxx C2541... cert=7V57Z... iat-mode=0
+    # Bridge obfs4 xxx.xxx.xxx.xxxx:xxxx C1CCA... cert=RTTE2... iat-mode=0
+    # Bridge obfs4 xxx.xxx.xxx.xxxx:xxxx B6432... cert=hoGth... iat-mode=0
