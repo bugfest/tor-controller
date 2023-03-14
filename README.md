@@ -94,6 +94,10 @@ Full changelog: [CHANGELOG](CHANGELOG.md)
   - Onion Service's authorized clients support
 - **v0.8.x**
   - Namespaced deployments
+- **v0.9.x**
+  - Controller deployment automatic rollout on chart upgrade
+  - Upgraded Tor daemon to 0.4.7.x
+  - Bridges support (obfs4 pluggable transport shipped alongside Tor daemon)
 
 Roadmap / TODO
 --------------
@@ -592,19 +596,20 @@ Dependencies:
 Versions
 --------
 
-| Helm Chart version | Tor-Controller version | Tor daemon |
-| ------------------ | ---------------------- | ---------- |
-| 0.1.0              | 0.3.1                  | 0.4.6.8    |
-| 0.1.1              | 0.3.2                  | 0.4.6.8    |
-| 0.1.2              | 0.4.0                  | 0.4.6.8    |
-| 0.1.3              | 0.5.0                  | 0.4.6.10   |
-| 0.1.4              | 0.5.1                  | 0.4.6.10   |
-| 0.1.5              | 0.6.0                  | 0.4.6.10   |
-| 0.1.6              | 0.6.1                  | 0.4.6.10   |
-| 0.1.7              | 0.7.0                  | 0.4.6.10   |
-| 0.1.8              | 0.7.1                  | 0.4.6.10   |
-| 0.1.9              | 0.7.2                  | 0.4.6.10   |
-| 0.1.10             | 0.8.0                  | 0.5.6.10   |
+| Helm Chart version | Tor-Controller version | Tor daemon | Pluggable transports |
+| ------------------ | ---------------------- | ---------- | -------------------- |
+| 0.1.0              | 0.3.1                  | 0.4.6.8    |                      |
+| 0.1.1              | 0.3.2                  | 0.4.6.8    |                      |
+| 0.1.2              | 0.4.0                  | 0.4.6.8    |                      |
+| 0.1.3              | 0.5.0                  | 0.4.6.10   |                      |
+| 0.1.4              | 0.5.1                  | 0.4.6.10   |                      |
+| 0.1.5              | 0.6.0                  | 0.4.6.10   |                      |
+| 0.1.6              | 0.6.1                  | 0.4.6.10   |                      |
+| 0.1.7              | 0.7.0                  | 0.4.6.10   |                      |
+| 0.1.8              | 0.7.1                  | 0.4.6.10   |                      |
+| 0.1.9              | 0.7.2                  | 0.4.6.10   |                      |
+| 0.1.10             | 0.8.0                  | 0.4.6.10   |                      |
+| 0.1.11             | 0.9.0                  | 0.4.7.13   | Obfs4-0.0.14         |
 
 References
 ----------
@@ -613,6 +618,7 @@ References
 - Tor man pages: https://manpages.debian.org/testing/tor/tor.1.en.html
 - Onionbalance: https://gitlab.torproject.org/tpo/core/onionbalance
 - Onionbalance tutorial: https://onionbalance.readthedocs.io/en/latest/v3/tutorial-v3.html
+- Obfs4 pluggable transport: https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/obfs4
 
 ## Utils
 - Helm docs updated with https://github.com/norwoodj/helm-docs
