@@ -35,7 +35,7 @@ jobs:
           if [ "${{github.event_name}}" == "pull_request" ]; then
                 echo push=false >> $GITHUB_OUTPUT
               else
-                echo push=true
+                echo push=true >> $GITHUB_OUTPUT
                 echo tags1=${TAGS1} >> $GITHUB_OUTPUT
                 echo tags2=${TAGS2} >> $GITHUB_OUTPUT
                 echo tags3=${TAGS3} >> $GITHUB_OUTPUT
