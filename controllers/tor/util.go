@@ -19,6 +19,9 @@ limitations under the License.
 package tor
 
 import (
+	"crypto/rand"
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -33,10 +36,7 @@ import (
 	// byte result of the hash (or possibly just 64 random bytes that are used the same
 	// way as the hash result).
 
-	"crypto/rand"
-	"crypto/sha1"
-	"encoding/hex"
-
+	"github.com/cockroachdb/errors"
 	torutil "github.com/cretz/bine/torutil"
 	ed25519 "github.com/cretz/bine/torutil/ed25519"
 )
@@ -62,14 +62,13 @@ type OnionV3 struct {
 }
 
 func GenerateOnionV3() (*OnionV3, error) {
-
 	k, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to generate ed25519 key")
+	}
+
 	publicKey := k.PrivateKey().KeyPair().PublicKey()
 	privateKey := k.PrivateKey().KeyPair().PrivateKey()
-
-	if err != nil {
-		return nil, err
-	}
 
 	return GenerateOnionV3FromKeys(publicKey, privateKey)
 }
@@ -77,6 +76,7 @@ func GenerateOnionV3() (*OnionV3, error) {
 func GenerateOnionV3FromKeys(publicKey ed25519.PublicKey, privateKey ed25519.PrivateKey) (*OnionV3, error) {
 	// onionAddress := fmt.Sprintf("%s.onion", encodePublicKey(publicKey))
 	onionAddress := fmt.Sprintf("%s.onion", torutil.OnionServiceIDFromV3PublicKey(publicKey))
+
 	privateKeyFile := append([]byte("== ed25519v1-secret: type0 ==\x00\x00\x00"), privateKey[:]...)
 	publicKeyFile := append([]byte("== ed25519v1-public: type0 ==\x00\x00\x00"), publicKey...)
 
@@ -147,14 +147,16 @@ func doHashPassword(in string) (string, error) {
 	const S2K_RFC2440_SPECIFIER_LEN = 9
 	const DIGEST_LEN = 20
 	const ITERATIONS = 96
+
 	// 1) Generate S2K_RFC2440_SPECIFIER_LEN-1 random bytes
 	// 2) Set last key byte to 96
 	//
 	// out := make([]byte, DIGEST_LEN)
 	salt := make([]byte, S2K_RFC2440_SPECIFIER_LEN-1)
+
 	_, err := rand.Read(salt)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to generate random salt")
 	}
 
 	// Inspired by: https://stackoverflow.com/questions/48054399/get-the-hashed-tor-password-automated-in-python
@@ -176,6 +178,7 @@ func doHashPassword(in string) (string, error) {
 			count = 0
 		}
 	}
+
 	return fmt.Sprintf("16:%s%s%s",
 		strings.ToUpper((hex.EncodeToString(salt))),
 		strings.ToUpper((hex.EncodeToString([]byte{ITERATIONS}))),

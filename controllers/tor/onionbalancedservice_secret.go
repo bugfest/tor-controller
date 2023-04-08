@@ -21,53 +21,58 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
-func (r *OnionBalancedServiceReconciler) reconcileSecret(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := log.FromContext(ctx)
+func (r *OnionBalancedServiceReconciler) reconcileSecret(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
+	log := k8slog.FromContext(ctx)
 
-	secretName := OnionBalancedService.SecretName()
-	namespace := OnionBalancedService.Namespace
+	secretName := onionBalancedService.SecretName()
+	namespace := onionBalancedService.Namespace
+
 	if secretName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("secret name must be specified"))
+		runtime.HandleError(errors.New("secret name must be specified"))
+
 		return nil
 	}
 
 	var secret corev1.Secret
 	err := r.Get(ctx, types.NamespacedName{Name: secretName, Namespace: namespace}, &secret)
 
-	newSecret := onionbalanceSecret(OnionBalancedService)
-	if errors.IsNotFound(err) {
+	newSecret := onionbalanceSecret(onionBalancedService)
+	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newSecret)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to create secret")
 		}
+
 		secret = *newSecret
 	} else if err != nil {
-		return err
+		return errors.Wrap(err, "failed to get secret")
 	}
 
 	// Patch OnionBalancedService.Status.Hostname so we can use it later to generate the backends configmaps
-	OnionBalancedService.Status.Hostname = string(secret.Data["onionAddress"])
+	onionBalancedService.Status.Hostname = string(secret.Data["onionAddress"])
 
-	if !metav1.IsControlledBy(&secret.ObjectMeta, OnionBalancedService) {
+	if !metav1.IsControlledBy(&secret.ObjectMeta, onionBalancedService) {
 		// msg := fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, OnionBalancedService.Name)
 		// TODO: generate MessageResourceExists event
 		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
 		// bc.recorder.Event(OnionBalancedService, corev1.EventTypeWarning, ErrResourceExists, msg)
-		// return fmt.Errorf(msg)
-		log.Info(fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, OnionBalancedService.Name))
+		// return errors.New(msg)
+		log.Info(fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, onionBalancedService.Name))
+
 		return nil
 	}
 
@@ -75,10 +80,10 @@ func (r *OnionBalancedServiceReconciler) reconcileSecret(ctx context.Context, On
 }
 
 func onionbalanceSecret(onion *torv1alpha2.OnionBalancedService) *corev1.Secret {
-
 	onionv3, err := GenerateOnionV3()
 	if err != nil {
-		log.Log.Error(err, "error generating Onion keys")
+		k8slog.Log.Error(err, "error generating Onion keys")
+
 		return nil
 	}
 

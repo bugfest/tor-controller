@@ -52,7 +52,7 @@ func (c *Controller) processNextItem() bool {
 }
 
 func (c *Controller) sync(key string) error {
-	log.Info(fmt.Sprintf("Getting key %s", key))
+	log.Infof("Getting key %s", key)
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
 		log.Error(fmt.Sprintf("Fetching object with key %s from store failed with %v", key, err))
@@ -88,9 +88,9 @@ func (c *Controller) sync(key string) error {
 		}
 
 		if reload {
-			log.Info(fmt.Sprintf("Updating tor config for %s/%s", onionService.Namespace, onionService.Name))
+			log.Infof("Updating tor config for %s/%s", onionService.Namespace, onionService.Name)
 
-			err = ioutil.WriteFile("/run/tor/torfile", []byte(torConfig), 0644)
+			err = ioutil.WriteFile("/run/tor/torfile", []byte(torConfig), 0o644)
 			if err != nil {
 				log.Error(fmt.Sprintf("Writing config failed with %v", err))
 				return err
@@ -166,9 +166,9 @@ func (c *Controller) sync(key string) error {
 			}
 
 			if reload {
-				log.Info(fmt.Sprintf("Updating onionbalance config for %s/%s", onionService.Namespace, onionService.Name))
+				log.Infof("Updating onionbalance config for %s/%s", onionService.Namespace, onionService.Name)
 
-				err = ioutil.WriteFile("/run/tor/service/ob_config", []byte(obConfig), 0644)
+				err = ioutil.WriteFile("/run/tor/service/ob_config", []byte(obConfig), 0o644)
 				if err != nil {
 					log.Error(fmt.Sprintf("Writing config failed with %v", err))
 					return err
@@ -200,7 +200,7 @@ func (c *Controller) updateOnionServiceStatus(onionService *v1alpha2.OnionServic
 	newHostname := strings.TrimSpace(string(hostname))
 
 	if newHostname != onionService.Status.Hostname {
-		log.Info(fmt.Sprintf("Got new hostname: %s", newHostname))
+		log.Infof("Got new hostname: %s", newHostname)
 		onionService.Status.Hostname = newHostname
 
 		log.Debug(fmt.Sprintf("Updating onionService to: %v", onionService))
@@ -234,7 +234,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 	c.queue.Forget(key)
 	// Report to an external entity that, even after several retries, we could not successfully process this key
 	runtime.HandleError(err)
-	log.Info(fmt.Sprintf("Dropping onionservice %q out of the queue: %v", key, err))
+	log.Infof("Dropping onionservice %q out of the queue: %v", key, err)
 }
 
 func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
@@ -248,7 +248,7 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 
 	// Wait for all involved caches to be synced, before processing items from the queue is started
 	if !cache.WaitForCacheSync(stopCh, c.informer.HasSynced) {
-		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
+		runtime.HandleError(errors.New("timed out waiting for caches to sync"))
 		return
 	}
 
@@ -268,7 +268,7 @@ func (c *Controller) runWorker() {
 func copyIfNotExist(src string, dst string) error {
 	_, err := ioutil.ReadFile(dst)
 	if os.IsNotExist(err) {
-		log.Info(fmt.Sprintf("Creating copy of %s at %s", src, dst))
+		log.Infof("Creating copy of %s at %s", src, dst)
 
 		var err error
 		var srcfd *os.File

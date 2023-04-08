@@ -18,7 +18,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -95,7 +94,7 @@ func main() {
 
 	// Setup namespace if running in namespaced mode
 	if ctrlConfig.Namespace != "" {
-		setupLog.Info(fmt.Sprintf("Namespaced mode. Namespace=%s", ctrlConfig.Namespace))
+		setupLog.Info("Namespaced mode. Namespace=" + ctrlConfig.Namespace)
 		options.Namespace = ctrlConfig.Namespace
 	}
 

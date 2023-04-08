@@ -2,7 +2,8 @@ package main
 
 import (
 	"flag"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 
 	local "github.com/bugfest/tor-controller/agents/onionbalance/local"
 )
@@ -11,7 +12,7 @@ import (
 func main() {
 	flag.Parse()
 
-	//stopCh := signals.SetupSignalHandler()
+	// stopCh := signals.SetupSignalHandler()
 
 	localManager := local.New()
 	err := localManager.Run()

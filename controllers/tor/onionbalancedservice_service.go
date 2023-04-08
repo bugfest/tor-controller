@@ -21,27 +21,30 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
 func (r *OnionBalancedServiceReconciler) reconcileService(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := log.FromContext(ctx)
+	log := k8slog.FromContext(ctx)
 
 	serviceName := OnionBalancedService.ServiceName()
 	namespace := OnionBalancedService.Namespace
+
 	if serviceName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("service name must be specified"))
+		runtime.HandleError(errors.New("service name must be specified"))
+
 		return nil
 	}
 
@@ -49,18 +52,20 @@ func (r *OnionBalancedServiceReconciler) reconcileService(ctx context.Context, O
 	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
 	newService := onionbalanceService(OnionBalancedService)
-	if errors.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newService)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create Service %s", serviceName)
 		}
+
 		service = *newService
 	} else if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get Service %s", serviceName)
 	}
 
 	if !metav1.IsControlledBy(&service.ObjectMeta, OnionBalancedService) {
 		log.Info(fmt.Sprintf("Service %s already exists and is not controller by %s", service.Name, OnionBalancedService.Name))
+
 		return nil
 	}
 
@@ -68,7 +73,7 @@ func (r *OnionBalancedServiceReconciler) reconcileService(ctx context.Context, O
 	if !serviceEqual(&service, newService) {
 		err := r.Update(ctx, newService)
 		if err != nil {
-			return fmt.Errorf("filed to update Service %#v", newService)
+			return errors.Wrapf(err, "failed to update Service %s", serviceName)
 		}
 	}
 
@@ -77,6 +82,7 @@ func (r *OnionBalancedServiceReconciler) reconcileService(ctx context.Context, O
 
 func onionbalanceService(onion *torv1alpha2.OnionBalancedService) *corev1.Service {
 	ports := []corev1.ServicePort{}
+
 	for _, r := range onion.Spec.Template.Spec.Rules {
 		port := corev1.ServicePort{
 			Name:       r.Port.Name,

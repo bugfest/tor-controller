@@ -24,14 +24,15 @@ import (
 	"text/template"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
 const torConfigFormat = `# Config automatically generated
@@ -104,40 +105,43 @@ type torConfig struct {
 	ControlHashedPasswords []string
 }
 
-func (r *TorReconciler) reconcileConfigMap(ctx context.Context, Tor *torv1alpha2.Tor) error {
-	log := log.FromContext(ctx)
+func (r *TorReconciler) reconcileConfigMap(ctx context.Context, tor *torv1alpha2.Tor) error {
+	log := k8slog.FromContext(ctx)
 
-	configMapName := Tor.ConfigMapName()
-	namespace := Tor.Namespace
+	configMapName := tor.ConfigMapName()
+	namespace := tor.Namespace
+
 	if configMapName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("configMap name must be specified"))
+		runtime.HandleError(errors.New("configMap name must be specified"))
+
 		return nil
 	}
 
 	var configmap corev1.ConfigMap
 	err := r.Get(ctx, types.NamespacedName{Name: configMapName, Namespace: namespace}, &configmap)
 
-	newConfigMap := torConfigMap(Tor)
-	if errors.IsNotFound(err) {
+	newConfigMap := torConfigMap(tor)
+	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newConfigMap)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create configmap %s/%s", namespace, configMapName)
 		}
 		configmap = *newConfigMap
 	} else if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get configmap %s/%s", namespace, configMapName)
 	}
 
-	if !metav1.IsControlledBy(&configmap.ObjectMeta, Tor) {
+	if !metav1.IsControlledBy(&configmap.ObjectMeta, tor) {
 		// msg := fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, Tor.Name)
 		// TODO: generate MessageResourceExists event
 		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
 		// bc.recorder.Event(Tor, corev1.EventTypeWarning, ErrResourceExists, msg)
-		// return fmt.Errorf(msg)
-		log.Info(fmt.Sprintf("ConfigMap %s already exists and is not controller by %s", configmap.Name, Tor.Name))
+		// return errors.New(msg)
+		log.Info(fmt.Sprintf("ConfigMap %s already exists and is not controller by %s", configmap.Name, tor.Name))
+
 		return nil
 	}
 
@@ -145,28 +149,28 @@ func (r *TorReconciler) reconcileConfigMap(ctx context.Context, Tor *torv1alpha2
 }
 
 func torConfigFile(tor *torv1alpha2.Tor) string {
-
-	s := torConfig{
+	config := torConfig{
 		Tor:                    tor,
 		ControlHashedPasswords: getTorControlHashedPasswords(tor),
 	}
 
-	var configTemplate = template.Must(
+	configTemplate := template.Must(
 		template.New("config").Funcs(
 			template.FuncMap{"StringsJoin": strings.Join},
 		).Parse(torConfigFormat),
 	)
 
 	var tmp bytes.Buffer
-	err := configTemplate.Execute(&tmp, s)
+
+	err := configTemplate.Execute(&tmp, config)
 	if err != nil {
 		return fmt.Sprintf("# error in template: %s", err)
 	}
+
 	return tmp.String()
 }
 
 func torConfigMap(tor *torv1alpha2.Tor) *corev1.ConfigMap {
-
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      tor.ConfigMapName(),

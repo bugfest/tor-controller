@@ -21,45 +21,50 @@ import (
 	"fmt"
 
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
-func (r *OnionBalancedServiceReconciler) reconcileRole(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := log.FromContext(ctx)
+func (r *OnionBalancedServiceReconciler) reconcileRole(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
+	log := k8slog.FromContext(ctx)
 
-	roleName := OnionBalancedService.RoleName()
-	namespace := OnionBalancedService.Namespace
+	namespace := onionBalancedService.Namespace
+
+	roleName := onionBalancedService.RoleName()
 	if roleName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("role name must be specified"))
+		runtime.HandleError(errors.New("role name must be specified"))
+
 		return nil
 	}
 
 	var role rbacv1.Role
 	err := r.Get(ctx, types.NamespacedName{Name: roleName, Namespace: namespace}, &role)
 
-	newRole := onionbalanceRole(OnionBalancedService)
-	if errors.IsNotFound(err) {
+	newRole := onionbalanceRole(onionBalancedService)
+	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newRole)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create Role %#v", newRole)
 		}
+
 		role = *newRole
 	} else if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get Role %s", roleName)
 	}
 
-	if !metav1.IsControlledBy(&role.ObjectMeta, OnionBalancedService) {
-		log.Info(fmt.Sprintf("Role %s already exists and is not controlled by %s", role.Name, OnionBalancedService.Name))
+	if !metav1.IsControlledBy(&role.ObjectMeta, onionBalancedService) {
+		log.Info(fmt.Sprintf("Role %s already exists and is not controlled by %s", role.Name, onionBalancedService.Name))
+
 		return nil
 	}
 
@@ -67,7 +72,7 @@ func (r *OnionBalancedServiceReconciler) reconcileRole(ctx context.Context, Onio
 	if !roleEqual(&role, newRole) {
 		err := r.Update(ctx, newRole)
 		if err != nil {
-			return fmt.Errorf("filed to update Role %#v", newRole)
+			return errors.Wrapf(err, "failed to update Role %#v", newRole)
 		}
 	}
 

@@ -21,46 +21,50 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
 func (r *OnionBalancedServiceReconciler) reconcileMetricsService(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := log.FromContext(ctx)
+	log := k8slog.FromContext(ctx)
 
 	serviceName := onionBalancedService.ServiceMetricsName()
 	namespace := onionBalancedService.Namespace
+
 	if serviceName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("service name must be specified"))
+		runtime.HandleError(errors.New("service name must be specified"))
+
 		return nil
 	}
 
 	var service corev1.Service
 	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
-	newService := obs_torMetricsService(onionBalancedService)
-	if errors.IsNotFound(err) {
+	newService := obsTorMetricsService(onionBalancedService)
+	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newService)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to create Service")
 		}
 		service = *newService
 	} else if err != nil {
-		return err
+		return errors.Wrap(err, "failed to get Service")
 	}
 
 	if !metav1.IsControlledBy(&service.ObjectMeta, onionBalancedService) {
 		log.Info(fmt.Sprintf("Service %s already exists and is not controller by %s", service.Name, onionBalancedService.Name))
+
 		return nil
 	}
 
@@ -68,14 +72,14 @@ func (r *OnionBalancedServiceReconciler) reconcileMetricsService(ctx context.Con
 	if !serviceEqual(&service, newService) {
 		err := r.Update(ctx, newService)
 		if err != nil {
-			return fmt.Errorf("filed to update Service %#v", newService)
+			return errors.Wrapf(err, "failed to update Service %s", service.Name)
 		}
 	}
 
 	return nil
 }
 
-func obs_torMetricsService(onion *torv1alpha2.OnionBalancedService) *corev1.Service {
+func obsTorMetricsService(onion *torv1alpha2.OnionBalancedService) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      onion.ServiceMetricsName(),

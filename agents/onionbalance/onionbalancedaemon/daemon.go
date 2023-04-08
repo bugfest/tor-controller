@@ -2,11 +2,12 @@ package onionbalancedaemon
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/exec"
 	"syscall"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type OnionBalance struct {
@@ -21,7 +22,8 @@ func (t *OnionBalance) SetContext(ctx context.Context) {
 func (t *OnionBalance) Start() {
 	go func() {
 		for {
-			fmt.Println("starting onionbalance...")
+			log.Println("starting onionbalance...")
+
 			t.cmd = exec.CommandContext(t.ctx,
 				"onionbalance",
 				"--config", "/run/onionbalance/config.yaml",
@@ -35,9 +37,14 @@ func (t *OnionBalance) Start() {
 
 			err := t.cmd.Start()
 			if err != nil {
-				fmt.Print(err)
+				log.Print("error starting onionbalance: ", err)
 			}
-			t.cmd.Wait()
+
+			err = t.cmd.Wait()
+			if err != nil {
+				log.Print("error running onionbalance: ", err)
+			}
+
 			time.Sleep(time.Second * 3)
 		}
 	}()
@@ -49,18 +56,26 @@ func (t *OnionBalance) IsRunning() bool {
 
 func (t *OnionBalance) EnsureRunning() {
 	if !t.IsRunning() {
-		fmt.Println("onionbalance is not running...")
+		log.Println("onionbalance is not running...")
 		t.Start()
 	}
 }
 
 func (t *OnionBalance) Reload() {
-	fmt.Println("reloading onionbalance...")
+	log.Println("reloading onionbalance...")
 
 	if t.IsRunning() {
-		fmt.Println("stopping existing onionbalance...")
-		t.cmd.Process.Signal(syscall.SIGHUP)
-		t.cmd.Wait()
+		log.Println("stopping existing onionbalance...")
+
+		err := t.cmd.Process.Signal(syscall.SIGHUP)
+		if err != nil {
+			log.Println()
+		}
+
+		err = t.cmd.Wait()
+		if err != nil {
+			log.Println("error stopping onionbalance: ", err)
+		}
 	}
 
 	t.Start()

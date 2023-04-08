@@ -38,19 +38,20 @@ import (
 // 	return false
 // }
 
-func portExists(slice []corev1.ServicePort, item corev1.ServicePort) bool {
-	s := reflect.ValueOf(slice)
+func portExists(slice []corev1.ServicePort, item *corev1.ServicePort) bool {
+	service := reflect.ValueOf(slice)
 
-	if s.Kind() != reflect.Slice {
+	if service.Kind() != reflect.Slice {
 		panic("Invalid data-type")
 	}
 
-	for _, p := range slice {
-		if p.Protocol == item.Protocol {
-			if p.Port == item.Port {
+	for _, port := range slice {
+		if port.Protocol == item.Protocol {
+			if port.Port == item.Port {
 				return true
 			}
-			if p.Name != "" && p.Name == item.Name {
+
+			if port.Name != "" && port.Name == item.Name {
 				return true
 			}
 		}

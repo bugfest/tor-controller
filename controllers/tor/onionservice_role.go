@@ -21,26 +21,29 @@ import (
 	"fmt"
 
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
 func (r *OnionServiceReconciler) reconcileRole(ctx context.Context, onionService *torv1alpha2.OnionService) error {
-	log := log.FromContext(ctx)
+	log := k8slog.FromContext(ctx)
 
 	roleName := onionService.RoleName()
 	namespace := onionService.Namespace
+
 	if roleName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("role name must be specified"))
+		runtime.HandleError(errors.New("role name must be specified"))
+
 		return nil
 	}
 
@@ -48,18 +51,19 @@ func (r *OnionServiceReconciler) reconcileRole(ctx context.Context, onionService
 	err := r.Get(ctx, types.NamespacedName{Name: roleName, Namespace: namespace}, &role)
 
 	newRole := torOnionRole(onionService)
-	if errors.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newRole)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create Role %#v", newRole)
 		}
 		role = *newRole
 	} else if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get Role %s", roleName)
 	}
 
 	if !metav1.IsControlledBy(&role.ObjectMeta, onionService) {
 		log.Info(fmt.Sprintf("Role %s already exists and is not controlled by %s", role.Name, onionService.Name))
+
 		return nil
 	}
 
@@ -67,7 +71,7 @@ func (r *OnionServiceReconciler) reconcileRole(ctx context.Context, onionService
 	if !roleEqual(&role, newRole) {
 		err := r.Update(ctx, newRole)
 		if err != nil {
-			return fmt.Errorf("filed to update Role %#v", newRole)
+			return errors.Wrapf(err, "failed to update Role %#v", newRole)
 		}
 	}
 

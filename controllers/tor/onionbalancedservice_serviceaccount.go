@@ -21,26 +21,29 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
 func (r *OnionBalancedServiceReconciler) reconcileServiceAccount(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := log.FromContext(ctx)
+	log := k8slog.FromContext(ctx)
 
 	serviceAccountName := OnionBalancedService.ServiceAccountName()
 	namespace := OnionBalancedService.Namespace
+
 	if serviceAccountName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("serviceAccount name must be specified"))
+		runtime.HandleError(errors.New("serviceAccount name must be specified"))
+
 		return nil
 	}
 
@@ -48,18 +51,20 @@ func (r *OnionBalancedServiceReconciler) reconcileServiceAccount(ctx context.Con
 	err := r.Get(ctx, types.NamespacedName{Name: serviceAccountName, Namespace: namespace}, &serviceAccount)
 
 	newServiceAccount := onionbalanceServiceAccount(OnionBalancedService)
-	if errors.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newServiceAccount)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create ServiceAccount %#v", newServiceAccount)
 		}
+
 		serviceAccount = *newServiceAccount
 	} else if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get ServiceAccount %s", serviceAccountName)
 	}
 
 	if !metav1.IsControlledBy(&serviceAccount.ObjectMeta, OnionBalancedService) {
 		log.Info(fmt.Sprintf("ServiceAccount %s already exists and is not controller by %s", serviceAccount.Name, OnionBalancedService.Name))
+
 		return nil
 	}
 
@@ -67,7 +72,7 @@ func (r *OnionBalancedServiceReconciler) reconcileServiceAccount(ctx context.Con
 	if !serviceAccountEqual(&serviceAccount, newServiceAccount) {
 		err := r.Update(ctx, newServiceAccount)
 		if err != nil {
-			return fmt.Errorf("filed to update ServiceAccount %#v", newServiceAccount)
+			return errors.Wrapf(err, "failed to update ServiceAccount %#v", newServiceAccount)
 		}
 	}
 

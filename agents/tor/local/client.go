@@ -4,12 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
-
-	// "log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/cockroachdb/errors"
 
 	log "github.com/sirupsen/logrus"
 
@@ -31,9 +31,7 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-var (
-	namespace, onionServiceName string
-)
+var namespace, onionServiceName string
 
 func init() {
 	flag.StringVar(&namespace, "namespace", "",
@@ -41,7 +39,6 @@ func init() {
 
 	flag.StringVar(&onionServiceName, "name", "",
 		"The name of the OnionService to manage.")
-
 }
 
 func GetClient() client.Client {
@@ -78,15 +75,15 @@ func New() *LocalManager {
 }
 
 func (m *LocalManager) Run() error {
-	var errors []error
+	var runErrors []error
 
 	if onionServiceName == "" {
-		errors = append(errors, fmt.Errorf("-name flag cannot be empty"))
+		runErrors = append(runErrors, errors.New("-name flag cannot be empty"))
 	}
 	if namespace == "" {
-		errors = append(errors, fmt.Errorf("-namespace flag cannot be empty"))
+		runErrors = append(runErrors, errors.New("-namespace flag cannot be empty"))
 	}
-	if err := utilerrors.NewAggregate(errors); err != nil {
+	if err := utilerrors.NewAggregate(runErrors); err != nil {
 		return err
 	}
 
@@ -100,7 +97,7 @@ func (m *LocalManager) Run() error {
 	defer cancel()
 	m.daemon.SetContext(ctx)
 
-	err := os.Chmod("/run/tor/service", 0700)
+	err := os.Chmod("/run/tor/service", 0o700)
 	if err != nil {
 		log.Error(err, "error changing /run/tor/service permissions")
 	}
@@ -116,7 +113,7 @@ func (m *LocalManager) Run() error {
 
 func (m *LocalManager) Must(err error) *LocalManager {
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		os.Exit(1)
 	}
 	return m
@@ -130,14 +127,14 @@ func (m *LocalManager) signalHandler(ch chan os.Signal) {
 		case sig := <-ch:
 			switch sig {
 			case syscall.SIGHUP:
-				fmt.Println("received SIGHUP")
+				log.Println("received SIGHUP")
 
 			case syscall.SIGINT:
-				fmt.Println("received SIGINT")
+				log.Println("received SIGINT")
 				close(m.stopCh)
 
 			case syscall.SIGTERM:
-				fmt.Println("received SIGTERM")
+				log.Println("received SIGTERM")
 				close(m.stopCh)
 			}
 		}
@@ -174,15 +171,14 @@ func parseOnionService(obj interface{}) (torv1alpha2.OnionService, error) {
 	err := runtime.DefaultUnstructuredConverter.
 		FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), &d)
 	if err != nil {
-		fmt.Println("could not convert obj to OnionService")
-		fmt.Print(err)
+		log.Println("could not convert obj to OnionService")
+		log.Print(err)
 		return d, err
 	}
 	return d, nil
 }
 
 func (m *LocalManager) runOnionServiceCRDInformer(stopCh <-chan struct{}, s cache.SharedIndexInformer, namespace string) {
-
 	// create the workqueue
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
@@ -193,7 +189,7 @@ func (m *LocalManager) runOnionServiceCRDInformer(stopCh <-chan struct{}, s cach
 			log.Debug("OnionService added")
 			onionservice, err := parseOnionService(obj)
 			if err == nil {
-				log.Info(fmt.Sprintf("Added OnionService: %s/%s", onionservice.Namespace, onionservice.Name))
+				log.Infof("Added OnionService: %s/%s", onionservice.Namespace, onionservice.Name)
 				key, err := cache.MetaNamespaceKeyFunc(onionservice.GetObjectMeta())
 				if err != nil {
 					log.Error(err)
@@ -205,7 +201,7 @@ func (m *LocalManager) runOnionServiceCRDInformer(stopCh <-chan struct{}, s cach
 			log.Debug("OnionService updated")
 			onionservice, err := parseOnionService(newObj)
 			if err == nil {
-				log.Info(fmt.Sprintf("Updated OnionService: %s/%s", onionservice.Namespace, onionservice.Name))
+				log.Infof("Updated OnionService: %s/%s", onionservice.Namespace, onionservice.Name)
 				key, err := cache.MetaNamespaceKeyFunc(onionservice.GetObjectMeta())
 				if err == nil {
 					queue.AddAfter(key, 2*time.Second)
@@ -216,7 +212,7 @@ func (m *LocalManager) runOnionServiceCRDInformer(stopCh <-chan struct{}, s cach
 			log.Debug("OnionService deleted")
 			onionservice, err := parseOnionService(obj)
 			if err == nil {
-				log.Info(fmt.Sprintf("Deleted OnionService: %s/%s", onionservice.Namespace, onionservice.Name))
+				log.Infof("Deleted OnionService: %s/%s", onionservice.Namespace, onionservice.Name)
 				key, err := cache.MetaNamespaceKeyFunc(onionservice.GetObjectMeta())
 				if err == nil {
 					queue.AddAfter(key, 2*time.Second)
@@ -237,7 +233,7 @@ func (m *LocalManager) runOnionServiceCRDInformer(stopCh <-chan struct{}, s cach
 }
 
 func (m *LocalManager) onionServiceCRDWatcher(namespace string) {
-	//dynamic informer needs to be told which type to watch
+	// dynamic informer needs to be told which type to watch
 	onionserviceinformer, _ := GetDynamicInformer("onionservices.v1alpha2.tor.k8s.torproject.org", namespace)
 	stopper := make(chan struct{})
 	defer close(stopper)

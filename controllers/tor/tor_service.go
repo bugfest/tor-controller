@@ -21,27 +21,30 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
 func (r *TorReconciler) reconcileService(ctx context.Context, tor *torv1alpha2.Tor) error {
-	log := log.FromContext(ctx)
+	log := k8slog.FromContext(ctx)
 
 	serviceName := tor.ServiceName()
 	namespace := tor.Namespace
+
 	if serviceName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("service name must be specified"))
+		runtime.HandleError(errors.New("service name must be specified"))
+
 		return nil
 	}
 
@@ -49,24 +52,26 @@ func (r *TorReconciler) reconcileService(ctx context.Context, tor *torv1alpha2.T
 	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
 	newService := torService(tor)
-	if errors.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 
 		if len(newService.Spec.Ports) == 0 {
 			log.Info("No ports enabled, skipping service for this tor instance")
+
 			return nil
 		}
 
 		err := r.Create(ctx, newService)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create Service %#v", newService)
 		}
 		service = *newService
 	} else if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get Service %s", serviceName)
 	}
 
 	if !metav1.IsControlledBy(&service.ObjectMeta, tor) {
 		log.Info(fmt.Sprintf("Service %s already exists and is not controller by %s", service.Name, tor.Name))
+
 		return nil
 	}
 
@@ -74,7 +79,7 @@ func (r *TorReconciler) reconcileService(ctx context.Context, tor *torv1alpha2.T
 	if !serviceEqual(&service, newService) {
 		err := r.Update(ctx, newService)
 		if err != nil {
-			return fmt.Errorf("filed to update Service %#v", newService)
+			return errors.Wrapf(err, "failed to update Service %#v", newService)
 		}
 	}
 
@@ -104,13 +109,13 @@ func torService(tor *torv1alpha2.Tor) *corev1.Service {
 func getTorServicePortList(tor *torv1alpha2.Tor) []corev1.ServicePort {
 	ports := []corev1.ServicePort{}
 
-	for _, r := range tor.GetAllPorts() {
-		if r.Port.Enable {
+	for _, port := range tor.GetAllPorts() {
+		if port.Port.Enable {
 			port := corev1.ServicePort{
-				Name:       r.Name,
-				TargetPort: intstr.FromInt(int(r.Port.Port)),
-				Port:       r.Port.Port,
-				Protocol:   corev1.Protocol(r.Protocol),
+				Name:       port.Name,
+				TargetPort: intstr.FromInt(int(port.Port.Port)),
+				Port:       port.Port.Port,
+				Protocol:   corev1.Protocol(port.Protocol),
 			}
 			ports = append(ports, port)
 		}

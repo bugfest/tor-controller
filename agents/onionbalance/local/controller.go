@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -50,15 +51,15 @@ func (c *Controller) processNextItem() bool {
 }
 
 func (c *Controller) sync(key string) error {
-	log.Info(fmt.Sprintf("Getting key %s", key))
+	log.Infof("Getting key %s", key)
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
-		log.Error(fmt.Sprintf("Fetching object with key %s from store failed with %v", key, err))
+		log.Errorf("Fetching object with key %s from store failed with %v", key, err)
 		return err
 	}
 
 	if !exists {
-		log.Warn(fmt.Sprintf("onionBalancedService %s does not exist anymore", key))
+		log.Warnf("onionBalancedService %s does not exist anymore", key)
 	} else {
 		log.Debug(fmt.Sprintf("%v", obj))
 		onionBalancedService, err := parseOnionBalancedService(obj)
@@ -81,9 +82,9 @@ func (c *Controller) sync(key string) error {
 
 		if string(torfile) != torConfig {
 			// Configuration has changed, save new configs and reload the daemon.
-			log.Info(fmt.Sprintf("Updating onionbalance config for %s/%s", onionBalancedService.Namespace, onionBalancedService.Name))
+			log.Infof("Updating onionbalance config for %s/%s", onionBalancedService.Namespace, onionBalancedService.Name)
 
-			err = ioutil.WriteFile("/run/onionbalance/config.yaml", []byte(torConfig), 0644)
+			err = ioutil.WriteFile("/run/onionbalance/config.yaml", []byte(torConfig), 0o644)
 			if err != nil {
 				log.Error(fmt.Sprintf("Writing config failed with %v", err))
 				return err
@@ -114,7 +115,7 @@ func (c *Controller) updateOnionBalancedServiceStatus(onionBalancedService *v1al
 	newHostname := strings.TrimSpace(string(hostname))
 
 	if newHostname != onionBalancedService.Status.Hostname {
-		log.Info(fmt.Sprintf("Got new hostname: %s", newHostname))
+		log.Infof("Got new hostname: %s", newHostname)
 		onionBalancedService.Status.Hostname = newHostname
 
 		log.Debug(fmt.Sprintf("Updating onionBalancedService to: %v", onionBalancedService))
@@ -148,7 +149,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 	c.queue.Forget(key)
 	// Report to an external entity that, even after several retries, we could not successfully process this key
 	runtime.HandleError(err)
-	log.Info(fmt.Sprintf("Dropping onionBalancedService %q out of the queue: %v", key, err))
+	log.Infof("Dropping onionBalancedService %q out of the queue: %v", key, err)
 }
 
 func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
@@ -162,7 +163,7 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 
 	// Wait for all involved caches to be synced, before processing items from the queue is started
 	if !cache.WaitForCacheSync(stopCh, c.informer.HasSynced) {
-		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
+		runtime.HandleError(errors.New("timed out waiting for caches to sync"))
 		return
 	}
 

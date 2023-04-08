@@ -3,9 +3,6 @@ package local
 import (
 	"context"
 	"flag"
-	"fmt"
-
-	// "log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -27,13 +24,13 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/cockroachdb/errors"
+
 	onionbalancedaemon "github.com/bugfest/tor-controller/agents/onionbalance/onionbalancedaemon"
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-var (
-	namespace, onionBalancedServiceName string
-)
+var namespace, onionBalancedServiceName string
 
 func init() {
 	flag.StringVar(&namespace, "namespace", "",
@@ -41,7 +38,6 @@ func init() {
 
 	flag.StringVar(&onionBalancedServiceName, "name", "",
 		"The name of the onionBalancedService to manage.")
-
 }
 
 func GetClient() client.Client {
@@ -78,15 +74,15 @@ func New() *LocalManager {
 }
 
 func (m *LocalManager) Run() error {
-	var errors []error
+	var runErrors []error
 
 	if onionBalancedServiceName == "" {
-		errors = append(errors, fmt.Errorf("-name flag cannot be empty"))
+		runErrors = append(runErrors, errors.New("-name flag cannot be empty"))
 	}
 	if namespace == "" {
-		errors = append(errors, fmt.Errorf("-namespace flag cannot be empty"))
+		runErrors = append(runErrors, errors.New("-namespace flag cannot be empty"))
 	}
-	if err := utilerrors.NewAggregate(errors); err != nil {
+	if err := utilerrors.NewAggregate(runErrors); err != nil {
 		return err
 	}
 
@@ -111,8 +107,7 @@ func (m *LocalManager) Run() error {
 
 func (m *LocalManager) Must(err error) *LocalManager {
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 	return m
 }
@@ -125,14 +120,14 @@ func (m *LocalManager) signalHandler(ch chan os.Signal) {
 		case sig := <-ch:
 			switch sig {
 			case syscall.SIGHUP:
-				fmt.Println("received SIGHUP")
+				log.Println("received SIGHUP")
 
 			case syscall.SIGINT:
-				fmt.Println("received SIGINT")
+				log.Println("received SIGINT")
 				close(m.stopCh)
 
 			case syscall.SIGTERM:
-				fmt.Println("received SIGTERM")
+				log.Println("received SIGTERM")
 				close(m.stopCh)
 			}
 		}
@@ -152,7 +147,7 @@ func GetDynamicInformer(resourceType string, namespace string) (informers.Generi
 	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0,
 		namespace,
 		func(x *metav1.ListOptions) {
-			x.FieldSelector = fmt.Sprintf("metadata.name=%s", onionBalancedServiceName)
+			x.FieldSelector = "metadata.name" + onionBalancedServiceName
 		})
 
 	// "GroupVersionResource" to say what to watch e.g. "deployments.v1.apps" or "seldondeployments.v1.machinelearning.seldon.io"
@@ -169,15 +164,14 @@ func parseOnionBalancedService(obj interface{}) (torv1alpha2.OnionBalancedServic
 	err := runtime.DefaultUnstructuredConverter.
 		FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), &d)
 	if err != nil {
-		fmt.Println("could not convert obj to onionBalancedService")
-		fmt.Print(err)
+		log.Println("could not convert obj to onionBalancedService")
+		log.Print(err)
 		return d, err
 	}
 	return d, nil
 }
 
 func (m *LocalManager) runOnionBalancedServiceCRDInformer(stopCh <-chan struct{}, s cache.SharedIndexInformer, namespace string) {
-
 	// create the workqueue
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
@@ -188,7 +182,7 @@ func (m *LocalManager) runOnionBalancedServiceCRDInformer(stopCh <-chan struct{}
 			log.Debug("onionBalancedService added")
 			onionBalancedService, err := parseOnionBalancedService(obj)
 			if err == nil {
-				log.Info(fmt.Sprintf("Added onionBalancedService: %s/%s", onionBalancedService.Namespace, onionBalancedService.Name))
+				log.Infof("Added onionBalancedService: %s/%s", onionBalancedService.Namespace, onionBalancedService.Name)
 				key, err := cache.MetaNamespaceKeyFunc(onionBalancedService.GetObjectMeta())
 				if err != nil {
 					log.Error(err)
@@ -200,7 +194,7 @@ func (m *LocalManager) runOnionBalancedServiceCRDInformer(stopCh <-chan struct{}
 			log.Debug("onionBalancedService updated")
 			onionBalancedService, err := parseOnionBalancedService(newObj)
 			if err == nil {
-				log.Info(fmt.Sprintf("Updated onionBalancedService: %s/%s", onionBalancedService.Namespace, onionBalancedService.Name))
+				log.Infof("Updated onionBalancedService: %s/%s", onionBalancedService.Namespace, onionBalancedService.Name)
 				key, err := cache.MetaNamespaceKeyFunc(onionBalancedService.GetObjectMeta())
 				if err == nil {
 					queue.AddAfter(key, 2*time.Second)
@@ -211,7 +205,7 @@ func (m *LocalManager) runOnionBalancedServiceCRDInformer(stopCh <-chan struct{}
 			log.Debug("onionBalancedService deleted")
 			onionBalancedService, err := parseOnionBalancedService(obj)
 			if err == nil {
-				log.Info(fmt.Sprintf("Deleted onionBalancedService: %s/%s", onionBalancedService.Namespace, onionBalancedService.Name))
+				log.Infof("Deleted onionBalancedService: %s/%s", onionBalancedService.Namespace, onionBalancedService.Name)
 				key, err := cache.MetaNamespaceKeyFunc(onionBalancedService.GetObjectMeta())
 				if err == nil {
 					queue.AddAfter(key, 2*time.Second)
@@ -232,7 +226,7 @@ func (m *LocalManager) runOnionBalancedServiceCRDInformer(stopCh <-chan struct{}
 }
 
 func (m *LocalManager) onionBalancedServiceCRDWatcher(namespace string) {
-	//dynamic informer needs to be told which type to watch
+	// dynamic informer needs to be told which type to watch
 	onionBalancedServiceinformer, _ := GetDynamicInformer("onionbalancedservices.v1alpha2.tor.k8s.torproject.org", namespace)
 	stopper := make(chan struct{})
 	defer close(stopper)

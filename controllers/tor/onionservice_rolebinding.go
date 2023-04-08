@@ -21,26 +21,29 @@ import (
 	"fmt"
 
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
 func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onionService *torv1alpha2.OnionService) error {
-	log := log.FromContext(ctx)
+	log := k8slog.FromContext(ctx)
 
 	roleName := onionService.RoleName()
 	namespace := onionService.Namespace
+
 	if roleName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("role name must be specified"))
+		runtime.HandleError(errors.New("role name must be specified"))
+
 		return nil
 	}
 
@@ -48,18 +51,20 @@ func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onion
 	err := r.Get(ctx, types.NamespacedName{Name: roleName, Namespace: namespace}, &roleBinding)
 
 	newRolebinding := torOnionRolebinding(onionService)
-	if errors.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newRolebinding)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create Rolebinding %s", roleName)
 		}
+
 		roleBinding = *newRolebinding
 	} else if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get Rolebinding %s", roleName)
 	}
 
 	if !metav1.IsControlledBy(&roleBinding.ObjectMeta, onionService) {
 		log.Info(fmt.Sprintf("RoleBinding %s already exists and is not controlled by %s", roleBinding.Name, onionService.Name))
+
 		return nil
 	}
 
@@ -67,7 +72,7 @@ func (r *OnionServiceReconciler) reconcileRolebinding(ctx context.Context, onion
 	if !rolebindingEqual(&roleBinding, newRolebinding) {
 		err := r.Update(ctx, newRolebinding)
 		if err != nil {
-			return fmt.Errorf("filed to update Rolebinding %#v", newRolebinding)
+			return errors.Wrapf(err, "failed to update Rolebinding %s", roleName)
 		}
 	}
 
@@ -98,5 +103,4 @@ func torOnionRolebinding(onion *torv1alpha2.OnionService) *rbacv1.RoleBinding {
 			Name: onion.RoleName(),
 		},
 	}
-
 }
