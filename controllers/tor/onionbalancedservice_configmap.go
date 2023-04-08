@@ -49,7 +49,9 @@ type onionBalancedServiceTorConfig struct {
 	MetricsPortPolicy string
 }
 
-func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
+func (r *OnionBalancedServiceReconciler) reconcileConfigMap(
+	ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService,
+) error {
 	logger := k8slog.FromContext(ctx)
 
 	configMapName := onionBalancedService.ConfigMapName()
@@ -80,12 +82,10 @@ func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context,
 	}
 
 	if !metav1.IsControlledBy(&configmap.ObjectMeta, onionBalancedService) {
-		// msg := fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, OnionBalancedService.Name)
-		// TODO: generate MessageResourceExists event
-		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
-		// bc.recorder.Event(OnionBalancedService, corev1.EventTypeWarning, ErrResourceExists, msg)
-		// return errors.New(msg)
-		logger.Info("configmap already exists and is not controlled by onionbalancedservice", "configmap", configmap.Name, "onionbalancedservice", onionBalancedService.Name)
+		logger.Info("configmap already exists and is not controlled by onionbalancedservice",
+			"configmap", configmap.Name,
+			"onionbalancedservice", onionBalancedService.Name,
+		)
 
 		return nil
 	}

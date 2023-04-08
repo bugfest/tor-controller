@@ -62,13 +62,13 @@ type OnionV3 struct {
 }
 
 func GenerateOnionV3() (*OnionV3, error) {
-	k, err := ed25519.GenerateKey(nil)
+	key, err := ed25519.GenerateKey(nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate ed25519 key")
 	}
 
-	publicKey := k.PrivateKey().KeyPair().PublicKey()
-	privateKey := k.PrivateKey().KeyPair().PrivateKey()
+	publicKey := key.PrivateKey().KeyPair().PublicKey()
+	privateKey := key.PrivateKey().KeyPair().PrivateKey()
 
 	return GenerateOnionV3FromKeys(publicKey, privateKey)
 }
@@ -142,17 +142,17 @@ func GenerateOnionV3FromKeys(publicKey ed25519.PublicKey, privateKey ed25519.Pri
 // Source: https://gitlab.torproject.org/tpo/core/tor/-/blob/main/src/lib/defs/digest_sizes.h#L20
 // #define DIGEST_LEN 20
 
-func doHashPassword(in string) (string, error) {
-	const OUTPUT_LEN = 256
-	const S2K_RFC2440_SPECIFIER_LEN = 9
-	const DIGEST_LEN = 20
-	const ITERATIONS = 96
+func doHashPassword(input string) (string, error) {
+	const (
+		OutputLen    = 256
+		SpecifierLen = 9
+		DigestLen    = 20
+		Iterations   = 96
+	)
 
 	// 1) Generate S2K_RFC2440_SPECIFIER_LEN-1 random bytes
 	// 2) Set last key byte to 96
-	//
-	// out := make([]byte, DIGEST_LEN)
-	salt := make([]byte, S2K_RFC2440_SPECIFIER_LEN-1)
+	salt := make([]byte, SpecifierLen-1)
 
 	_, err := rand.Read(salt)
 	if err != nil {
@@ -161,12 +161,12 @@ func doHashPassword(in string) (string, error) {
 
 	// Inspired by: https://stackoverflow.com/questions/48054399/get-the-hashed-tor-password-automated-in-python
 	EXPBIAS := 6
-	c := ITERATIONS
+	c := Iterations
 	count := (16 + (c & 15)) << ((c >> 4) + EXPBIAS)
 	d := sha1.New()
 
-	inb := []byte(in)
-	tmp := append(salt[:S2K_RFC2440_SPECIFIER_LEN-1], inb...)
+	inb := []byte(input)
+	tmp := append(salt[:SpecifierLen-1], inb...)
 	slen := len(tmp)
 
 	for count > 0 {
@@ -181,7 +181,7 @@ func doHashPassword(in string) (string, error) {
 
 	return fmt.Sprintf("16:%s%s%s",
 		strings.ToUpper((hex.EncodeToString(salt))),
-		strings.ToUpper((hex.EncodeToString([]byte{ITERATIONS}))),
+		strings.ToUpper((hex.EncodeToString([]byte{Iterations}))),
 		strings.ToUpper((hex.EncodeToString(d.Sum(nil)))),
 	), nil
 }

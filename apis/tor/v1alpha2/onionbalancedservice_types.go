@@ -25,7 +25,6 @@ import (
 
 // OnionBalancedServiceSpec defines the desired state of OnionBalancedService
 type OnionBalancedServiceSpec struct {
-
 	// "Tor onion service descriptors can include a maximum of 10 introduction points."
 	// https://gitlab.torproject.org/tpo/core/onionbalance/-/blob/main/docs/v2/design.rst#L127
 	// We set max to 8 to match onionbalance maximum allowed value

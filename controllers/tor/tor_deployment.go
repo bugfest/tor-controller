@@ -75,6 +75,7 @@ func (r *TorReconciler) reconcileDeployment(ctx context.Context, tor *torv1alpha
 		logger.Info("Deployment already exists and not controlled by - skipping update",
 			"deployment", deployment.Name,
 			"controller", tor.Name)
+
 		return nil
 	}
 

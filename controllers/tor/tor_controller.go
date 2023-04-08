@@ -55,7 +55,7 @@ type TorReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := k8slog.FromContext(ctx)
-	// namespace, name := req.Namespace, req.Name
+
 	var tor torv1alpha2.Tor
 
 	err := r.Get(ctx, req.NamespacedName, &tor)

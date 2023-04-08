@@ -32,11 +32,14 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-func (r *OnionBalancedServiceReconciler) reconcileService(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
+func (r *OnionBalancedServiceReconciler) reconcileService(
+	ctx context.Context,
+	onionBalancedService *torv1alpha2.OnionBalancedService,
+) error {
 	logger := k8slog.FromContext(ctx)
 
-	serviceName := OnionBalancedService.ServiceName()
-	namespace := OnionBalancedService.Namespace
+	serviceName := onionBalancedService.ServiceName()
+	namespace := onionBalancedService.Namespace
 
 	if serviceName == "" {
 		// We choose to absorb the error here as the worker would requeue the
@@ -50,7 +53,7 @@ func (r *OnionBalancedServiceReconciler) reconcileService(ctx context.Context, O
 	var service corev1.Service
 	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
-	newService := onionbalanceService(OnionBalancedService)
+	newService := onionbalanceService(onionBalancedService)
 	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newService)
 		if err != nil {
@@ -62,10 +65,10 @@ func (r *OnionBalancedServiceReconciler) reconcileService(ctx context.Context, O
 		return errors.Wrapf(err, "failed to get Service %s", serviceName)
 	}
 
-	if !metav1.IsControlledBy(&service.ObjectMeta, OnionBalancedService) {
+	if !metav1.IsControlledBy(&service.ObjectMeta, onionBalancedService) {
 		logger.Info("Service already exists and is not controlled by",
 			"service", service.Name,
-			"controller", OnionBalancedService.Name)
+			"controller", onionBalancedService.Name)
 
 		return nil
 	}

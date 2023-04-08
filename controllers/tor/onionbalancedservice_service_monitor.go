@@ -33,7 +33,10 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionBalancedServiceReconciler) reconcileServiceMonitor(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
+func (r *OnionBalancedServiceReconciler) reconcileServiceMonitor(
+	ctx context.Context,
+	onionBalancedService *torv1alpha2.OnionBalancedService,
+) error {
 	logger := k8slog.FromContext(ctx)
 
 	if !r.monitoringInstalled(ctx) {

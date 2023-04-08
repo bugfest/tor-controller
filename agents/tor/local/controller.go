@@ -2,7 +2,6 @@ package local
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	log "github.com/sirupsen/logrus"
 
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -82,7 +82,7 @@ func (c *Controller) sync(key string) error {
 		if os.IsNotExist(err) {
 			reload = true
 		} else if err != nil {
-			return err
+			return errors.Wrap(err, "reading torfile")
 		} else if string(torfile) != torConfig {
 			reload = true
 		}
@@ -90,9 +90,9 @@ func (c *Controller) sync(key string) error {
 		if reload {
 			log.Infof("Updating tor config for %s/%s", onionService.Namespace, onionService.Name)
 
-			err = ioutil.WriteFile("/run/tor/torfile", []byte(torConfig), 0o644)
+			err = os.WriteFile("/run/tor/torfile", []byte(torConfig), 0o600)
 			if err != nil {
-				log.Error(fmt.Sprintf("Writing config failed with %v", err))
+				log.Errorf("Writing config failed with %v", err)
 				return err
 			}
 		}
@@ -160,7 +160,7 @@ func (c *Controller) sync(key string) error {
 			if os.IsNotExist(err) {
 				reload = true
 			} else if err != nil {
-				return err
+				return errors.Wrap(err, "reading ob_config")
 			} else if string(obfile) != obConfig {
 				reload = true
 			}
@@ -270,26 +270,28 @@ func copyIfNotExist(src string, dst string) error {
 	if os.IsNotExist(err) {
 		log.Infof("Creating copy of %s at %s", src, dst)
 
-		var err error
-		var srcfd *os.File
-		var dstfd *os.File
-		var srcinfo os.FileInfo
+		var (
+			err     error
+			srcfd   *os.File
+			dstfd   *os.File
+			srcinfo os.FileInfo
+		)
 
 		if srcfd, err = os.Open(src); err != nil {
-			return err
+			return errors.Wrap(err, "opening source file")
 		}
 		defer srcfd.Close()
 
 		if dstfd, err = os.Create(dst); err != nil {
-			return err
+			return errors.Wrap(err, "creating destination file")
 		}
 		defer dstfd.Close()
 
 		if _, err = io.Copy(dstfd, srcfd); err != nil {
-			return err
+			return errors.Wrap(err, "copying file")
 		}
 		if srcinfo, err = os.Stat(src); err != nil {
-			return err
+			return errors.Wrap(err, "getting source file info")
 		}
 		return os.Chmod(dst, srcinfo.Mode())
 	}

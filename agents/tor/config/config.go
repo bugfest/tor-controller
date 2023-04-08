@@ -5,6 +5,7 @@ import (
 	"text/template"
 
 	v1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
 const configFormat = `
@@ -28,8 +29,10 @@ MasterOnionAddress {{.MasterOnionAddress}}
 {{ end }}
 `
 
-var configTemplate = template.Must(template.New("config").Parse(configFormat))
-var oBconfigTemplate = template.Must(template.New("config").Parse(oBconfigFormat))
+var (
+	configTemplate   = template.Must(template.New("config").Parse(configFormat))
+	oBconfigTemplate = template.Must(template.New("config").Parse(oBconfigFormat))
+)
 
 type torConfig struct {
 	SocksPort                         string
@@ -53,6 +56,7 @@ type portTuple struct {
 
 func OnionServiceInputData(onion *v1alpha2.OnionService) torConfig {
 	ports := []portTuple{}
+
 	for _, rule := range onion.Spec.Rules {
 		port := portTuple{
 			ServicePort:      rule.Backend.Service.Port.Number,
@@ -79,21 +83,27 @@ func OnionServiceInputData(onion *v1alpha2.OnionService) torConfig {
 
 func TorConfigForService(onion *v1alpha2.OnionService) (string, error) {
 	s := OnionServiceInputData(onion)
+
 	var tmp bytes.Buffer
+
 	err := configTemplate.Execute(&tmp, s)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "Error while Marshaling. %v")
 	}
+
 	return tmp.String(), nil
 }
 
-// Generates ob_config file if this instance handles traffic on behalf of a master hidden service
+// Generates ob_config file if this instance handles traffic on behalf of a master hidden service.
 func ObConfigForService(onion *v1alpha2.OnionService) (string, error) {
 	s := OnionServiceInputData(onion)
+
 	var tmp bytes.Buffer
+
 	err := oBconfigTemplate.Execute(&tmp, s)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "Error while Marshaling. %v")
 	}
+
 	return tmp.String(), nil
 }

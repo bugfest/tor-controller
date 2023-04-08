@@ -17,48 +17,120 @@ limitations under the License.
 package tor
 
 import (
+	"reflect"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 )
 
-// func onionServiceEqual(a, b *torv1alpha2.OnionService) bool {
-// 	// TODO: actually detect differences
-// 	return false
-// }
+// deploymentEqual compares two deployments and returns true if they are equal.
+func deploymentEqual(dep1, dep2 *appsv1.Deployment) bool {
+	// Compare metadata
+	if !reflect.DeepEqual(dep1.ObjectMeta, dep2.ObjectMeta) {
+		return false
+	}
 
-func deploymentEqual(a, b *appsv1.Deployment) bool {
-	// TODO: actually detect differences
-	return false
-}
+	// Compare spec
+	if !reflect.DeepEqual(dep1.Spec, dep2.Spec) {
+		return false
+	}
 
-func serviceEqual(a, b *corev1.Service) bool {
-	// TODO: actually detect differences
+	// Compare status
+	if !reflect.DeepEqual(dep1.Status, dep2.Status) {
+		return false
+	}
+
 	return true
 }
 
-func monitorServiceEqual(a, b *monitoringv1.ServiceMonitor) bool {
-	// TODO: actually detect differences
+func serviceEqual(svc1, svc2 *corev1.Service) bool {
+	// Compare metadata
+	if !reflect.DeepEqual(svc1.ObjectMeta, svc2.ObjectMeta) {
+		return false
+	}
+
+	// Compare spec
+	if !reflect.DeepEqual(svc1.Spec, svc2.Spec) {
+		return false
+	}
+
+	// Compare status
+	if !reflect.DeepEqual(svc1.Status, svc2.Status) {
+		return false
+	}
+
 	return true
 }
 
-// func secretEqual(a, b *corev1.Service) bool {
-// 	// TODO: actually detect differences
-// 	return true
-// }
+func monitorServiceEqual(sm1, sm2 *monitoringv1.ServiceMonitor) bool {
+	// Compare metadata
+	if !reflect.DeepEqual(sm1.ObjectMeta, sm2.ObjectMeta) {
+		return false
+	}
 
-func serviceAccountEqual(a, b *corev1.ServiceAccount) bool {
-	// TODO: actually detect differences
+	// Compare spec
+	if !reflect.DeepEqual(sm1.Spec, sm2.Spec) {
+		return false
+	}
+
 	return true
 }
 
-func rolebindingEqual(a, b *rbacv1.RoleBinding) bool {
-	// TODO: actually detect differences
+func serviceAccountEqual(sa1, sa2 *corev1.ServiceAccount) bool {
+	// Compare metadata
+	if !reflect.DeepEqual(sa1.ObjectMeta, sa2.ObjectMeta) {
+		return false
+	}
+
+	// Compare secrets
+	if !reflect.DeepEqual(sa1.Secrets, sa2.Secrets) {
+		return false
+	}
+
+	// Compare image pull secrets
+	if !reflect.DeepEqual(sa1.ImagePullSecrets, sa2.ImagePullSecrets) {
+		return false
+	}
+
+	// Compare automount service account token
+	if !reflect.DeepEqual(sa1.AutomountServiceAccountToken, sa2.AutomountServiceAccountToken) {
+		return false
+	}
+
 	return true
 }
 
-func roleEqual(a, b *rbacv1.Role) bool {
-	// TODO: actually detect differences
+func rolebindingEqual(rb1, rb2 *rbacv1.RoleBinding) bool {
+	// Compare metadata
+	if !reflect.DeepEqual(rb1.ObjectMeta, rb2.ObjectMeta) {
+		return false
+	}
+
+	// Compare subjects
+	if !reflect.DeepEqual(rb1.Subjects, rb2.Subjects) {
+		return false
+	}
+
+	// Compare roleRef
+	if !reflect.DeepEqual(rb1.RoleRef, rb2.RoleRef) {
+		return false
+	}
+
+	return true
+}
+
+func roleEqual(role1, role2 *rbacv1.Role) bool {
+	// Compare metadata
+	if !reflect.DeepEqual(role1.ObjectMeta, role2.ObjectMeta) {
+		return false
+	}
+
+	// Compare rules
+	if !reflect.DeepEqual(role1.Rules, role2.Rules) {
+		return false
+	}
+
 	return true
 }

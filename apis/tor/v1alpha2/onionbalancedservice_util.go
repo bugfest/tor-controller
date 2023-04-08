@@ -20,6 +20,7 @@ func (s *OnionBalancedServiceSpec) GetVersion() int {
 	if s.Version == 2 {
 		v = 2
 	}
+
 	return v
 }
 
@@ -49,6 +50,7 @@ func (s *OnionBalancedService) SecretName() string {
 			return s.Spec.PrivateKeySecret.Name
 		}
 	}
+
 	return fmt.Sprintf(osSecretNameFmt, s.Name)
 }
 
@@ -89,6 +91,7 @@ func (s *OnionBalancedService) IsSynced() bool {
 			return false
 		}
 	}
+
 	return true
 }
 
