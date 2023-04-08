@@ -35,13 +35,13 @@ import (
 
 //nolint:unparam // as expected
 func (r *OnionBalancedServiceReconciler) reconcileBackends(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	// Reconcile each backend
 	for idx := int32(1); idx <= onionBalancedService.Spec.Backends; idx++ {
 		_, err := r.reconcileBackend(ctx, onionBalancedService, idx)
 		if err != nil {
-			log.Error(err, fmt.Sprintf("unable reconcile backend idx=%d", idx))
+			logger.Error(err, fmt.Sprintf("unable reconcile backend idx=%d", idx))
 		}
 	}
 

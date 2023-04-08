@@ -106,7 +106,7 @@ type torConfig struct {
 }
 
 func (r *TorReconciler) reconcileConfigMap(ctx context.Context, tor *torv1alpha2.Tor) error {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	configMapName := tor.ConfigMapName()
 	namespace := tor.Namespace
@@ -140,7 +140,9 @@ func (r *TorReconciler) reconcileConfigMap(ctx context.Context, tor *torv1alpha2
 		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
 		// bc.recorder.Event(Tor, corev1.EventTypeWarning, ErrResourceExists, msg)
 		// return errors.New(msg)
-		log.Info(fmt.Sprintf("ConfigMap %s already exists and is not controller by %s", configmap.Name, tor.Name))
+		logger.Info("ConfigMap already exists and is not controlled by",
+			"configmap", configmap.Name,
+			"controller", tor.Name)
 
 		return nil
 	}

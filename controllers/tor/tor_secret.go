@@ -18,7 +18,6 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -33,11 +32,11 @@ import (
 	"github.com/m1/go-generate-password/generator"
 )
 
-func (r *TorReconciler) reconcileControlSecret(ctx context.Context, Tor *torv1alpha2.Tor) error {
-	log := k8slog.FromContext(ctx)
+func (r *TorReconciler) reconcileControlSecret(ctx context.Context, tor *torv1alpha2.Tor) error {
+	logger := k8slog.FromContext(ctx)
 
-	secretName := Tor.SecretName()
-	namespace := Tor.Namespace
+	secretName := tor.SecretName()
+	namespace := tor.Namespace
 
 	if secretName == "" {
 		// We choose to absorb the error here as the worker would requeue the
@@ -52,7 +51,7 @@ func (r *TorReconciler) reconcileControlSecret(ctx context.Context, Tor *torv1al
 	err := r.Get(ctx, types.NamespacedName{Name: secretName, Namespace: namespace}, &secret)
 
 	password := generateRandomPassword()
-	newSecret := torSecret(Tor, password)
+	newSecret := torSecret(tor, password)
 
 	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newSecret)
@@ -65,7 +64,7 @@ func (r *TorReconciler) reconcileControlSecret(ctx context.Context, Tor *torv1al
 	}
 
 	var tmpSecret corev1.Secret
-	for _, secretRef := range Tor.Spec.Control.SecretRef {
+	for _, secretRef := range tor.Spec.Control.SecretRef {
 		err := r.Get(ctx, types.NamespacedName{Name: secretRef.Name, Namespace: namespace}, &tmpSecret)
 		if err != nil {
 			return errors.Wrapf(err, "failed to get secret %s", secretRef.Name)
@@ -74,26 +73,28 @@ func (r *TorReconciler) reconcileControlSecret(ctx context.Context, Tor *torv1al
 		for k := range tmpSecret.Data {
 			if k == secretRef.Key {
 				// Adds all the referenced secrets to Tor.Spec.Control.Secret for later use
-				Tor.Spec.Control.Secret = append(Tor.Spec.Control.Secret, string(tmpSecret.Data[k]))
+				tor.Spec.Control.Secret = append(tor.Spec.Control.Secret, string(tmpSecret.Data[k]))
 			}
 		}
 	}
 
-	if len(Tor.Spec.Control.Secret) == 0 && len(Tor.Spec.Control.SecretRef) == 0 {
+	if len(tor.Spec.Control.Secret) == 0 && len(tor.Spec.Control.SecretRef) == 0 {
 		// If the user did not define any password in the Control spec,
 		// update Control Secrets with the generated one
 		for _, s := range secret.Data {
-			Tor.Spec.Control.Secret = append(Tor.Spec.Control.Secret, string(s))
+			tor.Spec.Control.Secret = append(tor.Spec.Control.Secret, string(s))
 		}
 	}
 
-	if !metav1.IsControlledBy(&secret.ObjectMeta, Tor) {
+	if !metav1.IsControlledBy(&secret.ObjectMeta, tor) {
 		// msg := fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, OnionBalancedService.Name)
 		// TODO: generate MessageResourceExists event
 		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
 		// bc.recorder.Event(OnionBalancedService, corev1.EventTypeWarning, ErrResourceExists, msg)
 		// return errors.New(msg)
-		log.Info(fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, Tor.Name))
+		logger.Info("Secret already exists and is not controlled by",
+			"secret", secret.Name,
+			"controller", tor.Name)
 
 		return nil
 	}

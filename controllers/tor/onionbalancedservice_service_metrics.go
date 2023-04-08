@@ -18,7 +18,6 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -34,7 +33,7 @@ import (
 )
 
 func (r *OnionBalancedServiceReconciler) reconcileMetricsService(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	serviceName := onionBalancedService.ServiceMetricsName()
 	namespace := onionBalancedService.Namespace
@@ -63,7 +62,9 @@ func (r *OnionBalancedServiceReconciler) reconcileMetricsService(ctx context.Con
 	}
 
 	if !metav1.IsControlledBy(&service.ObjectMeta, onionBalancedService) {
-		log.Info(fmt.Sprintf("Service %s already exists and is not controller by %s", service.Name, onionBalancedService.Name))
+		logger.Info("service already exists and is not controlled by",
+			"service", service.Name,
+			"controller", onionBalancedService.Name)
 
 		return nil
 	}

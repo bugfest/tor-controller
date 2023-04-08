@@ -54,7 +54,7 @@ type TorReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 	// namespace, name := req.Namespace, req.Name
 	var tor torv1alpha2.Tor
 
@@ -63,7 +63,7 @@ func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 		// The Tor resource may no longer exist, in which case we stop
 		// processing.
 
-		log.Error(err, "unable to fetch Tor")
+		logger.Error(err, "unable to fetch Tor")
 
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
@@ -128,7 +128,7 @@ func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 
 	var service corev1.Service
 	if err := r.Get(ctx, types.NamespacedName{Name: instanceName, Namespace: namespace}, &service); err != nil {
-		log.Error(err, "unable to get service")
+		logger.Error(err, "unable to get service")
 
 		return ctrl.Result{}, errors.Wrap(err, "unable to get service")
 	}
@@ -136,7 +136,7 @@ func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	torCopy.Status.Config = "updateme"
 
 	if err := r.Status().Update(ctx, torCopy); err != nil {
-		log.Error(err, "unable to update Tor status")
+		logger.Error(err, "unable to update Tor status")
 
 		return ctrl.Result{}, errors.Wrap(err, "unable to update Tor status")
 	}

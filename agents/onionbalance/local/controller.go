@@ -61,22 +61,22 @@ func (c *Controller) sync(key string) error {
 	if !exists {
 		log.Warnf("onionBalancedService %s does not exist anymore", key)
 	} else {
-		log.Debug(fmt.Sprintf("%v", obj))
+		log.Debugf("%v", obj)
 		onionBalancedService, err := parseOnionBalancedService(obj)
 		if err != nil {
-			log.Error(fmt.Sprintf("Error in parseonionBalancedService: %s", err))
+			log.Errorf("Error in parseonionBalancedService: %s", err)
 			return err
 		}
 
 		torConfig, err := config.OnionBalanceConfigForService(&onionBalancedService)
 		if err != nil {
-			log.Error(fmt.Sprintf("Generating config failed with %v", err))
+			log.Errorf("Generating config failed with %v", err)
 			return err
 		}
 
 		torfile, err := ioutil.ReadFile("/run/onionbalance/config.yaml")
 		if err != nil && !os.IsNotExist(err) {
-			log.Error(fmt.Sprintf("Failed to read config file: %v", err))
+			log.Errorf("Failed to read config file: %v", err)
 			return err
 		}
 

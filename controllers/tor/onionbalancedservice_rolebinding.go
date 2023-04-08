@@ -18,7 +18,6 @@ package tor
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -34,7 +33,7 @@ import (
 )
 
 func (r *OnionBalancedServiceReconciler) reconcileRolebinding(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	roleName := onionBalancedService.RoleName()
 	namespace := onionBalancedService.Namespace
@@ -64,7 +63,9 @@ func (r *OnionBalancedServiceReconciler) reconcileRolebinding(ctx context.Contex
 	}
 
 	if !metav1.IsControlledBy(&roleBinding.ObjectMeta, onionBalancedService) {
-		log.Info(fmt.Sprintf("RoleBinding %s already exists and is not controlled by %s", roleBinding.Name, onionBalancedService.Name))
+		logger.Info("RoleBinding already exists and is not controlled by",
+			"RoleBinding", roleBinding.Name,
+			"controller", onionBalancedService.Name)
 
 		return nil
 	}

@@ -35,7 +35,7 @@ import (
 )
 
 func (r *TorReconciler) reconcileDeployment(ctx context.Context, tor *torv1alpha2.Tor) error {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	deploymentName := tor.DeploymentName()
 	namespace := tor.Namespace
@@ -72,8 +72,9 @@ func (r *TorReconciler) reconcileDeployment(ctx context.Context, tor *torv1alpha
 	// If the Deployment is not controlled by this Foo resource, we should log
 	// a warning to the event recorder and ret
 	if !metav1.IsControlledBy(&deployment.ObjectMeta, tor) {
-		log.Info(fmt.Sprintf("Deployment %s already exists and not controlled by %s - skipping update", deployment.Name, tor.Name))
-
+		logger.Info("Deployment already exists and not controlled by - skipping update",
+			"deployment", deployment.Name,
+			"controller", tor.Name)
 		return nil
 	}
 

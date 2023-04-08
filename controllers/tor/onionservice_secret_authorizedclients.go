@@ -44,7 +44,7 @@ const (
 )
 
 func (r *OnionServiceReconciler) reconcileSecretAuthorizedClients(ctx context.Context, onionService *torv1alpha2.OnionService) error {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	secretName := onionService.AuthorizedClientsSecretName()
 	namespace := onionService.Namespace
@@ -69,7 +69,8 @@ func (r *OnionServiceReconciler) reconcileSecretAuthorizedClients(ctx context.Co
 		acErr := r.Get(ctx, types.NamespacedName{Name: authorizedClientSecretRef.Name, Namespace: namespace}, &authorizedClientSecret)
 
 		if acErr != nil {
-			log.Info(fmt.Sprintf("authorizedClientSecretRef %s not found - skipping", authorizedClientSecretRef.Name))
+			logger.Info("authorizedClientSecretRef not found - skipping",
+				"authorizedClientSecretRef", authorizedClientSecretRef.Name)
 		} else {
 			// expeted keys:
 			// - authType (optional, default="descriptor") -> skipped, we use default
@@ -83,7 +84,9 @@ func (r *OnionServiceReconciler) reconcileSecretAuthorizedClients(ctx context.Co
 				if authKey, authKeyExists := authorizedClientSecret.Data[authorizedClientSecretRef.Key]; authKeyExists {
 					authorizedClients[fmt.Sprintf("client-%d.auth", idx)] = authKey
 				} else {
-					log.Info(fmt.Sprintf("authorizedClientSecretRef %s, key: %s not found - skipping", authorizedClientSecretRef.Name, authorizedClientSecretRef.Key))
+					logger.Info("authorizedClientSecretRef not found - skipping",
+						"authorizedClientSecretRef", authorizedClientSecretRef.Name,
+						"key", authorizedClientSecretRef.Key)
 				}
 			} else {
 				// secretRef does not specify a key. Check if "authKey" key exists
@@ -94,7 +97,8 @@ func (r *OnionServiceReconciler) reconcileSecretAuthorizedClients(ctx context.Co
 					if publicKey, publicKeyExists := authorizedClientSecret.Data[publicKeyLabel]; publicKeyExists {
 						authorizedClients[fmt.Sprintf("client-%d.auth", idx)] = []byte(fmt.Sprintf("%s:%s:%s", authTypeDefault, keyTypeDefault, publicKey))
 					} else {
-						log.Info(fmt.Sprintf("authorizedClientSecretRef %s is not valid - skipping", authorizedClientSecretRef.Name))
+						logger.Info("authorizedClientSecretRef is not valid - skipping",
+							"authorizedClientSecretRef", authorizedClientSecretRef.Name)
 					}
 				}
 			}
@@ -118,7 +122,9 @@ func (r *OnionServiceReconciler) reconcileSecretAuthorizedClients(ctx context.Co
 		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
 		// bc.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
 		// return errors.New(msg)
-		log.Info(fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, onionService.Name))
+		logger.Info("Secret already exists and is not controlled by",
+			"secret", secret.Name,
+			"controller", onionService.Name)
 
 		return nil
 	}

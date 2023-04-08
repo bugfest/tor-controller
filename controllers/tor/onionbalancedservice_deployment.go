@@ -18,7 +18,6 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -36,7 +35,7 @@ import (
 )
 
 func (r *OnionBalancedServiceReconciler) reconcileDeployment(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	deploymentName := onionBalancedService.DeploymentName()
 	namespace := onionBalancedService.Namespace
@@ -76,7 +75,9 @@ func (r *OnionBalancedServiceReconciler) reconcileDeployment(ctx context.Context
 	// If the Deployment is not controlled by this Foo resource, we should log
 	// a warning to the event recorder and ret
 	if !metav1.IsControlledBy(&deployment.ObjectMeta, onionBalancedService) {
-		log.Info(fmt.Sprintf("Deployment %s already exists and not controlled by %s - skipping update", deployment.Name, onionBalancedService.Name))
+		logger.Info("deployment already exists and not controlled by - skipping update",
+			"deployment", deployment.Name,
+			"controller", onionBalancedService.Name)
 
 		return nil
 	}

@@ -18,7 +18,6 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,7 +33,7 @@ import (
 )
 
 func (r *TorReconciler) reconcileServiceMonitor(ctx context.Context, tor *torv1alpha2.Tor) error {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	if !r.monitoringInstalled(ctx) {
 		// Service Monitor cannot be created; monitoring CRDs are not installed
@@ -74,7 +73,9 @@ func (r *TorReconciler) reconcileServiceMonitor(ctx context.Context, tor *torv1a
 	}
 
 	if !metav1.IsControlledBy(&service.ObjectMeta, tor) {
-		log.Info(fmt.Sprintf("ServiceMonitor %s already exists and is not controller by %s", service.Name, tor.Name))
+		logger.Info("ServiceMonitor already exists and is not controlled by",
+			"service", service.Name,
+			"controller", tor.Name)
 
 		return nil
 	}

@@ -18,7 +18,6 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -33,7 +32,7 @@ import (
 )
 
 func (r *TorReconciler) reconcileRole(ctx context.Context, tor *torv1alpha2.Tor) error {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	roleName := tor.RoleName()
 	namespace := tor.Namespace
@@ -62,7 +61,9 @@ func (r *TorReconciler) reconcileRole(ctx context.Context, tor *torv1alpha2.Tor)
 	}
 
 	if !metav1.IsControlledBy(&role.ObjectMeta, tor) {
-		log.Info(fmt.Sprintf("Role %s already exists and is not controlled by %s", role.Name, tor.Name))
+		logger.Info("Role already exists and is not controlled by",
+			"role", role.Name,
+			"controller", tor.Name)
 
 		return nil
 	}

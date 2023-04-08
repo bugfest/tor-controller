@@ -18,7 +18,6 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -34,7 +33,7 @@ import (
 )
 
 func (r *TorReconciler) reconcileService(ctx context.Context, tor *torv1alpha2.Tor) error {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	serviceName := tor.ServiceName()
 	namespace := tor.Namespace
@@ -55,7 +54,7 @@ func (r *TorReconciler) reconcileService(ctx context.Context, tor *torv1alpha2.T
 	if apierrors.IsNotFound(err) {
 
 		if len(newService.Spec.Ports) == 0 {
-			log.Info("No ports enabled, skipping service for this tor instance")
+			logger.Info("No ports enabled, skipping service for this tor instance")
 
 			return nil
 		}
@@ -70,7 +69,9 @@ func (r *TorReconciler) reconcileService(ctx context.Context, tor *torv1alpha2.T
 	}
 
 	if !metav1.IsControlledBy(&service.ObjectMeta, tor) {
-		log.Info(fmt.Sprintf("Service %s already exists and is not controller by %s", service.Name, tor.Name))
+		logger.Info("service already exists and is not controlled by",
+			"service", service.Name,
+			"controller", tor.Name)
 
 		return nil
 	}

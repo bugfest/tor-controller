@@ -50,7 +50,7 @@ type onionBalancedServiceTorConfig struct {
 }
 
 func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	configMapName := onionBalancedService.ConfigMapName()
 	namespace := onionBalancedService.Namespace
@@ -85,7 +85,7 @@ func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context,
 		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
 		// bc.recorder.Event(OnionBalancedService, corev1.EventTypeWarning, ErrResourceExists, msg)
 		// return errors.New(msg)
-		log.Info("configmap already exists and is not controlled by onionbalancedservice", "configmap", configmap.Name, "onionbalancedservice", onionBalancedService.Name)
+		logger.Info("configmap already exists and is not controlled by onionbalancedservice", "configmap", configmap.Name, "onionbalancedservice", onionBalancedService.Name)
 
 		return nil
 	}

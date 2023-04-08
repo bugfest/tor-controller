@@ -18,7 +18,6 @@ package tor
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -67,7 +66,7 @@ type OnionBalancedServiceReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.10.0/pkg/reconcile
 func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	// namespace, name := req.Namespace, req.Name
 	var OnionBalancedService torv1alpha2.OnionBalancedService
@@ -76,7 +75,7 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 	if err != nil {
 		// The OnionBalancedService resource may no longer exist, in which case we stop
 		// processing.
-		log.Error(err, "unable to fetch OnionBalancedService")
+		logger.Error(err, "unable to fetch OnionBalancedService")
 
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
@@ -176,12 +175,13 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 	if err != nil {
 		// The OnionService (backends) resource may no longer exist, in which case we stop
 		// processing.
-		log.Error(err, "unable to list OnionServices")
+		logger.Error(err, "unable to list OnionServices")
 	}
 
 	backends := map[string]torv1alpha2.OnionServiceStatus{}
 
-	log.Info(fmt.Sprintf("Found %d backends", len(onionServiceList.Items)))
+	logger.Info("found backends",
+		"count", len(onionServiceList.Items))
 
 	for index := range onionServiceList.Items {
 		backends[onionServiceList.Items[index].Name] = *onionServiceList.Items[index].Status.DeepCopy()
@@ -190,7 +190,7 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 	OnionBalancedServiceCopy.Status.Backends = backends
 
 	if err := r.Status().Update(ctx, OnionBalancedServiceCopy); err != nil {
-		log.Error(err, "unable to update OnionBalancedService status")
+		logger.Error(err, "unable to update OnionBalancedService status")
 
 		return ctrl.Result{}, errors.Wrap(err, "unable to update OnionBalancedService status")
 	}

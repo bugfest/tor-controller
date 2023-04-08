@@ -18,7 +18,6 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -33,7 +32,7 @@ import (
 )
 
 func (r *OnionBalancedServiceReconciler) reconcileSecret(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	secretName := onionBalancedService.SecretName()
 	namespace := onionBalancedService.Namespace
@@ -71,7 +70,9 @@ func (r *OnionBalancedServiceReconciler) reconcileSecret(ctx context.Context, on
 		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
 		// bc.recorder.Event(OnionBalancedService, corev1.EventTypeWarning, ErrResourceExists, msg)
 		// return errors.New(msg)
-		log.Info(fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, onionBalancedService.Name))
+		logger.Info("secret already exists and is not controlled by",
+			"secret", secret.Name,
+			"controller", onionBalancedService.Name)
 
 		return nil
 	}
