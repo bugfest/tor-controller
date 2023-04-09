@@ -2,7 +2,6 @@ package local
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"path"
@@ -90,7 +89,7 @@ func (c *Controller) sync(key string) error {
 
 	onionService, err := parseOnionService(obj)
 	if err != nil {
-		log.Error(fmt.Sprintf("Error in parseOnionService: %s", err))
+		log.Errorf("Error in parseOnionService: %s", err)
 
 		return errors.Wrap(err, "parsing onion service")
 	}
@@ -98,7 +97,7 @@ func (c *Controller) sync(key string) error {
 	// torfile
 	torConfig, err := config.TorConfigForService(&onionService)
 	if err != nil {
-		log.Error(fmt.Sprintf("Generating config failed with %v", err))
+		log.Errorf("Generating config failed with %v", err)
 
 		return errors.Wrap(err, "generating config")
 	}
@@ -119,7 +118,7 @@ func (c *Controller) sync(key string) error {
 	if reload {
 		err = serviceReload(&onionService, []byte(torConfig))
 		if err != nil {
-			log.Error(fmt.Sprintf("Reloading service failed with %v", err))
+			log.Errorf("Reloading service failed with %v", err)
 
 			return errors.Wrap(err, "reloading service")
 		}
@@ -193,7 +192,7 @@ func (c *Controller) sync(key string) error {
 	if len(onionService.Spec.MasterOnionAddress) > 0 {
 		obConfig, err := config.ObConfigForService(&onionService)
 		if err != nil {
-			log.Error(fmt.Sprintf("Generating ob_config failed with %v", err))
+			log.Errorf("Generating ob_config failed with %v", err)
 
 			return errors.Wrap(err, "generating ob_config")
 		}
@@ -214,7 +213,7 @@ func (c *Controller) sync(key string) error {
 
 			err = os.WriteFile("/run/tor/service/ob_config", []byte(obConfig), defaultUnixPermission)
 			if err != nil {
-				log.Error(fmt.Sprintf("Writing config failed with %v", err))
+				log.Errorf("Writing config failed with %v", err)
 
 				return errors.Wrap(err, "writing ob_config")
 			}
@@ -227,7 +226,7 @@ func (c *Controller) sync(key string) error {
 
 	err = c.updateOnionServiceStatus(&onionService)
 	if err != nil {
-		log.Error(fmt.Sprintf("Updating status failed with %v", err))
+		log.Errorf("Updating status failed with %v", err)
 
 		return errors.Wrap(err, "updating status")
 	}
@@ -238,7 +237,7 @@ func (c *Controller) sync(key string) error {
 func (c *Controller) updateOnionServiceStatus(onionService *v1alpha2.OnionService) error {
 	hostname, err := os.ReadFile("/run/tor/service/hostname")
 	if err != nil {
-		log.Error(fmt.Sprintf("Got this error when trying to find hostname: %v", err))
+		log.Errorf("Got this error when trying to find hostname: %v", err)
 
 		return errors.Wrap(err, "reading hostname")
 	}
@@ -249,11 +248,11 @@ func (c *Controller) updateOnionServiceStatus(onionService *v1alpha2.OnionServic
 		log.Infof("Got new hostname: %s", newHostname)
 		onionService.Status.Hostname = newHostname
 
-		log.Debug(fmt.Sprintf("Updating onionService to: %v", onionService))
+		log.Debugf("Updating onionService to: %v", onionService)
 
 		err = c.localManager.kclient.Status().Update(context.Background(), onionService)
 		if err != nil {
-			log.Error(fmt.Sprintf("Error updating onionService: %s", err))
+			log.Errorf("Error updating onionService: %s", err)
 
 			return errors.Wrap(err, "updating onionService")
 		}
@@ -273,7 +272,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 	// This controller retries 5 times if something goes wrong. After that, it stops trying.
 	//nolint:gomnd // 5 is a reasonable number of retries
 	if c.queue.NumRequeues(key) < 5 {
-		log.Error(fmt.Sprintf("Error syncing onionservice %v: %v", key, err))
+		log.Errorf("Error syncing onionservice %v: %v", key, err)
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.

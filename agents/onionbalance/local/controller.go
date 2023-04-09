@@ -1,7 +1,6 @@
 package local
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -105,7 +104,7 @@ func (c *Controller) sync(key string) error {
 
 		err = os.WriteFile("/run/onionbalance/config.yaml", []byte(torConfig), defaultUnixPermission)
 		if err != nil {
-			log.Error(fmt.Sprintf("Writing config failed with %v", err))
+			log.Errorf("Writing config failed with %v", err)
 
 			return errors.Wrapf(err, "writing config failed")
 		}
@@ -130,7 +129,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 	// This controller retries 5 times if something goes wrong. After that, it stops trying.
 	//nolint:gomnd // just tries
 	if c.queue.NumRequeues(key) < 5 {
-		log.Error(fmt.Sprintf("Error syncing onionBalancedService %v: %v", key, err))
+		log.Errorf("Error syncing onionBalancedService %v: %v", key, err)
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.

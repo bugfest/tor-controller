@@ -3,7 +3,6 @@ package local
 import (
 	"context"
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -164,7 +163,7 @@ func GetDynamicInformer(resourceType, namespace string) (informers.GenericInform
 	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dynamicConfig, 0,
 		namespace,
 		func(x *metav1.ListOptions) {
-			x.FieldSelector = fmt.Sprintf("metadata.name=%s", onionServiceName)
+			x.FieldSelector = "metadata.name=" + onionServiceName
 		})
 
 	// "GroupVersionResource" to say what to watch e.g. "deployments.v1.apps" or "seldondeployments.v1.machinelearning.seldon.io"

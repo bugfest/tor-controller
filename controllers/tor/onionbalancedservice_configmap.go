@@ -19,7 +19,6 @@ package tor
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"html/template"
 
 	corev1 "k8s.io/api/core/v1"
@@ -80,12 +79,12 @@ func (r *OnionBalancedServiceReconciler) reconcileConfigMap(
 	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newConfigMap)
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("failed to create configmap %s", configMapName))
+			return errors.Wrapf(err, "failed to create configmap %s", configMapName)
 		}
 
 		configmap = *newConfigMap
 	} else if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to get configmap %s", configMapName))
+		return errors.Wrapf(err, "failed to get configmap %s", configMapName)
 	}
 
 	if !metav1.IsControlledBy(&configmap.ObjectMeta, onionBalancedService) {

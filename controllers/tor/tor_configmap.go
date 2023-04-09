@@ -19,7 +19,6 @@ package tor
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"strings"
 	"text/template"
 
@@ -136,11 +135,7 @@ func (r *Reconciler) reconcileConfigMap(ctx context.Context, tor *torv1alpha2.To
 	}
 
 	if !metav1.IsControlledBy(&configmap.ObjectMeta, tor) {
-		// msg := fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, Tor.Name)
 		// TODO: generate MessageResourceExists event
-		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
-		// bc.recorder.Event(Tor, corev1.EventTypeWarning, ErrResourceExists, msg)
-		// return errors.New(msg)
 		logger.Info("ConfigMap already exists and is not controlled by",
 			"configmap", configmap.Name,
 			"controller", tor.Name)
@@ -167,7 +162,7 @@ func torConfigFile(tor *torv1alpha2.Tor) string {
 
 	err := configTemplate.Execute(&tmp, config)
 	if err != nil {
-		return fmt.Sprintf("# error in template: %s", err)
+		return "# error in template: %s" + err.Error()
 	}
 
 	return tmp.String()

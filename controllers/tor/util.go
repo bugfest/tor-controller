@@ -74,7 +74,7 @@ func GenerateOnionV3() (*OnionV3, error) {
 }
 
 func GenerateOnionV3FromKeys(publicKey ed25519.PublicKey, privateKey ed25519.PrivateKey) (*OnionV3, error) {
-	onionAddress := fmt.Sprintf("%s.onion", torutil.OnionServiceIDFromV3PublicKey(publicKey))
+	onionAddress := torutil.OnionServiceIDFromV3PublicKey(publicKey) + ".onion"
 
 	privateKeyFile := append([]byte("== ed25519v1-secret: type0 ==\x00\x00\x00"), privateKey[:]...)
 	publicKeyFile := append([]byte("== ed25519v1-public: type0 ==\x00\x00\x00"), publicKey...)

@@ -18,7 +18,6 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -65,7 +64,7 @@ type OnionServiceReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.10.0/pkg/reconcile
 func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := k8slog.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	var onionService torv1alpha2.OnionService
 
@@ -73,7 +72,7 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	if err != nil {
 		// The OnionService resource may no longer exist, in which case we stop
 		// processing.
-		log.Error(err, "unable to fetch OnionService")
+		logger.Error(err, "unable to fetch OnionService")
 
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
@@ -89,7 +88,7 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		var service corev1.Service
 
 		if err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service); err != nil {
-			log.Error(err, "service not found")
+			logger.Error(err, "service not found")
 
 			return ctrl.Result{}, errors.Wrap(err, "service not found")
 		}
@@ -101,7 +100,8 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		}
 
 		if !portExists(service.Spec.Ports, &ruleBackendService) {
-			log.Error(err, fmt.Sprintf("port in service rule %#v not found in target service", ruleBackendService))
+			logger.Error(err, "Port not found in target service rule",
+				"ruleBackendService", ruleBackendService)
 
 			return ctrl.Result{}, errors.Wrapf(err, "port in service rule %#v not found in target service", ruleBackendService)
 		}
@@ -161,7 +161,7 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	err = r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 	if err != nil {
-		log.Error(err, "unable to get service")
+		logger.Error(err, "unable to get service")
 	}
 
 	var clusterIP string
@@ -178,7 +178,7 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	onionServiceCopy.Status.TargetClusterIP = clusterIP
 
 	if err := r.Status().Update(ctx, onionServiceCopy); err != nil {
-		log.Error(err, "unable to update OnionService status")
+		logger.Error(err, "unable to update OnionService status")
 
 		return ctrl.Result{}, errors.Wrap(err, "unable to update OnionService status")
 	}

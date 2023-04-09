@@ -18,7 +18,6 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,7 +40,8 @@ func (r *OnionBalancedServiceReconciler) reconcileBackends(ctx context.Context, 
 	for idx := int32(1); idx <= onionBalancedService.Spec.Backends; idx++ {
 		_, err := r.reconcileBackend(ctx, onionBalancedService, idx)
 		if err != nil {
-			logger.Error(err, fmt.Sprintf("unable reconcile backend idx=%d", idx))
+			logger.Error(err, "Unable to reconcile backend",
+				"idx", idx)
 		}
 	}
 
