@@ -18,23 +18,23 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	corev1 "k8s.io/api/core/v1"
 
 	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
-// OnionServiceReconciler reconciles a OnionService object
+// OnionServiceReconciler reconciles a OnionService object.
 type OnionServiceReconciler struct {
 	client.Client
 	Scheme        *runtime.Scheme
@@ -64,46 +64,46 @@ type OnionServiceReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.10.0/pkg/reconcile
 func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
-	//namespace, name := req.Namespace, req.Name
 	var onionService torv1alpha2.OnionService
 
 	err := r.Get(ctx, req.NamespacedName, &onionService)
 	if err != nil {
 		// The OnionService resource may no longer exist, in which case we stop
 		// processing.
-
-		log.Error(err, "unable to fetch OnionService")
+		logger.Error(err, "unable to fetch OnionService")
 
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
 		// on deleted requests.
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		return ctrl.Result{}, errors.Wrap(client.IgnoreNotFound(err), "unable to fetch OnionService")
 	}
 
 	namespace := onionService.Namespace
 
 	for _, rule := range onionService.Spec.Rules {
-		// for num, rule := range onionService.Spec.Rules {
-		// log.Info(fmt.Sprintf("rule %d: %#v", num, rule))
-
 		serviceName := rule.Backend.Service.Name
+
 		var service corev1.Service
 
 		if err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service); err != nil {
-			log.Error(err, "service not found")
-			return ctrl.Result{}, err
+			logger.Error(err, "service not found")
+
+			return ctrl.Result{}, errors.Wrap(err, "service not found")
 		}
 
-		rule_backend_service := corev1.ServicePort{
+		ruleBackendService := corev1.ServicePort{
 			Name:     rule.Backend.Service.Port.Name,
 			Port:     rule.Backend.Service.Port.Number,
 			Protocol: "TCP",
 		}
-		if !portExists(service.Spec.Ports, rule_backend_service) {
-			log.Error(err, fmt.Sprintf("port in service rule %#v not found in target service", rule_backend_service))
-			return ctrl.Result{}, err
+
+		if !portExists(service.Spec.Ports, &ruleBackendService) {
+			logger.Error(err, "Port not found in target service rule",
+				"ruleBackendService", ruleBackendService)
+
+			return ctrl.Result{}, errors.Wrapf(err, "port in service rule %#v not found in target service", ruleBackendService)
 		}
 	}
 
@@ -152,32 +152,35 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 
-	// bc.recorder.Event(onionService, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
-
 	// Finally, we update the status block of the OnionService resource to reflect the
 	// current state of the world
 	onionServiceCopy := onionService.DeepCopy()
 	serviceName := onionService.ServiceName()
 
 	var service corev1.Service
-	err = r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
-	clusterIP := ""
-	if errors.IsNotFound(err) {
-		clusterIP = "0.0.0.0"
-	} else if err != nil {
-		return ctrl.Result{}, err
-	} else {
+	err = r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
+	if err != nil {
+		logger.Error(err, "unable to get service")
+	}
+
+	var clusterIP string
+
+	switch {
+	case apierrors.IsNotFound(err):
+		clusterIP = defaultClusterIP
+	case err != nil:
+		return ctrl.Result{}, errors.Wrap(err, "unable to get service")
+	default:
 		clusterIP = service.Spec.ClusterIP
 	}
 
 	onionServiceCopy.Status.TargetClusterIP = clusterIP
-	// hostname := "test.onion"
-	// onionService.Status.Hostname = hostname
 
 	if err := r.Status().Update(ctx, onionServiceCopy); err != nil {
-		log.Error(err, "unable to update OnionService status")
-		return ctrl.Result{}, err
+		logger.Error(err, "unable to update OnionService status")
+
+		return ctrl.Result{}, errors.Wrap(err, "unable to update OnionService status")
 	}
 
 	return ctrl.Result{}, nil
@@ -186,8 +189,14 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 // SetupWithManager sets up the controller with the Manager.
 func (r *OnionServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	pred := predicate.GenerationChangedPredicate{}
-	return ctrl.NewControllerManagedBy(mgr).
+
+	err := ctrl.NewControllerManagedBy(mgr).
 		For(&torv1alpha2.OnionService{}).
 		WithEventFilter(pred).
 		Complete(r)
+	if err != nil {
+		return errors.Wrap(err, "unable to create OnionService controller")
+	}
+
+	return nil
 }

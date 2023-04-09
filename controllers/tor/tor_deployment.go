@@ -27,22 +27,25 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
-func (r *TorReconciler) reconcileDeployment(ctx context.Context, tor *torv1alpha2.Tor) error {
-	log := log.FromContext(ctx)
+func (r *Reconciler) reconcileDeployment(ctx context.Context, tor *torv1alpha2.Tor) error {
+	logger := k8slog.FromContext(ctx)
 
 	deploymentName := tor.DeploymentName()
 	namespace := tor.Namespace
+
 	if deploymentName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("%s/%s: deployment name must be specified", tor.Namespace, tor.Name))
+		runtime.HandleError(errors.Newf("%s/%s: deployment name must be specified", tor.Namespace, tor.Name))
+
 		return nil
 	}
 
@@ -51,24 +54,29 @@ func (r *TorReconciler) reconcileDeployment(ctx context.Context, tor *torv1alpha
 
 	// If the deployment doesn't exist, we'll create it
 	projectConfig := r.ProjectConfig
-	newDeployment := torDeployment(tor, projectConfig)
+	newDeployment := torDeployment(tor, &projectConfig)
+
 	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newDeployment)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create Deployment %s/%s", namespace, deploymentName)
 		}
+
 		deployment = *newDeployment
 	} else if err != nil {
 		// If an error occurs during Get/Create, we'll requeue the item so we can
 		// attempt processing again later. This could have been caused by a
 		// temporary network failure, or any other transient reason.
-		return err
+		return errors.Wrapf(err, "failed to get Deployment %s/%s", namespace, deploymentName)
 	}
 
 	// If the Deployment is not controlled by this Foo resource, we should log
 	// a warning to the event recorder and ret
 	if !metav1.IsControlledBy(&deployment.ObjectMeta, tor) {
-		log.Info(fmt.Sprintf("Deployment %s already exists and not controlled by %s - skipping update", deployment.Name, tor.Name))
+		logger.Info("Deployment already exists and not controlled by - skipping update",
+			"deployment", deployment.Name,
+			"controller", tor.Name)
+
 		return nil
 	}
 
@@ -76,15 +84,14 @@ func (r *TorReconciler) reconcileDeployment(ctx context.Context, tor *torv1alpha
 	if !deploymentEqual(&deployment, newDeployment) {
 		err := r.Update(ctx, newDeployment)
 		if err != nil {
-			return fmt.Errorf("filed to update Deployment %#v", newDeployment)
+			return errors.Wrapf(err, "failed to update Deployment %s/%s", namespace, deploymentName)
 		}
 	}
 
 	return nil
 }
 
-func torDeployment(tor *torv1alpha2.Tor, projectConfig configv2.ProjectConfig) *appsv1.Deployment {
-
+func torDeployment(tor *torv1alpha2.Tor, projectConfig *configv2.ProjectConfig) *appsv1.Deployment {
 	// new deployment
 	if tor.Spec.Replicas == 0 {
 		tor.Spec.Replicas = 1
@@ -122,7 +129,6 @@ func torDeployment(tor *torv1alpha2.Tor, projectConfig configv2.ProjectConfig) *
 	}
 
 	for i, ConfigMapKeyRef := range tor.Spec.ConfigMapKeyRef {
-
 		volumeName := fmt.Sprintf("custom-%d", i)
 		fileName := fmt.Sprintf("custom-%d.conf", i)
 
@@ -145,7 +151,6 @@ func torDeployment(tor *torv1alpha2.Tor, projectConfig configv2.ProjectConfig) *
 			Name:      volumeName,
 			MountPath: fmt.Sprintf("/config/%s", volumeName),
 		})
-
 	}
 
 	// Fetch Pod Template

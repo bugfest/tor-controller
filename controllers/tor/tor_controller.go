@@ -23,17 +23,18 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	corev1 "k8s.io/api/core/v1"
 
 	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
-// TorReconciler reconciles a Tor object
-type TorReconciler struct {
+// Reconciler reconciles a Tor object.
+type Reconciler struct {
 	client.Client
 	Scheme        *runtime.Scheme
 	ProjectConfig configv2.ProjectConfig
@@ -52,22 +53,21 @@ type TorReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
-func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
-	//namespace, name := req.Namespace, req.Name
+func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	logger := k8slog.FromContext(ctx)
+
 	var tor torv1alpha2.Tor
 
 	err := r.Get(ctx, req.NamespacedName, &tor)
 	if err != nil {
 		// The Tor resource may no longer exist, in which case we stop
 		// processing.
-
-		log.Error(err, "unable to fetch Tor")
+		logger.Error(err, "unable to fetch Tor")
 
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
 		// on deleted requests.
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		return ctrl.Result{}, errors.Wrap(client.IgnoreNotFound(err), "unable to fetch Tor")
 	}
 
 	namespace := tor.Namespace
@@ -127,25 +127,33 @@ func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 
 	var service corev1.Service
 	if err := r.Get(ctx, types.NamespacedName{Name: instanceName, Namespace: namespace}, &service); err != nil {
-		log.Error(err, "unable to get service")
-		return ctrl.Result{}, err
+		logger.Error(err, "unable to get service")
+
+		return ctrl.Result{}, errors.Wrap(err, "unable to get service")
 	}
 
 	torCopy.Status.Config = "updateme"
 
 	if err := r.Status().Update(ctx, torCopy); err != nil {
-		log.Error(err, "unable to update Tor status")
-		return ctrl.Result{}, err
+		logger.Error(err, "unable to update Tor status")
+
+		return ctrl.Result{}, errors.Wrap(err, "unable to update Tor status")
 	}
 
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *TorReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	pred := predicate.GenerationChangedPredicate{}
-	return ctrl.NewControllerManagedBy(mgr).
+
+	err := ctrl.NewControllerManagedBy(mgr).
 		For(&torv1alpha2.Tor{}).
 		WithEventFilter(pred).
 		Complete(r)
+	if err != nil {
+		return errors.Wrap(err, "unable to create controller")
+	}
+
+	return nil
 }

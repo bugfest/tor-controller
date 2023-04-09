@@ -32,7 +32,7 @@ import (
 // +kubebuilder:storageversion
 // +kubebuilder:object:root=true
 
-// ProjectConfig is the Schema for the projectconfigs API
+// ProjectConfig is the Schema for the projectconfigs API.
 type ProjectConfig struct {
 	metav1.TypeMeta `json:",inline"`
 

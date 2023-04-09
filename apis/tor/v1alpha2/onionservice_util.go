@@ -22,6 +22,7 @@ func (s *OnionServiceSpec) GetVersion() int {
 	if s.Version == 2 {
 		v = 2
 	}
+
 	return v
 }
 
@@ -52,6 +53,7 @@ func (s *OnionService) SecretName() string {
 	if len(s.Spec.PrivateKeySecret.Name) > 0 {
 		return s.Spec.PrivateKeySecret.Name
 	}
+
 	return fmt.Sprintf(osSecretNameFmt, s.Name)
 }
 
@@ -64,6 +66,7 @@ func (s *OnionService) ServiceSelector() map[string]string {
 		"app":        s.ServiceName(),
 		"controller": s.Name,
 	}
+
 	return serviceSelector
 }
 

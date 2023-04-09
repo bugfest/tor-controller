@@ -23,7 +23,7 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// OnionServiceSpec defines the desired state of OnionService
+// OnionServiceSpec defines the desired state of OnionService.
 type OnionServiceSpec struct {
 	// The list of ports that are exposed by this service.
 	// +patchMergeKey=publicPort
@@ -61,7 +61,7 @@ type ServicePort struct {
 	TargetPort int32 `json:"targetPort,omitempty"`
 }
 
-// SecretReference represents a Secret Reference
+// SecretReference represents a Secret Reference.
 type SecretReference struct {
 	// Name is unique within a namespace to reference a secret resource.
 	Name string `json:"name,omitempty"`
@@ -69,10 +69,10 @@ type SecretReference struct {
 	Key string `json:"key,omitempty"`
 }
 
-// OnionServiceStatus defines the observed state of OnionService
+// OnionServiceStatus defines the observed state of OnionService.
 type OnionServiceStatus struct {
 	Hostname        string `json:"hostname"`
-	TargetClusterIP string `json:"targetClusterIP"`
+	TargetClusterIP string `json:"targetClusterIp"`
 }
 
 // +kubebuilder:object:root=true
@@ -81,7 +81,7 @@ type OnionServiceStatus struct {
 // +kubebuilder:printcolumn:name="TargetClusterIP",type=string,JSONPath=`.status.targetClusterIP`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
-// OnionService is the Schema for the onionservices API
+// OnionService is the Schema for the onionservices API.
 type OnionService struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -92,7 +92,7 @@ type OnionService struct {
 
 // +kubebuilder:object:root=true
 
-// OnionServiceList contains a list of OnionService
+// OnionServiceList contains a list of OnionService.
 type OnionServiceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

@@ -18,7 +18,6 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -27,22 +26,25 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
 func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionService *torv1alpha2.OnionService) error {
-	log := log.FromContext(ctx)
+	logger := k8slog.FromContext(ctx)
 
 	deploymentName := onionService.DeploymentName()
 	namespace := onionService.Namespace
+
 	if deploymentName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("%s/%s: deployment name must be specified", onionService.Namespace, onionService.Name))
+		runtime.HandleError(errors.Errorf("%s/%s: deployment name must be specified", onionService.Namespace, onionService.Name))
+
 		return nil
 	}
 
@@ -51,24 +53,29 @@ func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionS
 
 	// If the deployment doesn't exist, we'll create it
 	projectConfig := r.ProjectConfig
-	newDeployment := torOnionServiceDeployment(onionService, projectConfig)
+	newDeployment := torOnionServiceDeployment(onionService, &projectConfig)
+
 	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newDeployment)
 		if err != nil {
-			return err
+			return errors.Errorf("failed to create Deployment %#v", newDeployment)
 		}
+
 		deployment = *newDeployment
 	} else if err != nil {
 		// If an error occurs during Get/Create, we'll requeue the item so we can
 		// attempt processing again later. This could have been caused by a
 		// temporary network failure, or any other transient reason.
-		return err
+		return errors.Errorf("failed to get Deployment %s/%s", namespace, deploymentName)
 	}
 
 	// If the Deployment is not controlled by this Foo resource, we should log
 	// a warning to the event recorder and ret
 	if !metav1.IsControlledBy(&deployment.ObjectMeta, onionService) {
-		log.Info(fmt.Sprintf("Deployment %s already exists and not controlled by %s - skipping update", deployment.Name, onionService.Name))
+		logger.Info("Deployment already exists and not controlled by - skipping update",
+			"deployment", deployment.Name,
+			"controller", onionService.Name)
+
 		return nil
 	}
 
@@ -76,20 +83,20 @@ func (r *OnionServiceReconciler) reconcileDeployment(ctx context.Context, onionS
 	if !deploymentEqual(&deployment, newDeployment) {
 		err := r.Update(ctx, newDeployment)
 		if err != nil {
-			return fmt.Errorf("filed to update Deployment %#v", newDeployment)
+			return errors.Errorf("filed to update Deployment %#v", newDeployment)
 		}
 	}
 
 	return nil
 }
 
-func torOnionServiceDeployment(onion *torv1alpha2.OnionService, projectConfig configv2.ProjectConfig) *appsv1.Deployment {
-
+func torOnionServiceDeployment(onion *torv1alpha2.OnionService, projectConfig *configv2.ProjectConfig) *appsv1.Deployment {
 	privateKeyMountPath := "/run/tor/service/key"
 	authorizedClientsMountPath := "/run/tor/service/.authorized_clients"
 
 	publicKeyFileName := "hs_ed25519_public_key"
 	privateKeyFileName := "hs_ed25519_secret_key"
+
 	if onion.Spec.GetVersion() == 2 {
 		publicKeyFileName = "public_key"
 		privateKeyFileName = "private_key"
@@ -97,7 +104,7 @@ func torOnionServiceDeployment(onion *torv1alpha2.OnionService, projectConfig co
 
 	var volumeSecretItems []corev1.KeyToPath
 
-	if len(onion.Spec.PrivateKeySecret.Key) != 0 {
+	if onion.Spec.PrivateKeySecret.Key != "" {
 		// The specified key must be hs_ed25519_secret_key
 		volumeSecretItems = []corev1.KeyToPath{
 			{
@@ -123,7 +130,9 @@ func torOnionServiceDeployment(onion *torv1alpha2.OnionService, projectConfig co
 		}
 	}
 
-	defaultMode := int32(0400)
+	// The default mode for the authorized_clients file is 0400
+	//nolint:gomnd // 0400 is a valid octal number
+	defaultMode := int32(0o400)
 	volumes := []corev1.Volume{
 		{
 			Name: privateKeyVolume,
@@ -196,7 +205,7 @@ func torOnionServiceDeployment(onion *torv1alpha2.OnionService, projectConfig co
 			{
 				Name:          "metrics",
 				Protocol:      "TCP",
-				ContainerPort: 9035,
+				ContainerPort: metricsPort,
 			},
 		},
 		Resources: onion.Resources(),

@@ -18,7 +18,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -48,6 +47,7 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
+//nolint:wsl // here is a special comment, works as expected
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
@@ -60,14 +60,19 @@ func init() {
 }
 
 func main() {
-	var configFile string
-	var disableLeaderElection bool
+	var (
+		configFile            string
+		disableLeaderElection bool
+		err                   error
+	)
+
 	flag.StringVar(&configFile, "config", "",
 		"The controller will load its initial configuration from this file. "+
 			"Omit this flag to use the default configuration values. "+
 			"Command-line flags override configuration from this file.")
 	flag.BoolVar(&disableLeaderElection, "no-leader-elect", false,
 		"Disable leader election for controller manager. ")
+
 	opts := zap.Options{
 		Development: true,
 	}
@@ -76,7 +81,6 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
-	var err error
 	ctrlConfig := configv2.ProjectConfig{}
 	options := ctrl.Options{Scheme: scheme}
 
@@ -90,12 +94,13 @@ func main() {
 
 	if disableLeaderElection && options.LeaderElection {
 		options.LeaderElection = false
+
 		setupLog.Info("Overriding LeaderElection (no-leader-elect)")
 	}
 
 	// Setup namespace if running in namespaced mode
 	if ctrlConfig.Namespace != "" {
-		setupLog.Info(fmt.Sprintf("Namespaced mode. Namespace=%s", ctrlConfig.Namespace))
+		setupLog.Info("Namespaced mode. Namespace=" + ctrlConfig.Namespace)
 		options.Namespace = ctrlConfig.Namespace
 	}
 
@@ -123,7 +128,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&torcontrollers.TorReconciler{
+	if err = (&torcontrollers.Reconciler{
 		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
 		ProjectConfig: ctrlConfig,
@@ -137,12 +142,14 @@ func main() {
 		setupLog.Error(err, "unable to set up health check")
 		os.Exit(1)
 	}
+
 	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
 
 	setupLog.Info("starting manager")
+
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)

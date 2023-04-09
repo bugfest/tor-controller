@@ -18,43 +18,47 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/cockroachdb/errors"
 
 	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionBalancedServiceReconciler) reconcileBackends(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := log.FromContext(ctx)
+//nolint:unparam // as expected
+func (r *OnionBalancedServiceReconciler) reconcileBackends(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
+	logger := k8slog.FromContext(ctx)
 
 	// Reconcile each backend
-	for idx := int32(1); idx <= OnionBalancedService.Spec.Backends; idx++ {
-		_, err := r.reconcileBackend(ctx, OnionBalancedService, idx)
+	for idx := int32(1); idx <= onionBalancedService.Spec.Backends; idx++ {
+		_, err := r.reconcileBackend(ctx, onionBalancedService, idx)
 		if err != nil {
-			log.Error(err, fmt.Sprintf("unable reconcile backend idx=%d", idx))
+			logger.Error(err, "Unable to reconcile backend",
+				"idx", idx)
 		}
 	}
 
 	return nil
 }
 
-func (r *OnionBalancedServiceReconciler) reconcileBackend(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService, idx int32) (*torv1alpha2.OnionService, error) {
-	// log := log.FromContext(ctx)
+func (r *OnionBalancedServiceReconciler) reconcileBackend(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService, idx int32) (*torv1alpha2.OnionService, error) {
+	onionServiceName := onionBalancedService.OnionServiceBackendName(idx)
+	namespace := onionBalancedService.Namespace
 
-	onionServiceName := OnionBalancedService.OnionServiceBackendName(idx)
-	namespace := OnionBalancedService.Namespace
 	if onionServiceName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("%s/%s: onionService name must be specified", OnionBalancedService.Namespace, OnionBalancedService.Name))
+		runtime.HandleError(errors.Errorf("%s/%s: onionService name must be specified", onionBalancedService.Namespace, onionBalancedService.Name))
+
+		//nolint:nilnil // as expected
 		return nil, nil
 	}
 
@@ -62,29 +66,32 @@ func (r *OnionBalancedServiceReconciler) reconcileBackend(ctx context.Context, O
 	err := r.Get(ctx, types.NamespacedName{Name: onionServiceName, Namespace: namespace}, &onionServiceBackend)
 
 	// We need a master address
-	if len(OnionBalancedService.Status.Hostname) == 0 {
-		return nil, fmt.Errorf("OnionBalancedService Hostname is not set")
+	if onionBalancedService.Status.Hostname == "" {
+		return nil, errors.Errorf("OnionBalancedService Hostname is not set")
 	}
 
 	// If the onionService doesn't exist, we'll create it
 	projectConfig := r.ProjectConfig
-	newOnionServiceBackend := onionBalancedServiceBackend(OnionBalancedService, projectConfig, idx)
+	newOnionServiceBackend := onionBalancedServiceBackend(onionBalancedService, &projectConfig, idx)
+
 	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newOnionServiceBackend)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "unable to create onionServiceBackend")
 		}
+
 		onionServiceBackend = *newOnionServiceBackend
 	} else if err != nil {
 		// If an error occurs during Get/Create, we'll requeue the item so we can
 		// attempt processing again later. This could have been caused by a
 		// temporary network failure, or any other transient reason.
-		return nil, err
+		return nil, errors.Wrap(err, "unable to get onionServiceBackend")
 	}
+
 	return &onionServiceBackend, nil
 }
 
-func onionBalancedServiceBackend(onion *torv1alpha2.OnionBalancedService, projectConfig configv2.ProjectConfig, idx int32) *torv1alpha2.OnionService {
+func onionBalancedServiceBackend(onion *torv1alpha2.OnionBalancedService, _ *configv2.ProjectConfig, idx int32) *torv1alpha2.OnionService {
 	// Start with template
 	onionServiceSpec := onion.Spec.Template.Spec
 

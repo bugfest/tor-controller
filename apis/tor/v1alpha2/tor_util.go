@@ -14,88 +14,84 @@ const (
 	torRoleNameFmt           = "%s-tor-role"
 	torServiceAccountNameFmt = "%s-tor-sa"
 	torConfigMapFmt          = "%s-tor-config"
+
+	dnsPort        = 53
+	natdPort       = 8082
+	httpTunnelPort = 8080
+	transPort      = 8081
+	socksPort      = 9050
+	controlPort    = 9051
+	metricsPort    = 9035
+	serverPort     = 9999
 )
 
-func (s *Tor) DeploymentName() string {
-	return fmt.Sprintf(torDeploymentNameFmt, s.Name)
+func (tor *Tor) DeploymentName() string {
+	return fmt.Sprintf(torDeploymentNameFmt, tor.Name)
 }
 
-func (s *Tor) ConfigMapName() string {
-	return fmt.Sprintf(torConfigMapFmt, s.Name)
+func (tor *Tor) ConfigMapName() string {
+	return fmt.Sprintf(torConfigMapFmt, tor.Name)
 }
 
-func (s *Tor) InstanceName() string {
-	return fmt.Sprintf(torServiceNameFmt, s.Name)
+func (tor *Tor) InstanceName() string {
+	return fmt.Sprintf(torServiceNameFmt, tor.Name)
 }
 
-func (s *Tor) ServiceMetricsName() string {
-	return fmt.Sprintf(torMetricsServiceNameFmt, s.Name)
+func (tor *Tor) ServiceMetricsName() string {
+	return fmt.Sprintf(torMetricsServiceNameFmt, tor.Name)
 }
 
-func (s *Tor) ServiceMetricsSelector() map[string]string {
+func (tor *Tor) ServiceMetricsSelector() map[string]string {
 	return map[string]string{
-		"app":        s.ServiceMetricsName(),
-		"controller": s.Name,
+		"app":        tor.ServiceMetricsName(),
+		"controller": tor.Name,
 	}
 }
 
-func (s *Tor) ServiceSelector() map[string]string {
+func (tor *Tor) ServiceSelector() map[string]string {
 	serviceSelector := map[string]string{
-		"app":        s.InstanceName(),
-		"controller": s.Name,
+		"app":        tor.InstanceName(),
+		"controller": tor.Name,
 	}
+
 	return serviceSelector
 }
 
-func (s *Tor) ServiceName() string {
-	return fmt.Sprintf(torServiceNameFmt, s.Name)
+func (tor *Tor) ServiceName() string {
+	return fmt.Sprintf(torServiceNameFmt, tor.Name)
 }
 
-func (s *Tor) SecretName() string {
-	return fmt.Sprintf(torSecretNameFmt, s.Name)
+func (tor *Tor) SecretName() string {
+	return fmt.Sprintf(torSecretNameFmt, tor.Name)
 }
 
-func (s *Tor) DeploymentLabels() map[string]string {
-	return s.ServiceSelector()
+func (tor *Tor) DeploymentLabels() map[string]string {
+	return tor.ServiceSelector()
 }
 
-func (s *Tor) RoleName() string {
-	return fmt.Sprintf(torRoleNameFmt, s.Name)
+func (tor *Tor) RoleName() string {
+	return fmt.Sprintf(torRoleNameFmt, tor.Name)
 }
 
-func (s *Tor) ServiceAccountName() string {
-	return fmt.Sprintf(torServiceAccountNameFmt, s.Name)
+func (tor *Tor) ServiceAccountName() string {
+	return fmt.Sprintf(torServiceAccountNameFmt, tor.Name)
 }
 
-// func (p *TorGenericPortSpec) DefaultPort(port int32) TorGenericPortSpec {
-// 	var new TorGenericPortSpec = *p.DeepCopy()
-// 	if p.Port == int32(0) {
-// 		new.Port = port
-// 	}
-// 	return new
-// }
-
-// func (p *TorGenericPortSpec) DefaultEnable(enable bool) TorGenericPortSpec {
-// 	var new TorGenericPortSpec = *p.DeepCopy()
-// 	if enable {
-// 		p.Enable = true
-// 	}
-// 	return new
-// }
-
-// Set default vaules port all the Tor ports
+// Set default vaules port all the Tor ports.
 func (tor *Tor) SetTorDefaults() {
-	tor.Spec.Client.DNS.setPortsDefaults(53)
-	tor.Spec.Client.NATD.setPortsDefaults(8082)
-	tor.Spec.Client.HTTPTunnel.setPortsDefaults(8080)
-	tor.Spec.Client.Trans.setPortsDefaults(8081)
-	tor.Spec.Client.Socks.setPortsDefaults(9050)
-	tor.Spec.Control.setPortsDefaults(9051)
-	tor.Spec.Metrics.setPortsDefaults(9035)
-	tor.Spec.Server.setPortsDefaults(9999)
+	tor.Spec.Client.DNS.setPortsDefaults(dnsPort)
+	tor.Spec.Client.NATD.setPortsDefaults(natdPort)
+	tor.Spec.Client.HTTPTunnel.setPortsDefaults(httpTunnelPort)
+	tor.Spec.Client.Trans.setPortsDefaults(transPort)
+	tor.Spec.Client.Socks.setPortsDefaults(socksPort)
+	tor.Spec.Control.setPortsDefaults(controlPort)
+	tor.Spec.Metrics.setPortsDefaults(metricsPort)
+	tor.Spec.Server.setPortsDefaults(serverPort)
+
 	if tor.Spec.Client.TransProxyType == "" {
 		tor.Spec.Client.TransProxyType = "default"
 	}
+
 	anyPortEnabled := false
 	// Loop thru available ports but metrics
 	for _, enabled := range []bool{
@@ -110,80 +106,93 @@ func (tor *Tor) SetTorDefaults() {
 			anyPortEnabled = true
 		}
 	}
+
 	if !anyPortEnabled {
 		// if no client or server port is enabled, socks is the default
 		tor.Spec.Client.Socks.Enable = true
 	}
 }
 
-// Set default values for port number, address and policy
+// Set default values for port number, address and policy.
 func (torPort *TorGenericPortWithFlagSpec) setPortsDefaults(portDefault int32) {
 	defaultAddress := []string{"0.0.0.0", "::"}
 	if len(torPort.Address) == 0 {
 		torPort.Address = defaultAddress
 	}
+
 	if len(torPort.Policy) == 0 {
 		torPort.Policy = []string{"accept 0.0.0.0/0", "accept ::/0"}
 	}
+
 	if torPort.Port == 0 {
 		torPort.Port = portDefault
 	}
 }
 
-// Retrieves an array of TorGenericPortDef with their protocols and port details
-func (s *Tor) GetAllPorts() []TorGenericPortDef {
-	var ports = []TorGenericPortDef{}
+// Retrieves an array of TorGenericPortDef with their protocols and port details.
+func (tor *Tor) GetAllPorts() []TorGenericPortDef {
+	return []TorGenericPortDef{
+		// Control
+		{
+			Name:     "control",
+			Protocol: "TCP",
+			Port:     tor.Spec.Control.TorGenericPortSpec,
+		},
 
-	// Control
-	ports = append(ports, TorGenericPortDef{Name: "control",
-		Protocol: "TCP",
-		Port:     s.Spec.Control.TorGenericPortSpec},
-	)
+		// Metrics
+		{
+			Name:     "metrics",
+			Protocol: "TCP",
+			Port:     tor.Spec.Metrics.TorGenericPortSpec,
+		},
 
-	// Metrics
-	ports = append(ports, TorGenericPortDef{Name: "metrics",
-		Protocol: "TCP",
-		Port:     s.Spec.Metrics.TorGenericPortSpec},
-	)
+		// Server
+		{
+			Name:     "server",
+			Protocol: "TCP",
+			Port:     tor.Spec.Server.TorGenericPortSpec,
+		},
 
-	// Server
-	ports = append(ports, TorGenericPortDef{Name: "server",
-		Protocol: "TCP",
-		Port:     s.Spec.Server.TorGenericPortSpec},
-	)
+		// Client
+		{
+			Name:     "dns",
+			Protocol: "UDP",
+			Port:     tor.Spec.Client.DNS.TorGenericPortSpec,
+		},
 
-	// Client
-	ports = append(ports, TorGenericPortDef{Name: "dns",
-		Protocol: "UDP",
-		Port:     s.Spec.Client.DNS.TorGenericPortSpec},
-	)
-	ports = append(ports, TorGenericPortDef{Name: "httptunnel",
-		Protocol: "TCP",
-		Port:     s.Spec.Client.HTTPTunnel.TorGenericPortSpec},
-	)
-	ports = append(ports, TorGenericPortDef{Name: "natd",
-		Protocol: "TCP",
-		Port:     s.Spec.Client.NATD.TorGenericPortSpec},
-	)
-	ports = append(ports, TorGenericPortDef{Name: "socks",
-		Protocol: "TCP",
-		Port:     s.Spec.Client.Socks.TorGenericPortSpec},
-	)
-	ports = append(ports, TorGenericPortDef{Name: "trans",
-		Protocol: "TCP",
-		Port:     s.Spec.Client.Trans.TorGenericPortSpec},
-	)
+		{
+			Name:     "httptunnel",
+			Protocol: "TCP",
+			Port:     tor.Spec.Client.HTTPTunnel.TorGenericPortSpec,
+		},
 
-	return ports
-}
+		{
+			Name:     "natd",
+			Protocol: "TCP",
+			Port:     tor.Spec.Client.NATD.TorGenericPortSpec,
+		},
 
-func (s *Tor) PodTemplate() corev1.PodTemplateSpec {
-	return corev1.PodTemplateSpec{
-		ObjectMeta: s.Spec.Template.ObjectMeta,
-		Spec:       s.Spec.Template.Spec,
+		{
+			Name:     "socks",
+			Protocol: "TCP",
+			Port:     tor.Spec.Client.Socks.TorGenericPortSpec,
+		},
+
+		{
+			Name:     "trans",
+			Protocol: "TCP",
+			Port:     tor.Spec.Client.Trans.TorGenericPortSpec,
+		},
 	}
 }
 
-func (s *Tor) Resources() corev1.ResourceRequirements {
-	return s.Spec.Template.Resources
+func (tor *Tor) PodTemplate() corev1.PodTemplateSpec {
+	return corev1.PodTemplateSpec{
+		ObjectMeta: tor.Spec.Template.ObjectMeta,
+		Spec:       tor.Spec.Template.Spec,
+	}
+}
+
+func (tor *Tor) Resources() corev1.ResourceRequirements {
+	return tor.Spec.Template.Resources
 }

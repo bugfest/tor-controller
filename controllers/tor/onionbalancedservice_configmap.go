@@ -19,26 +19,34 @@ package tor
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"html/template"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/cockroachdb/errors"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-const configFormat = `# Config automatically generated
+const (
+	socksPort         = "0"
+	controlAddress    = "127.0.0.1:9051"
+	metricsAddress    = "0.0.0.0:9035"
+	MetricsPortPolicy = "accept 0.0.0.0/0"
+
+	configFormat = `# Config automatically generated
 SocksPort {{ .SocksPort }}
 ControlPort {{ .ControlPort }}
 MetricsPort {{ .MetricsPort }}
 MetricsPortPolicy {{ .MetricsPortPolicy }}
 `
+)
 
 type onionBalancedServiceTorConfig struct {
 	SocksPort         string
@@ -47,66 +55,71 @@ type onionBalancedServiceTorConfig struct {
 	MetricsPortPolicy string
 }
 
-func (r *OnionBalancedServiceReconciler) reconcileConfigMap(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := log.FromContext(ctx)
+func (r *OnionBalancedServiceReconciler) reconcileConfigMap(
+	ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService,
+) error {
+	logger := k8slog.FromContext(ctx)
 
-	configMapName := OnionBalancedService.ConfigMapName()
-	namespace := OnionBalancedService.Namespace
+	configMapName := onionBalancedService.ConfigMapName()
+	namespace := onionBalancedService.Namespace
+
 	if configMapName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("configMap name must be specified"))
+		runtime.HandleError(errors.New("configMap name must be specified"))
+
 		return nil
 	}
 
 	var configmap corev1.ConfigMap
 	err := r.Get(ctx, types.NamespacedName{Name: configMapName, Namespace: namespace}, &configmap)
 
-	newConfigMap := onionbalanceTorConfigMap(OnionBalancedService)
-	if errors.IsNotFound(err) {
+	newConfigMap := onionbalanceTorConfigMap(onionBalancedService)
+	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newConfigMap)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create configmap %s", configMapName)
 		}
+
 		configmap = *newConfigMap
 	} else if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get configmap %s", configMapName)
 	}
 
-	if !metav1.IsControlledBy(&configmap.ObjectMeta, OnionBalancedService) {
-		// msg := fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, OnionBalancedService.Name)
-		// TODO: generate MessageResourceExists event
-		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
-		// bc.recorder.Event(OnionBalancedService, corev1.EventTypeWarning, ErrResourceExists, msg)
-		// return fmt.Errorf(msg)
-		log.Info(fmt.Sprintf("Secret %s already exists and is not controller by %s", configmap.Name, OnionBalancedService.Name))
+	if !metav1.IsControlledBy(&configmap.ObjectMeta, onionBalancedService) {
+		logger.Info("configmap already exists and is not controlled by onionbalancedservice",
+			"configmap", configmap.Name,
+			"onionbalancedservice", onionBalancedService.Name,
+		)
+
 		return nil
 	}
 
 	return nil
 }
 
-func onionbalanceTorConfig(onion *torv1alpha2.OnionBalancedService) string {
-
-	s := onionBalancedServiceTorConfig{
-		SocksPort:         "0",
-		ControlPort:       "127.0.0.1:9051",
-		MetricsPort:       "0.0.0.0:9035",
-		MetricsPortPolicy: "accept 0.0.0.0/0",
+func onionbalanceTorConfig(_ *torv1alpha2.OnionBalancedService) string {
+	serviceConfig := onionBalancedServiceTorConfig{
+		SocksPort:         socksPort,
+		ControlPort:       controlAddress,
+		MetricsPort:       metricsAddress,
+		MetricsPortPolicy: MetricsPortPolicy,
 	}
 
-	var configTemplate = template.Must(template.New("config").Parse(configFormat))
+	configTemplate := template.Must(template.New("config").Parse(configFormat))
+
 	var tmp bytes.Buffer
-	err := configTemplate.Execute(&tmp, s)
+
+	err := configTemplate.Execute(&tmp, serviceConfig)
 	if err != nil {
 		return ""
 	}
+
 	return tmp.String()
 }
 
 func onionbalanceTorConfigMap(onion *torv1alpha2.OnionBalancedService) *corev1.ConfigMap {
-
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      onion.ConfigMapName(),

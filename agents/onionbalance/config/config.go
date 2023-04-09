@@ -1,9 +1,10 @@
 package config
 
 import (
-	"fmt"
+	log "github.com/sirupsen/logrus"
 
 	v1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -22,10 +23,10 @@ type Instance struct {
 }
 
 func OnionBalanceConfigForService(onion *v1alpha2.OnionBalancedService) (string, error) {
-
 	instances := []Instance{}
+
 	for name, b := range onion.Status.Backends {
-		if len(b.Hostname) != 0 {
+		if b.Hostname != "" {
 			instances = append(instances, Instance{Name: name, Address: b.Hostname})
 		}
 	}
@@ -41,11 +42,10 @@ func OnionBalanceConfigForService(onion *v1alpha2.OnionBalancedService) (string,
 
 	yamlData, err := yaml.Marshal(config)
 	if err != nil {
-		fmt.Printf("Error while Marshaling. %v", err)
+		log.Printf("Error while Marshaling. %v", err)
+
+		return "", errors.Wrap(err, "Error while Marshaling. %v")
 	}
 
-	if err != nil {
-		return "", err
-	}
 	return string(yamlData), nil
 }

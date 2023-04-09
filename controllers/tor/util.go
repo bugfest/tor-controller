@@ -19,6 +19,9 @@ limitations under the License.
 package tor
 
 import (
+	"crypto/rand"
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -33,10 +36,7 @@ import (
 	// byte result of the hash (or possibly just 64 random bytes that are used the same
 	// way as the hash result).
 
-	"crypto/rand"
-	"crypto/sha1"
-	"encoding/hex"
-
+	"github.com/cockroachdb/errors"
 	torutil "github.com/cretz/bine/torutil"
 	ed25519 "github.com/cretz/bine/torutil/ed25519"
 )
@@ -62,21 +62,20 @@ type OnionV3 struct {
 }
 
 func GenerateOnionV3() (*OnionV3, error) {
-
-	k, err := ed25519.GenerateKey(nil)
-	publicKey := k.PrivateKey().KeyPair().PublicKey()
-	privateKey := k.PrivateKey().KeyPair().PrivateKey()
-
+	key, err := ed25519.GenerateKey(nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to generate ed25519 key")
 	}
+
+	publicKey := key.PrivateKey().KeyPair().PublicKey()
+	privateKey := key.PrivateKey().KeyPair().PrivateKey()
 
 	return GenerateOnionV3FromKeys(publicKey, privateKey)
 }
 
 func GenerateOnionV3FromKeys(publicKey ed25519.PublicKey, privateKey ed25519.PrivateKey) (*OnionV3, error) {
-	// onionAddress := fmt.Sprintf("%s.onion", encodePublicKey(publicKey))
-	onionAddress := fmt.Sprintf("%s.onion", torutil.OnionServiceIDFromV3PublicKey(publicKey))
+	onionAddress := torutil.OnionServiceIDFromV3PublicKey(publicKey) + ".onion"
+
 	privateKeyFile := append([]byte("== ed25519v1-secret: type0 ==\x00\x00\x00"), privateKey[:]...)
 	publicKeyFile := append([]byte("== ed25519v1-public: type0 ==\x00\x00\x00"), publicKey...)
 
@@ -142,43 +141,49 @@ func GenerateOnionV3FromKeys(publicKey ed25519.PublicKey, privateKey ed25519.Pri
 // Source: https://gitlab.torproject.org/tpo/core/tor/-/blob/main/src/lib/defs/digest_sizes.h#L20
 // #define DIGEST_LEN 20
 
-func doHashPassword(in string) (string, error) {
-	const OUTPUT_LEN = 256
-	const S2K_RFC2440_SPECIFIER_LEN = 9
-	const DIGEST_LEN = 20
-	const ITERATIONS = 96
+func doHashPassword(input string) (string, error) {
+	const (
+		OutputLen    = 256
+		SpecifierLen = 9
+		DigestLen    = 20
+		Iterations   = 96
+	)
+
 	// 1) Generate S2K_RFC2440_SPECIFIER_LEN-1 random bytes
 	// 2) Set last key byte to 96
-	//
-	// out := make([]byte, DIGEST_LEN)
-	salt := make([]byte, S2K_RFC2440_SPECIFIER_LEN-1)
+	salt := make([]byte, SpecifierLen-1)
+
 	_, err := rand.Read(salt)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to generate random salt")
 	}
 
 	// Inspired by: https://stackoverflow.com/questions/48054399/get-the-hashed-tor-password-automated-in-python
-	EXPBIAS := 6
-	c := ITERATIONS
-	count := (16 + (c & 15)) << ((c >> 4) + EXPBIAS)
+	expbias := 6
+	c := Iterations
+	//nolint:gomnd // i can't explain the magic, but it's fine to use magic number in magic line
+	count := (16 + (c & 15)) << ((c >> 4) + expbias)
 	d := sha1.New()
 
-	inb := []byte(in)
-	tmp := append(salt[:S2K_RFC2440_SPECIFIER_LEN-1], inb...)
+	inb := []byte(input)
+	//nolint:gocritic // append result not assigned to the same slace by design
+	tmp := append(salt[:SpecifierLen-1], inb...)
 	slen := len(tmp)
 
 	for count > 0 {
 		if count > slen {
 			d.Write(tmp)
+
 			count -= slen
 		} else {
 			d.Write(tmp[:count])
 			count = 0
 		}
 	}
+
 	return fmt.Sprintf("16:%s%s%s",
 		strings.ToUpper((hex.EncodeToString(salt))),
-		strings.ToUpper((hex.EncodeToString([]byte{ITERATIONS}))),
+		strings.ToUpper((hex.EncodeToString([]byte{Iterations}))),
 		strings.ToUpper((hex.EncodeToString(d.Sum(nil)))),
 	), nil
 }

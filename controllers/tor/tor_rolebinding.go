@@ -18,29 +18,31 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
-func (r *TorReconciler) reconcileRolebinding(ctx context.Context, tor *torv1alpha2.Tor) error {
-	log := log.FromContext(ctx)
+func (r *Reconciler) reconcileRolebinding(ctx context.Context, tor *torv1alpha2.Tor) error {
+	logger := k8slog.FromContext(ctx)
 
 	roleName := tor.RoleName()
 	namespace := tor.Namespace
+
 	if roleName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("role name must be specified"))
+		runtime.HandleError(errors.New("role name must be specified"))
+
 		return nil
 	}
 
@@ -48,18 +50,22 @@ func (r *TorReconciler) reconcileRolebinding(ctx context.Context, tor *torv1alph
 	err := r.Get(ctx, types.NamespacedName{Name: roleName, Namespace: namespace}, &roleBinding)
 
 	newRolebinding := torRolebinding(tor)
-	if errors.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newRolebinding)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create Rolebinding %s", roleName)
 		}
+
 		roleBinding = *newRolebinding
 	} else if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get Rolebinding %s", roleName)
 	}
 
 	if !metav1.IsControlledBy(&roleBinding.ObjectMeta, tor) {
-		log.Info(fmt.Sprintf("RoleBinding %s already exists and is not controlled by %s", roleBinding.Name, tor.Name))
+		logger.Info("RoleBinding already exists and is not controlled by",
+			"roleBinding", roleBinding.Name,
+			"controller", tor.Name)
+
 		return nil
 	}
 
@@ -67,7 +73,7 @@ func (r *TorReconciler) reconcileRolebinding(ctx context.Context, tor *torv1alph
 	if !rolebindingEqual(&roleBinding, newRolebinding) {
 		err := r.Update(ctx, newRolebinding)
 		if err != nil {
-			return fmt.Errorf("filed to update Rolebinding %#v", newRolebinding)
+			return errors.Wrapf(err, "failed to update Rolebinding %s", roleName)
 		}
 	}
 
@@ -98,5 +104,4 @@ func torRolebinding(tor *torv1alpha2.Tor) *rbacv1.RoleBinding {
 			Name: tor.RoleName(),
 		},
 	}
-
 }

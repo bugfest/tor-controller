@@ -18,30 +18,36 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 	"github.com/m1/go-generate-password/generator"
 )
 
-func (r *TorReconciler) reconcileControlSecret(ctx context.Context, Tor *torv1alpha2.Tor) error {
-	log := log.FromContext(ctx)
+const (
+	passwordLength = 16
+)
 
-	secretName := Tor.SecretName()
-	namespace := Tor.Namespace
+func (r *Reconciler) reconcileControlSecret(ctx context.Context, tor *torv1alpha2.Tor) error {
+	logger := k8slog.FromContext(ctx)
+
+	secretName := tor.SecretName()
+	namespace := tor.Namespace
+
 	if secretName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("secret name must be specified"))
+		runtime.HandleError(errors.New("secret name must be specified"))
+
 		return nil
 	}
 
@@ -49,47 +55,52 @@ func (r *TorReconciler) reconcileControlSecret(ctx context.Context, Tor *torv1al
 	err := r.Get(ctx, types.NamespacedName{Name: secretName, Namespace: namespace}, &secret)
 
 	password := generateRandomPassword()
-	newSecret := torSecret(Tor, password)
-	if errors.IsNotFound(err) {
+	newSecret := torSecret(tor, password)
+
+	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newSecret)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create secret %#v", newSecret)
 		}
+
 		secret = *newSecret
 	} else if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get secret %s", secretName)
 	}
 
 	var tmpSecret corev1.Secret
-	for _, secretRef := range Tor.Spec.Control.SecretRef {
+	for _, secretRef := range tor.Spec.Control.SecretRef {
 		err := r.Get(ctx, types.NamespacedName{Name: secretRef.Name, Namespace: namespace}, &tmpSecret)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to get secret %s", secretRef.Name)
 		}
 
 		for k := range tmpSecret.Data {
 			if k == secretRef.Key {
 				// Adds all the referenced secrets to Tor.Spec.Control.Secret for later use
-				Tor.Spec.Control.Secret = append(Tor.Spec.Control.Secret, string(tmpSecret.Data[k]))
+				tor.Spec.Control.Secret = append(tor.Spec.Control.Secret, string(tmpSecret.Data[k]))
 			}
 		}
 	}
 
-	if len(Tor.Spec.Control.Secret) == 0 && len(Tor.Spec.Control.SecretRef) == 0 {
+	if len(tor.Spec.Control.Secret) == 0 && len(tor.Spec.Control.SecretRef) == 0 {
 		// If the user did not define any password in the Control spec,
 		// update Control Secrets with the generated one
 		for _, s := range secret.Data {
-			Tor.Spec.Control.Secret = append(Tor.Spec.Control.Secret, string(s))
+			tor.Spec.Control.Secret = append(tor.Spec.Control.Secret, string(s))
 		}
 	}
 
-	if !metav1.IsControlledBy(&secret.ObjectMeta, Tor) {
+	if !metav1.IsControlledBy(&secret.ObjectMeta, tor) {
 		// msg := fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, OnionBalancedService.Name)
 		// TODO: generate MessageResourceExists event
 		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
 		// bc.recorder.Event(OnionBalancedService, corev1.EventTypeWarning, ErrResourceExists, msg)
-		// return fmt.Errorf(msg)
-		log.Info(fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, Tor.Name))
+		// return errors.New(msg)
+		logger.Info("Secret already exists and is not controlled by",
+			"secret", secret.Name,
+			"controller", tor.Name)
+
 		return nil
 	}
 
@@ -97,7 +108,6 @@ func (r *TorReconciler) reconcileControlSecret(ctx context.Context, Tor *torv1al
 }
 
 func torSecret(tor *torv1alpha2.Tor, password string) *corev1.Secret {
-
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      tor.SecretName(),
@@ -119,7 +129,7 @@ func torSecret(tor *torv1alpha2.Tor, password string) *corev1.Secret {
 
 func generateRandomPassword() string {
 	config := generator.Config{
-		Length:                     16,
+		Length:                     passwordLength,
 		IncludeSymbols:             false,
 		IncludeNumbers:             true,
 		IncludeLowercaseLetters:    true,
@@ -130,5 +140,6 @@ func generateRandomPassword() string {
 	g, _ := generator.New(&config)
 
 	pwd, _ := g.Generate()
+
 	return *pwd
 }

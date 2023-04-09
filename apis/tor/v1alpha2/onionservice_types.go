@@ -39,7 +39,7 @@ type ServicePodTemplate struct {
 	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,8,opt,name=resources"`
 }
 
-// OnionServiceSpec defines the desired state of OnionService
+// OnionServiceSpec defines the desired state of OnionService.
 type OnionServiceSpec struct {
 	// +patchMergeKey=port
 	// +patchStrategy=merge
@@ -98,7 +98,7 @@ type ServicePort struct {
 	TargetPort int32 `json:"targetPort,omitempty"`
 }
 
-// SecretReference represents a Secret Reference
+// SecretReference represents a Secret Reference.
 type SecretReference struct {
 	// Name is unique within a namespace to reference a secret resource.
 	Name string `json:"name,omitempty"`
@@ -106,13 +106,13 @@ type SecretReference struct {
 	Key string `json:"key,omitempty"`
 }
 
-// OnionServiceStatus defines the observed state of OnionService
+// OnionServiceStatus defines the observed state of OnionService.
 type OnionServiceStatus struct {
 	// +optional
 	Hostname string `json:"hostname,omitempty"`
 
 	// +optional
-	TargetClusterIP string `json:"targetClusterIP,omitempty"`
+	TargetClusterIP string `json:"targetClusterIp,omitempty"`
 }
 
 // +kubebuilder:resource:shortName={"onion","os"}
@@ -122,7 +122,7 @@ type OnionServiceStatus struct {
 // +kubebuilder:printcolumn:name="Hostname",type=string,JSONPath=`.status.hostname`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
-// OnionService is the Schema for the onionservices API
+// OnionService is the Schema for the onionservices API.
 type OnionService struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -133,7 +133,7 @@ type OnionService struct {
 
 // +kubebuilder:object:root=true
 
-// OnionServiceList contains a list of OnionService
+// OnionServiceList contains a list of OnionService.
 type OnionServiceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

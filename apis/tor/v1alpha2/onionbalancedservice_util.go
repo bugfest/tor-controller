@@ -20,6 +20,7 @@ func (s *OnionBalancedServiceSpec) GetVersion() int {
 	if s.Version == 2 {
 		v = 2
 	}
+
 	return v
 }
 
@@ -49,6 +50,7 @@ func (s *OnionBalancedService) SecretName() string {
 			return s.Spec.PrivateKeySecret.Name
 		}
 	}
+
 	return fmt.Sprintf(osSecretNameFmt, s.Name)
 }
 
@@ -85,10 +87,11 @@ func (s *OnionBalancedService) IsSynced() bool {
 	}
 	// All backends must have a hostname
 	for _, backend := range s.Status.Backends {
-		if len(backend.Hostname) == 0 {
+		if backend.Hostname == "" {
 			return false
 		}
 	}
+
 	return true
 }
 

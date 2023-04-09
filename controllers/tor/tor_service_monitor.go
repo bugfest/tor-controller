@@ -18,22 +18,22 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
-func (r *TorReconciler) reconcileServiceMonitor(ctx context.Context, tor *torv1alpha2.Tor) error {
-	log := log.FromContext(ctx)
+func (r *Reconciler) reconcileServiceMonitor(ctx context.Context, tor *torv1alpha2.Tor) error {
+	logger := k8slog.FromContext(ctx)
 
 	if !r.monitoringInstalled(ctx) {
 		// Service Monitor cannot be created; monitoring CRDs are not installed
@@ -42,11 +42,13 @@ func (r *TorReconciler) reconcileServiceMonitor(ctx context.Context, tor *torv1a
 
 	serviceName := tor.ServiceMetricsName()
 	namespace := tor.Namespace
+
 	if serviceName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("service monitor name must be specified"))
+		runtime.HandleError(errors.New("service monitor name must be specified"))
+
 		return nil
 	}
 
@@ -54,8 +56,8 @@ func (r *TorReconciler) reconcileServiceMonitor(ctx context.Context, tor *torv1a
 	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
 	newService := torServiceMonitor(tor)
-	if errors.IsNotFound(err) {
 
+	if apierrors.IsNotFound(err) {
 		if !tor.Spec.ServiceMonitor {
 			// ServiceMonitor is not requested, skipping
 			return nil
@@ -63,15 +65,19 @@ func (r *TorReconciler) reconcileServiceMonitor(ctx context.Context, tor *torv1a
 
 		err := r.Create(ctx, newService)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create Service %#v", newService)
 		}
+
 		service = *newService
 	} else if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get Service %#v", newService)
 	}
 
 	if !metav1.IsControlledBy(&service.ObjectMeta, tor) {
-		log.Info(fmt.Sprintf("ServiceMonitor %s already exists and is not controller by %s", service.Name, tor.Name))
+		logger.Info("ServiceMonitor already exists and is not controlled by",
+			"service", service.Name,
+			"controller", tor.Name)
+
 		return nil
 	}
 
@@ -79,8 +85,9 @@ func (r *TorReconciler) reconcileServiceMonitor(ctx context.Context, tor *torv1a
 		// ServiceMonitor is not requested but exists, deleting
 		err = r.Delete(ctx, &service)
 		if err != nil {
-			return fmt.Errorf("failed to delete Service %#v", service)
+			return errors.Wrapf(err, "failed to delete Service %#v", newService)
 		}
+
 		return nil
 	}
 
@@ -88,7 +95,7 @@ func (r *TorReconciler) reconcileServiceMonitor(ctx context.Context, tor *torv1a
 	if !monitorServiceEqual(&service, newService) {
 		err := r.Update(ctx, newService)
 		if err != nil {
-			return fmt.Errorf("failed to update Service %#v", newService)
+			return errors.Wrapf(err, "failed to update Service %#v", newService)
 		}
 	}
 
@@ -130,12 +137,9 @@ func torServiceMonitor(onion *torv1alpha2.Tor) *monitoringv1.ServiceMonitor {
 	}
 }
 
-func (r *TorReconciler) monitoringInstalled(ctx context.Context) bool {
+func (r *Reconciler) monitoringInstalled(ctx context.Context) bool {
 	var monitoring apiextensionsv1.CustomResourceDefinition
 	err := r.Get(ctx, types.NamespacedName{Name: "servicemonitors.monitoring.coreos.com", Namespace: "default"}, &monitoring)
-	// if err != nil {
-	// 	log := log.FromContext(ctx)
-	// 	log.Error(err, "error at monitoringInstalled")
-	// }
-	return !errors.IsNotFound(err)
+
+	return !apierrors.IsNotFound(err)
 }

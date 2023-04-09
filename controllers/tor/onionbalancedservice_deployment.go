@@ -18,7 +18,6 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -27,22 +26,37 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/cockroachdb/errors"
 
 	configv2 "github.com/bugfest/tor-controller/apis/config/v2"
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-func (r *OnionBalancedServiceReconciler) reconcileDeployment(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
-	log := log.FromContext(ctx)
+const (
+	onionBalanceConfigMountPath = "/run/onionbalance/"
+	onionBalanceSecretMountPath = onionBalanceConfigMountPath + "key"
 
-	deploymentName := OnionBalancedService.DeploymentName()
-	namespace := OnionBalancedService.Namespace
+	torConfigMountDir  = "/run/tor"
+	privateKeyMounPath = torConfigMountDir + "key"
+
+	torFile   = "/run/tor/torfile"
+	torBinary = "/usr/local/bin/tor"
+)
+
+func (r *OnionBalancedServiceReconciler) reconcileDeployment(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
+	logger := k8slog.FromContext(ctx)
+
+	deploymentName := onionBalancedService.DeploymentName()
+	namespace := onionBalancedService.Namespace
+
 	if deploymentName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("%s/%s: deployment name must be specified", OnionBalancedService.Namespace, OnionBalancedService.Name))
+		runtime.HandleError(errors.Errorf("%s/%s: deployment name must be specified", onionBalancedService.Namespace, onionBalancedService.Name))
+
 		return nil
 	}
 
@@ -51,27 +65,31 @@ func (r *OnionBalancedServiceReconciler) reconcileDeployment(ctx context.Context
 
 	// If the deployment doesn't exist, we'll create it
 	projectConfig := r.ProjectConfig
-	newDeployment := onionbalanceDeployment(OnionBalancedService, projectConfig)
+	newDeployment := onionbalanceDeployment(onionBalancedService, &projectConfig)
 
-	// log.Info(fmt.Sprintf(" %#v", *newDeployment))
+	// log.Infof(" %#v", *newDeployment))
 
 	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newDeployment)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create Deployment %#v", newDeployment)
 		}
+
 		deployment = *newDeployment
 	} else if err != nil {
 		// If an error occurs during Get/Create, we'll requeue the item so we can
 		// attempt processing again later. This could have been caused by a
 		// temporary network failure, or any other transient reason.
-		return err
+		return errors.Wrapf(err, "failed to get Deployment %s", deploymentName)
 	}
 
 	// If the Deployment is not controlled by this Foo resource, we should log
 	// a warning to the event recorder and ret
-	if !metav1.IsControlledBy(&deployment.ObjectMeta, OnionBalancedService) {
-		log.Info(fmt.Sprintf("Deployment %s already exists and not controlled by %s - skipping update", deployment.Name, OnionBalancedService.Name))
+	if !metav1.IsControlledBy(&deployment.ObjectMeta, onionBalancedService) {
+		logger.Info("deployment already exists and not controlled by - skipping update",
+			"deployment", deployment.Name,
+			"controller", onionBalancedService.Name)
+
 		return nil
 	}
 
@@ -79,21 +97,14 @@ func (r *OnionBalancedServiceReconciler) reconcileDeployment(ctx context.Context
 	if !deploymentEqual(&deployment, newDeployment) {
 		err := r.Update(ctx, newDeployment)
 		if err != nil {
-			return fmt.Errorf("filed to update Deployment %#v", newDeployment)
+			return errors.Wrapf(err, "failed to update Deployment %#v", newDeployment)
 		}
 	}
 
 	return nil
 }
 
-func onionbalanceDeployment(onion *torv1alpha2.OnionBalancedService, projectConfig configv2.ProjectConfig) *appsv1.Deployment {
-
-	onionBalanceConfigMountPath := "/run/onionbalance/"
-	onionBalanceSecretMountPath := "/run/onionbalance/key"
-
-	torConfigMountDir := "/run/tor"
-	privateKeyMounPath := "/run/tor/key"
-
+func onionbalanceDeployment(onion *torv1alpha2.OnionBalancedService, projectConfig *configv2.ProjectConfig) *appsv1.Deployment {
 	volumes := []corev1.Volume{
 		{
 			Name: onionBalanceConfigVolume,
@@ -198,22 +209,17 @@ func onionbalanceDeployment(onion *torv1alpha2.OnionBalancedService, projectConf
 		corev1.Container{
 			Name:    "tor",
 			Image:   projectConfig.TorDaemonManager.Image, // TODO: use a dedicated Tor image
-			Command: []string{"/usr/local/bin/tor"},
+			Command: []string{torBinary},
 			Args: []string{
-				"-f", "/run/tor/torfile",
+				"-f", torFile,
 			},
 			ImagePullPolicy: "Always",
 			VolumeMounts:    torVolumeMounts,
 			Ports: []corev1.ContainerPort{
-				// {
-				// 	Name: "control",
-				// 	Protocol: "TCP",
-				// 	ContainerPort: 9051,
-				// },
 				{
 					Name:          "metrics",
 					Protocol:      "TCP",
-					ContainerPort: 9035,
+					ContainerPort: metricsPort,
 				},
 			},
 			Resources: onion.TorResources(),

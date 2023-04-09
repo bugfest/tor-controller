@@ -18,30 +18,32 @@ package tor
 
 import (
 	"context"
-	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	k8slog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
+	"github.com/cockroachdb/errors"
 )
 
-func (r *TorReconciler) reconcileMetricsService(ctx context.Context, tor *torv1alpha2.Tor) error {
-	log := log.FromContext(ctx)
+func (r *Reconciler) reconcileMetricsService(ctx context.Context, tor *torv1alpha2.Tor) error {
+	logger := k8slog.FromContext(ctx)
 
 	serviceName := tor.ServiceMetricsName()
 	namespace := tor.Namespace
+
 	if serviceName == "" {
 		// We choose to absorb the error here as the worker would requeue the
 		// resource otherwise. Instead, the next time the resource is updated
 		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("service name must be specified"))
+		runtime.HandleError(errors.New("service name must be specified"))
+
 		return nil
 	}
 
@@ -49,24 +51,29 @@ func (r *TorReconciler) reconcileMetricsService(ctx context.Context, tor *torv1a
 	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
 	newService := torMetricsService(tor)
-	if errors.IsNotFound(err) {
 
+	if apierrors.IsNotFound(err) {
 		if !tor.Spec.Metrics.Enable {
-			log.Info("No metrics enabled, skipping metrics service for this tor instance")
+			logger.Info("No metrics enabled, skipping metrics service for this tor instance")
+
 			return nil
 		}
 
 		err := r.Create(ctx, newService)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create Service %#v", newService)
 		}
+
 		service = *newService
 	} else if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get Service %s", serviceName)
 	}
 
 	if !metav1.IsControlledBy(&service.ObjectMeta, tor) {
-		log.Info(fmt.Sprintf("Service %s already exists and is not controller by %s", service.Name, tor.Name))
+		logger.Info("Service already exists and is not controlled by",
+			"service", service.Name,
+			"controller", tor.Name)
+
 		return nil
 	}
 
@@ -74,7 +81,7 @@ func (r *TorReconciler) reconcileMetricsService(ctx context.Context, tor *torv1a
 	if !serviceEqual(&service, newService) {
 		err := r.Update(ctx, newService)
 		if err != nil {
-			return fmt.Errorf("filed to update Service %#v", newService)
+			return errors.Wrapf(err, "failed to update Service %#v", newService)
 		}
 	}
 
@@ -99,8 +106,8 @@ func torMetricsService(onion *torv1alpha2.Tor) *corev1.Service {
 			Selector: onion.ServiceSelector(),
 			Ports: []corev1.ServicePort{{
 				Name:       "metrics",
-				TargetPort: intstr.FromInt(9035),
-				Port:       9035,
+				TargetPort: intstr.FromInt(metricsPort),
+				Port:       metricsPort,
 			}},
 		},
 	}

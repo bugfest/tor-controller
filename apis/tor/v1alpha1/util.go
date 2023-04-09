@@ -14,6 +14,7 @@ func (s *OnionServiceSpec) GetVersion() int {
 	if s.Version == 2 {
 		v = 2
 	}
+
 	return v
 }
 
