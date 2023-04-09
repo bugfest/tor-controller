@@ -35,7 +35,7 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-// OnionServiceReconciler reconciles a OnionService object
+// OnionServiceReconciler reconciles a OnionService object.
 type OnionServiceReconciler struct {
 	client.Client
 	Scheme        *runtime.Scheme
@@ -67,7 +67,6 @@ type OnionServiceReconciler struct {
 func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := k8slog.FromContext(ctx)
 
-	// namespace, name := req.Namespace, req.Name
 	var onionService torv1alpha2.OnionService
 
 	err := r.Get(ctx, req.NamespacedName, &onionService)
@@ -85,9 +84,6 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	namespace := onionService.Namespace
 
 	for _, rule := range onionService.Spec.Rules {
-		// for num, rule := range onionService.Spec.Rules {
-		// log.Infof("rule %d: %#v", num, rule))
-
 		serviceName := rule.Backend.Service.Name
 
 		var service corev1.Service
@@ -98,15 +94,16 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			return ctrl.Result{}, errors.Wrap(err, "service not found")
 		}
 
-		rule_backend_service := corev1.ServicePort{
+		ruleBackendService := corev1.ServicePort{
 			Name:     rule.Backend.Service.Port.Name,
 			Port:     rule.Backend.Service.Port.Number,
 			Protocol: "TCP",
 		}
-		if !portExists(service.Spec.Ports, &rule_backend_service) {
-			log.Error(err, fmt.Sprintf("port in service rule %#v not found in target service", rule_backend_service))
 
-			return ctrl.Result{}, errors.Wrapf(err, "port in service rule %#v not found in target service", rule_backend_service)
+		if !portExists(service.Spec.Ports, &ruleBackendService) {
+			log.Error(err, fmt.Sprintf("port in service rule %#v not found in target service", ruleBackendService))
+
+			return ctrl.Result{}, errors.Wrapf(err, "port in service rule %#v not found in target service", ruleBackendService)
 		}
 	}
 
@@ -155,20 +152,23 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 
-	// bc.recorder.Event(onionService, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
-
 	// Finally, we update the status block of the OnionService resource to reflect the
 	// current state of the world
 	onionServiceCopy := onionService.DeepCopy()
 	serviceName := onionService.ServiceName()
 
 	var service corev1.Service
-	err = r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
-	clusterIP := ""
+	err = r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
+	if err != nil {
+		log.Error(err, "unable to get service")
+	}
+
+	var clusterIP string
+
 	switch {
 	case apierrors.IsNotFound(err):
-		clusterIP = "0.0.0.0"
+		clusterIP = defaultClusterIP
 	case err != nil:
 		return ctrl.Result{}, errors.Wrap(err, "unable to get service")
 	default:
@@ -176,8 +176,6 @@ func (r *OnionServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	onionServiceCopy.Status.TargetClusterIP = clusterIP
-	// hostname := "test.onion"
-	// onionService.Status.Hostname = hostname
 
 	if err := r.Status().Update(ctx, onionServiceCopy); err != nil {
 		log.Error(err, "unable to update OnionService status")

@@ -31,7 +31,7 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-func (r *TorReconciler) reconcileRole(ctx context.Context, tor *torv1alpha2.Tor) error {
+func (r *Reconciler) reconcileRole(ctx context.Context, tor *torv1alpha2.Tor) error {
 	logger := k8slog.FromContext(ctx)
 
 	roleName := tor.RoleName()
@@ -55,6 +55,7 @@ func (r *TorReconciler) reconcileRole(ctx context.Context, tor *torv1alpha2.Tor)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create Role %#v", newRole)
 		}
+
 		role = *newRole
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get Role %s", roleName)

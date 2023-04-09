@@ -43,6 +43,7 @@ func (t *Tor) Start() {
 				log.Print(err)
 			}
 
+			//nolint:gomnd // 3 seconds
 			time.Sleep(time.Second * 3)
 		}
 	}()

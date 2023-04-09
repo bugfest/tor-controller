@@ -14,6 +14,15 @@ const (
 	torRoleNameFmt           = "%s-tor-role"
 	torServiceAccountNameFmt = "%s-tor-sa"
 	torConfigMapFmt          = "%s-tor-config"
+
+	dnsPort        = 53
+	natdPort       = 8082
+	httpTunnelPort = 8080
+	transPort      = 8081
+	socksPort      = 9050
+	controlPort    = 9051
+	metricsPort    = 9035
+	serverPort     = 9999
 )
 
 func (tor *Tor) DeploymentName() string {
@@ -68,16 +77,16 @@ func (tor *Tor) ServiceAccountName() string {
 	return fmt.Sprintf(torServiceAccountNameFmt, tor.Name)
 }
 
-// Set default vaules port all the Tor ports
+// Set default vaules port all the Tor ports.
 func (tor *Tor) SetTorDefaults() {
-	tor.Spec.Client.DNS.setPortsDefaults(53)
-	tor.Spec.Client.NATD.setPortsDefaults(8082)
-	tor.Spec.Client.HTTPTunnel.setPortsDefaults(8080)
-	tor.Spec.Client.Trans.setPortsDefaults(8081)
-	tor.Spec.Client.Socks.setPortsDefaults(9050)
-	tor.Spec.Control.setPortsDefaults(9051)
-	tor.Spec.Metrics.setPortsDefaults(9035)
-	tor.Spec.Server.setPortsDefaults(9999)
+	tor.Spec.Client.DNS.setPortsDefaults(dnsPort)
+	tor.Spec.Client.NATD.setPortsDefaults(natdPort)
+	tor.Spec.Client.HTTPTunnel.setPortsDefaults(httpTunnelPort)
+	tor.Spec.Client.Trans.setPortsDefaults(transPort)
+	tor.Spec.Client.Socks.setPortsDefaults(socksPort)
+	tor.Spec.Control.setPortsDefaults(controlPort)
+	tor.Spec.Metrics.setPortsDefaults(metricsPort)
+	tor.Spec.Server.setPortsDefaults(serverPort)
 
 	if tor.Spec.Client.TransProxyType == "" {
 		tor.Spec.Client.TransProxyType = "default"
@@ -104,7 +113,7 @@ func (tor *Tor) SetTorDefaults() {
 	}
 }
 
-// Set default values for port number, address and policy
+// Set default values for port number, address and policy.
 func (torPort *TorGenericPortWithFlagSpec) setPortsDefaults(portDefault int32) {
 	defaultAddress := []string{"0.0.0.0", "::"}
 	if len(torPort.Address) == 0 {
@@ -120,7 +129,7 @@ func (torPort *TorGenericPortWithFlagSpec) setPortsDefaults(portDefault int32) {
 	}
 }
 
-// Retrieves an array of TorGenericPortDef with their protocols and port details
+// Retrieves an array of TorGenericPortDef with their protocols and port details.
 func (tor *Tor) GetAllPorts() []TorGenericPortDef {
 	return []TorGenericPortDef{
 		// Control

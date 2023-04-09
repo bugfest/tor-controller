@@ -32,7 +32,7 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-func (r *TorReconciler) reconcileService(ctx context.Context, tor *torv1alpha2.Tor) error {
+func (r *Reconciler) reconcileService(ctx context.Context, tor *torv1alpha2.Tor) error {
 	logger := k8slog.FromContext(ctx)
 
 	serviceName := tor.ServiceName()
@@ -52,7 +52,6 @@ func (r *TorReconciler) reconcileService(ctx context.Context, tor *torv1alpha2.T
 
 	newService := torService(tor)
 	if apierrors.IsNotFound(err) {
-
 		if len(newService.Spec.Ports) == 0 {
 			logger.Info("No ports enabled, skipping service for this tor instance")
 
@@ -63,6 +62,7 @@ func (r *TorReconciler) reconcileService(ctx context.Context, tor *torv1alpha2.T
 		if err != nil {
 			return errors.Wrapf(err, "failed to create Service %#v", newService)
 		}
+
 		service = *newService
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get Service %s", serviceName)

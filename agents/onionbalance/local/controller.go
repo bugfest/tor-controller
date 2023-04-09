@@ -17,14 +17,18 @@ import (
 	config "github.com/bugfest/tor-controller/agents/onionbalance/config"
 )
 
+const (
+	defaultUnixPermission = 0o600
+)
+
 type Controller struct {
 	indexer      cache.Indexer
 	queue        workqueue.RateLimitingInterface
 	informer     cache.Controller
-	localManager *LocalManager
+	localManager *Manager
 }
 
-func NewController(queue workqueue.RateLimitingInterface, informer cache.SharedIndexInformer, localManager *LocalManager) *Controller {
+func NewController(queue workqueue.RateLimitingInterface, informer cache.SharedIndexInformer, localManager *Manager) *Controller {
 	return &Controller{
 		informer:     informer,
 		indexer:      informer.GetIndexer(),
@@ -68,45 +72,48 @@ func (c *Controller) sync(key string) error {
 
 	if !exists {
 		log.Warnf("onionBalancedService %s does not exist anymore", key)
+
+		return nil
+	}
+
+	log.Debugf("%v", obj)
+
+	onionBalancedService, err := parseOnionBalancedService(obj)
+	if err != nil {
+		log.Errorf("Error in parseonionBalancedService: %s", err)
+
+		return errors.Wrapf(err, "error in parseonionBalancedService")
+	}
+
+	torConfig, err := config.OnionBalanceConfigForService(&onionBalancedService)
+	if err != nil {
+		log.Errorf("Generating config failed with %v", err)
+
+		return errors.Wrapf(err, "generating config failed")
+	}
+
+	torfile, err := os.ReadFile("/run/onionbalance/config.yaml")
+	if err != nil && !os.IsNotExist(err) {
+		log.Errorf("Failed to read config file: %v", err)
+
+		return errors.Wrapf(err, "failed to read config file")
+	}
+
+	if string(torfile) != torConfig {
+		// Configuration has changed, save new configs and reload the daemon.
+		log.Infof("Updating onionbalance config for %s/%s", onionBalancedService.Namespace, onionBalancedService.Name)
+
+		err = os.WriteFile("/run/onionbalance/config.yaml", []byte(torConfig), defaultUnixPermission)
+		if err != nil {
+			log.Error(fmt.Sprintf("Writing config failed with %v", err))
+
+			return errors.Wrapf(err, "writing config failed")
+		}
+
+		c.localManager.daemon.Reload()
 	} else {
-		log.Debugf("%v", obj)
-		onionBalancedService, err := parseOnionBalancedService(obj)
-		if err != nil {
-			log.Errorf("Error in parseonionBalancedService: %s", err)
-
-			return errors.Wrapf(err, "error in parseonionBalancedService")
-		}
-
-		torConfig, err := config.OnionBalanceConfigForService(&onionBalancedService)
-		if err != nil {
-			log.Errorf("Generating config failed with %v", err)
-
-			return errors.Wrapf(err, "generating config failed")
-		}
-
-		torfile, err := os.ReadFile("/run/onionbalance/config.yaml")
-		if err != nil && !os.IsNotExist(err) {
-			log.Errorf("Failed to read config file: %v", err)
-
-			return errors.Wrapf(err, "failed to read config file")
-		}
-
-		if string(torfile) != torConfig {
-			// Configuration has changed, save new configs and reload the daemon.
-			log.Infof("Updating onionbalance config for %s/%s", onionBalancedService.Namespace, onionBalancedService.Name)
-
-			err = os.WriteFile("/run/onionbalance/config.yaml", []byte(torConfig), 0o600)
-			if err != nil {
-				log.Error(fmt.Sprintf("Writing config failed with %v", err))
-
-				return errors.Wrapf(err, "writing config failed")
-			}
-
-			c.localManager.daemon.Reload()
-		} else {
-			// Config was already set correctly, lets just ensure the daemon is (still) running.
-			c.localManager.daemon.EnsureRunning()
-		}
+		// Config was already set correctly, lets just ensure the daemon is (still) running.
+		c.localManager.daemon.EnsureRunning()
 	}
 
 	return nil
@@ -121,12 +128,14 @@ func (c *Controller) handleErr(err error, key interface{}) {
 	}
 
 	// This controller retries 5 times if something goes wrong. After that, it stops trying.
+	//nolint:gomnd // just tries
 	if c.queue.NumRequeues(key) < 5 {
 		log.Error(fmt.Sprintf("Error syncing onionBalancedService %v: %v", key, err))
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.
 		// c.queue.AddRateLimited(key)
+		//nolint:mnd // just seconds
 		c.queue.AddAfter(key, 3*time.Second)
 
 		return

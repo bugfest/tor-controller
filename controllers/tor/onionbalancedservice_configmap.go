@@ -35,12 +35,19 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-const configFormat = `# Config automatically generated
+const (
+	socksPort         = "0"
+	controlAddress    = "127.0.0.1:9051"
+	metricsAddress    = "0.0.0.0:9035"
+	MetricsPortPolicy = "accept 0.0.0.0/0"
+
+	configFormat = `# Config automatically generated
 SocksPort {{ .SocksPort }}
 ControlPort {{ .ControlPort }}
 MetricsPort {{ .MetricsPort }}
 MetricsPortPolicy {{ .MetricsPortPolicy }}
 `
+)
 
 type onionBalancedServiceTorConfig struct {
 	SocksPort         string
@@ -95,10 +102,10 @@ func (r *OnionBalancedServiceReconciler) reconcileConfigMap(
 
 func onionbalanceTorConfig(_ *torv1alpha2.OnionBalancedService) string {
 	serviceConfig := onionBalancedServiceTorConfig{
-		SocksPort:         "0",
-		ControlPort:       "127.0.0.1:9051",
-		MetricsPort:       "0.0.0.0:9035",
-		MetricsPortPolicy: "accept 0.0.0.0/0",
+		SocksPort:         socksPort,
+		ControlPort:       controlAddress,
+		MetricsPort:       metricsAddress,
+		MetricsPortPolicy: MetricsPortPolicy,
 	}
 
 	configTemplate := template.Must(template.New("config").Parse(configFormat))

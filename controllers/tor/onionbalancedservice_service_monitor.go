@@ -144,9 +144,6 @@ func obsTorServiceMonitor(onion *torv1alpha2.OnionBalancedService) *monitoringv1
 func (r *OnionBalancedServiceReconciler) monitoringInstalled(ctx context.Context) bool {
 	var monitoring apiextensionsv1.CustomResourceDefinition
 	err := r.Get(ctx, types.NamespacedName{Name: "servicemonitors.monitoring.coreos.com", Namespace: "default"}, &monitoring)
-	// if err != nil {
-	// 	log := k8slog.FromContext(ctx)
-	// 	log.Error(err, "error at monitoringInstalled")
-	// }
+
 	return !apierrors.IsNotFound(err)
 }

@@ -34,6 +34,17 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
+const (
+	onionBalanceConfigMountPath = "/run/onionbalance/"
+	onionBalanceSecretMountPath = onionBalanceConfigMountPath + "key"
+
+	torConfigMountDir  = "/run/tor"
+	privateKeyMounPath = torConfigMountDir + "key"
+
+	torFile   = "/run/tor/torfile"
+	torBinary = "/usr/local/bin/tor"
+)
+
 func (r *OnionBalancedServiceReconciler) reconcileDeployment(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
 	logger := k8slog.FromContext(ctx)
 
@@ -94,12 +105,6 @@ func (r *OnionBalancedServiceReconciler) reconcileDeployment(ctx context.Context
 }
 
 func onionbalanceDeployment(onion *torv1alpha2.OnionBalancedService, projectConfig *configv2.ProjectConfig) *appsv1.Deployment {
-	onionBalanceConfigMountPath := "/run/onionbalance/"
-	onionBalanceSecretMountPath := "/run/onionbalance/key"
-
-	torConfigMountDir := "/run/tor"
-	privateKeyMounPath := "/run/tor/key"
-
 	volumes := []corev1.Volume{
 		{
 			Name: onionBalanceConfigVolume,
@@ -204,22 +209,17 @@ func onionbalanceDeployment(onion *torv1alpha2.OnionBalancedService, projectConf
 		corev1.Container{
 			Name:    "tor",
 			Image:   projectConfig.TorDaemonManager.Image, // TODO: use a dedicated Tor image
-			Command: []string{"/usr/local/bin/tor"},
+			Command: []string{torBinary},
 			Args: []string{
-				"-f", "/run/tor/torfile",
+				"-f", torFile,
 			},
 			ImagePullPolicy: "Always",
 			VolumeMounts:    torVolumeMounts,
 			Ports: []corev1.ContainerPort{
-				// {
-				// 	Name: "control",
-				// 	Protocol: "TCP",
-				// 	ContainerPort: 9051,
-				// },
 				{
 					Name:          "metrics",
 					Protocol:      "TCP",
-					ContainerPort: 9035,
+					ContainerPort: metricsPort,
 				},
 			},
 			Resources: onion.TorResources(),

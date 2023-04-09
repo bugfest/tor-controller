@@ -33,8 +33,8 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-// TorReconciler reconciles a Tor object
-type TorReconciler struct {
+// Reconciler reconciles a Tor object.
+type Reconciler struct {
 	client.Client
 	Scheme        *runtime.Scheme
 	ProjectConfig configv2.ProjectConfig
@@ -53,7 +53,7 @@ type TorReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
-func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := k8slog.FromContext(ctx)
 
 	var tor torv1alpha2.Tor
@@ -62,7 +62,6 @@ func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	if err != nil {
 		// The Tor resource may no longer exist, in which case we stop
 		// processing.
-
 		logger.Error(err, "unable to fetch Tor")
 
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
@@ -145,7 +144,7 @@ func (r *TorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *TorReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	pred := predicate.GenerationChangedPredicate{}
 
 	err := ctrl.NewControllerManagedBy(mgr).

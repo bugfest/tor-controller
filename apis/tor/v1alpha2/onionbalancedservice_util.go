@@ -87,7 +87,7 @@ func (s *OnionBalancedService) IsSynced() bool {
 	}
 	// All backends must have a hostname
 	for _, backend := range s.Status.Backends {
-		if len(backend.Hostname) == 0 {
+		if backend.Hostname == "" {
 			return false
 		}
 	}

@@ -42,7 +42,11 @@ func init() {
 
 func GetClient() client.Client {
 	scheme := runtime.NewScheme()
-	torv1alpha2.AddToScheme(scheme)
+
+	err := torv1alpha2.AddToScheme(scheme)
+	if err != nil {
+		log.Println(err)
+	}
 
 	kubeconfig := ctrl.GetConfigOrDie()
 
@@ -56,7 +60,8 @@ func GetClient() client.Client {
 	return controllerClient
 }
 
-type LocalManager struct {
+// Manager is a local onionbalance manager.
+type Manager struct {
 	kclient client.Client
 
 	stopCh chan struct{}
@@ -67,15 +72,15 @@ type LocalManager struct {
 	controller *Controller
 }
 
-func New() *LocalManager {
-	return &LocalManager{
+func New() *Manager {
+	return &Manager{
 		kclient: GetClient(),
 		stopCh:  make(chan struct{}),
 		daemon:  onionbalancedaemon.OnionBalance{},
 	}
 }
 
-func (manager *LocalManager) Run() error {
+func (manager *Manager) Run() error {
 	var runErrors []error
 
 	if onionBalancedServiceName == "" {
@@ -92,7 +97,7 @@ func (manager *LocalManager) Run() error {
 
 	// listen to signals
 	signalCh := make(chan os.Signal, 1)
-	// signal.Notify(signalCh, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
+
 	signal.Notify(signalCh, syscall.SIGTERM, syscall.SIGHUP)
 	manager.signalHandler(signalCh)
 
@@ -109,7 +114,7 @@ func (manager *LocalManager) Run() error {
 	return nil
 }
 
-func (manager *LocalManager) Must(err error) *LocalManager {
+func (manager *Manager) Must(err error) *Manager {
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -117,7 +122,7 @@ func (manager *LocalManager) Must(err error) *LocalManager {
 	return manager
 }
 
-func (manager *LocalManager) signalHandler(ch chan os.Signal) {
+func (manager *Manager) signalHandler(ch chan os.Signal) {
 	go func() {
 		select {
 		case <-manager.stopCh:
@@ -143,13 +148,13 @@ func GetDynamicInformer(resourceType, namespace string) (informers.GenericInform
 	cfg := ctrl.GetConfigOrDie()
 
 	// Grab a dynamic interface that we can create informers from
-	dc, err := dynamic.NewForConfig(cfg)
+	dynamicConfig, err := dynamic.NewForConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create dynamic client")
 	}
 	// Create a factory object that can generate informers for resource types
 
-	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0,
+	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dynamicConfig, 0,
 		namespace,
 		func(x *metav1.ListOptions) {
 			x.FieldSelector = "metadata.name" + onionBalancedServiceName
@@ -187,7 +192,7 @@ func parseOnionBalancedService(obj interface{}) (torv1alpha2.OnionBalancedServic
 	return onionBalancedService, nil
 }
 
-func (manager *LocalManager) runOnionBalancedServiceCRDInformer(stopCh <-chan struct{}, sharedIndexInformer cache.SharedIndexInformer, _ string) {
+func (manager *Manager) runOnionBalancedServiceCRDInformer(stopCh <-chan struct{}, sharedIndexInformer cache.SharedIndexInformer, _ string) {
 	// create the workqueue
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
@@ -250,7 +255,7 @@ func (manager *LocalManager) runOnionBalancedServiceCRDInformer(stopCh <-chan st
 	<-stopCh
 }
 
-func (manager *LocalManager) onionBalancedServiceCRDWatcher(namespace string) {
+func (manager *Manager) onionBalancedServiceCRDWatcher(namespace string) {
 	// dynamic informer needs to be told which type to watch
 	onionBalancedServiceinformer, _ := GetDynamicInformer("onionbalancedservices.v1alpha2.tor.k8s.torproject.org", namespace)
 	stopper := make(chan struct{})

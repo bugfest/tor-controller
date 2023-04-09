@@ -23,7 +23,7 @@ import (
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// OnionBalancedServiceSpec defines the desired state of OnionBalancedService
+// OnionBalancedServiceSpec defines the desired state of OnionBalancedService.
 type OnionBalancedServiceSpec struct {
 	// "Tor onion service descriptors can include a maximum of 10 introduction points."
 	// https://gitlab.torproject.org/tpo/core/onionbalance/-/blob/main/docs/v2/design.rst#L127
@@ -58,7 +58,7 @@ type TemplateReference struct {
 	Spec OnionServiceSpec `json:"spec,omitempty"`
 }
 
-// Template for the daemon pods
+// Template for the daemon pods.
 type BalancerTemplate struct {
 	// Metadata of the pods created from this template.
 	// +optional
@@ -77,13 +77,13 @@ type BalancerTemplate struct {
 	BalancerResources corev1.ResourceRequirements `json:"balancerResources,omitempty" protobuf:"bytes,8,opt,name=resources"`
 }
 
-// OnionBalancedServiceStatus defines the observed state of OnionBalancedService
+// OnionBalancedServiceStatus defines the observed state of OnionBalancedService.
 type OnionBalancedServiceStatus struct {
 	// +optional
 	Hostname string `json:"hostname,omitempty"`
 
 	// +optional
-	TargetClusterIP string `json:"targetClusterIP,omitempty"`
+	TargetClusterIP string `json:"targetClusterIp,omitempty"`
 
 	// +optional
 	Backends map[string]OnionServiceStatus `json:"backends,omitempty"`
@@ -97,7 +97,7 @@ type OnionBalancedServiceStatus struct {
 // +kubebuilder:printcolumn:name="Backends",type=string,JSONPath=`.spec.backends`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
-// OnionBalancedService is the Schema for the onionbalancedservices API
+// OnionBalancedService is the Schema for the onionbalancedservices API.
 type OnionBalancedService struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -108,7 +108,7 @@ type OnionBalancedService struct {
 
 // +kubebuilder:object:root=true
 
-// OnionBalancedServiceList contains a list of OnionBalancedService
+// OnionBalancedServiceList contains a list of OnionBalancedService.
 type OnionBalancedServiceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

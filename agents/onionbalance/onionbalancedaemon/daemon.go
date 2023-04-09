@@ -45,6 +45,7 @@ func (t *OnionBalance) Start() {
 				log.Print("error running onionbalance: ", err)
 			}
 
+			//nolint:gomnd // just seconds
 			time.Sleep(time.Second * 3)
 		}
 	}()

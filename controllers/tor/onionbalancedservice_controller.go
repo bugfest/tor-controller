@@ -35,7 +35,11 @@ import (
 	torv1alpha2 "github.com/bugfest/tor-controller/apis/tor/v1alpha2"
 )
 
-// OnionBalancedServiceReconciler reconciles a OnionBalancedService object
+const (
+	defaultClusterIP = "0.0.0.0"
+)
+
+// OnionBalancedServiceReconciler reconciles a OnionBalancedService object.
 type OnionBalancedServiceReconciler struct {
 	client.Client
 	Scheme        *runtime.Scheme
@@ -68,7 +72,6 @@ type OnionBalancedServiceReconciler struct {
 func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := k8slog.FromContext(ctx)
 
-	// namespace, name := req.Namespace, req.Name
 	var OnionBalancedService torv1alpha2.OnionBalancedService
 
 	err := r.Get(ctx, req.NamespacedName, &OnionBalancedService)
@@ -137,8 +140,6 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 		return ctrl.Result{}, err
 	}
 
-	// bc.recorder.Event(OnionBalancedService, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
-
 	// Finally, we update the status block of the OnionBalancedService resource to reflect the
 	// current state of the world
 	OnionBalancedServiceCopy := OnionBalancedService.DeepCopy()
@@ -151,7 +152,7 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 
 	switch {
 	case apierrors.IsNotFound(err):
-		clusterIP = "0.0.0.0"
+		clusterIP = defaultClusterIP
 	case err != nil:
 		return ctrl.Result{}, errors.Wrap(err, "unable to get service")
 	default:
@@ -159,16 +160,12 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 	}
 
 	OnionBalancedServiceCopy.Status.TargetClusterIP = clusterIP
-	// hostname := "test.onion"
-	// OnionBalancedService.Status.Hostname = hostname
 
 	// Update backends
 	var onionServiceList torv1alpha2.OnionServiceList
 
 	filter := []client.ListOption{
 		client.InNamespace(req.Namespace),
-		// client.MatchingLabels{"instance": req.NamespacedName.Name},
-		// client.MatchingFields{"status.phase": "Running"},
 	}
 
 	err = r.List(ctx, &onionServiceList, filter...)
@@ -197,6 +194,7 @@ func (r *OnionBalancedServiceReconciler) Reconcile(ctx context.Context, req ctrl
 
 	if !OnionBalancedServiceCopy.IsSynced() {
 		return ctrl.Result{
+			//nolint:gomnd // 3 seconds
 			RequeueAfter: 3 * time.Second,
 		}, nil
 	}

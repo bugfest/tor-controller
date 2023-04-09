@@ -56,6 +56,7 @@ func (r *OnionServiceReconciler) reconcileMetricsService(ctx context.Context, on
 		if err != nil {
 			return errors.Wrapf(err, "failed to create Service %#v", newService)
 		}
+
 		service = *newService
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get Service %s", serviceName)
@@ -98,8 +99,8 @@ func osTorMetricsService(onion *torv1alpha2.OnionService) *corev1.Service {
 			Selector: onion.ServiceSelector(),
 			Ports: []corev1.ServicePort{{
 				Name:       "metrics",
-				TargetPort: intstr.FromInt(9035),
-				Port:       9035,
+				TargetPort: intstr.FromInt(metricsPort),
+				Port:       metricsPort,
 			}},
 		},
 	}

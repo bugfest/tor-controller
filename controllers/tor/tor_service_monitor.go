@@ -32,7 +32,7 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
-func (r *TorReconciler) reconcileServiceMonitor(ctx context.Context, tor *torv1alpha2.Tor) error {
+func (r *Reconciler) reconcileServiceMonitor(ctx context.Context, tor *torv1alpha2.Tor) error {
 	logger := k8slog.FromContext(ctx)
 
 	if !r.monitoringInstalled(ctx) {
@@ -56,8 +56,8 @@ func (r *TorReconciler) reconcileServiceMonitor(ctx context.Context, tor *torv1a
 	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
 	newService := torServiceMonitor(tor)
-	if apierrors.IsNotFound(err) {
 
+	if apierrors.IsNotFound(err) {
 		if !tor.Spec.ServiceMonitor {
 			// ServiceMonitor is not requested, skipping
 			return nil
@@ -67,6 +67,7 @@ func (r *TorReconciler) reconcileServiceMonitor(ctx context.Context, tor *torv1a
 		if err != nil {
 			return errors.Wrapf(err, "failed to create Service %#v", newService)
 		}
+
 		service = *newService
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get Service %#v", newService)
@@ -136,12 +137,9 @@ func torServiceMonitor(onion *torv1alpha2.Tor) *monitoringv1.ServiceMonitor {
 	}
 }
 
-func (r *TorReconciler) monitoringInstalled(ctx context.Context) bool {
+func (r *Reconciler) monitoringInstalled(ctx context.Context) bool {
 	var monitoring apiextensionsv1.CustomResourceDefinition
 	err := r.Get(ctx, types.NamespacedName{Name: "servicemonitors.monitoring.coreos.com", Namespace: "default"}, &monitoring)
-	// if err != nil {
-	// 	log := k8slog.FromContext(ctx)
-	// 	log.Error(err, "error at monitoringInstalled")
-	// }
+
 	return !apierrors.IsNotFound(err)
 }

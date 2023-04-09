@@ -41,7 +41,7 @@ func init() {
 		"The name of the OnionService to manage.")
 }
 
-// GetClient returns a client for the torv1alpha2 OnionService CRD
+// GetClient returns a client for the torv1alpha2 OnionService CRD.
 func GetClient() client.Client {
 	scheme := runtime.NewScheme()
 	kubeconfig := ctrl.GetConfigOrDie()
@@ -61,7 +61,8 @@ func GetClient() client.Client {
 	return controllerClient
 }
 
-type LocalManager struct {
+// Manager is the main struct for the tor agent.
+type Manager struct {
 	kclient client.Client
 
 	stopCh chan struct{}
@@ -72,15 +73,15 @@ type LocalManager struct {
 	controller *Controller
 }
 
-func New() *LocalManager {
-	return &LocalManager{
+func New() *Manager {
+	return &Manager{
 		kclient: GetClient(),
 		stopCh:  make(chan struct{}),
 		daemon:  tordaemon.Tor{},
 	}
 }
 
-func (manager *LocalManager) Run() error {
+func (manager *Manager) Run() error {
 	var runErrors []error
 
 	if onionServiceName == "" {
@@ -97,7 +98,7 @@ func (manager *LocalManager) Run() error {
 
 	// listen to signals
 	signalCh := make(chan os.Signal, 1)
-	// signal.Notify(signalCh, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
+
 	signal.Notify(signalCh, syscall.SIGTERM, syscall.SIGHUP)
 	manager.signalHandler(signalCh)
 
@@ -105,7 +106,7 @@ func (manager *LocalManager) Run() error {
 	defer cancel()
 	manager.daemon.SetContext(ctx)
 
-	err := os.Chmod("/run/tor/service", 0o700)
+	err := os.Chmod("/run/tor/service", defaultUnixPermission)
 	if err != nil {
 		log.Error(err, "error changing /run/tor/service permissions")
 	}
@@ -119,7 +120,7 @@ func (manager *LocalManager) Run() error {
 	return nil
 }
 
-func (manager *LocalManager) Must(err error) *LocalManager {
+func (manager *Manager) Must(err error) *Manager {
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
@@ -128,7 +129,7 @@ func (manager *LocalManager) Must(err error) *LocalManager {
 	return manager
 }
 
-func (manager *LocalManager) signalHandler(ch chan os.Signal) {
+func (manager *Manager) signalHandler(ch chan os.Signal) {
 	go func() {
 		select {
 		case <-manager.stopCh:
@@ -150,17 +151,17 @@ func (manager *LocalManager) signalHandler(ch chan os.Signal) {
 	}()
 }
 
-func GetDynamicInformer(resourceType string, namespace string) (informers.GenericInformer, error) {
+func GetDynamicInformer(resourceType, namespace string) (informers.GenericInformer, error) {
 	cfg := ctrl.GetConfigOrDie()
 
 	// Grab a dynamic interface that we can create informers from
-	dc, err := dynamic.NewForConfig(cfg)
+	dynamicConfig, err := dynamic.NewForConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating dynamic client")
 	}
 
 	// Create a factory object that can generate informers for resource types
-	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0,
+	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dynamicConfig, 0,
 		namespace,
 		func(x *metav1.ListOptions) {
 			x.FieldSelector = fmt.Sprintf("metadata.name=%s", onionServiceName)
@@ -178,8 +179,15 @@ func GetDynamicInformer(resourceType string, namespace string) (informers.Generi
 func parseOnionService(obj interface{}) (torv1alpha2.OnionService, error) {
 	service := torv1alpha2.OnionService{}
 	// try following https://erwinvaneyk.nl/kubernetes-unstructured-to-typed/
+	unstructuredObj, ok := obj.(*unstructured.Unstructured)
+	if !ok {
+		log.Println("could not convert obj to OnionService")
+
+		return service, errors.New("could not convert obj to OnionService")
+	}
+
 	err := runtime.DefaultUnstructuredConverter.
-		FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), &service)
+		FromUnstructured(unstructuredObj.UnstructuredContent(), &service)
 	if err != nil {
 		log.Println("could not convert obj to OnionService")
 		log.Print(err)
@@ -190,8 +198,8 @@ func parseOnionService(obj interface{}) (torv1alpha2.OnionService, error) {
 	return service, nil
 }
 
-// onionServiceCRDWatcher watches for OnionService CRD events
-func (manager *LocalManager) runOnionServiceCRDInformer(stopCh <-chan struct{}, sharedIndexInformer cache.SharedIndexInformer, _ string) {
+// onionServiceCRDWatcher watches for OnionService CRD events.
+func (manager *Manager) runOnionServiceCRDInformer(stopCh <-chan struct{}, sharedIndexInformer cache.SharedIndexInformer, _ string) {
 	// create the workqueue
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
@@ -233,8 +241,13 @@ func (manager *LocalManager) runOnionServiceCRDInformer(stopCh <-chan struct{}, 
 			}
 		},
 	}
+
 	sharedIndexInformer.AddEventHandler(handlers)
-	sharedIndexInformer.AddIndexers(indexers)
+
+	err := sharedIndexInformer.AddIndexers(indexers)
+	if err != nil {
+		log.Errorf("Error adding indexers: %s", err)
+	}
 
 	go sharedIndexInformer.Run(stopCh)
 
@@ -243,14 +256,18 @@ func (manager *LocalManager) runOnionServiceCRDInformer(stopCh <-chan struct{}, 
 	manager.controller = NewController(queue, sharedIndexInformer, manager)
 
 	log.Info("Running event controller")
+
 	go manager.controller.Run(1, manager.stopCh)
+
 	<-stopCh
 }
 
-func (m *LocalManager) onionServiceCRDWatcher(namespace string) {
+func (manager *Manager) onionServiceCRDWatcher(namespace string) {
 	// dynamic informer needs to be told which type to watch
 	onionserviceinformer, _ := GetDynamicInformer("onionservices.v1alpha2.tor.k8s.torproject.org", namespace)
+
 	stopper := make(chan struct{})
 	defer close(stopper)
-	m.runOnionServiceCRDInformer(stopper, onionserviceinformer.Informer(), namespace)
+
+	manager.runOnionServiceCRDInformer(stopper, onionserviceinformer.Informer(), namespace)
 }

@@ -34,7 +34,7 @@ var (
 	oBconfigTemplate = template.Must(template.New("config").Parse(oBconfigFormat))
 )
 
-type torConfig struct {
+type TorConfig struct {
 	SocksPort                         string
 	ControlPort                       string
 	MetricsPort                       string
@@ -54,7 +54,7 @@ type portTuple struct {
 	ServiceClusterIP string
 }
 
-func OnionServiceInputData(onion *v1alpha2.OnionService) torConfig {
+func OnionServiceInputData(onion *v1alpha2.OnionService) TorConfig {
 	ports := []portTuple{}
 
 	for _, rule := range onion.Spec.Rules {
@@ -66,7 +66,7 @@ func OnionServiceInputData(onion *v1alpha2.OnionService) torConfig {
 		ports = append(ports, port)
 	}
 
-	return torConfig{
+	return TorConfig{
 		SocksPort:                         "0",
 		ControlPort:                       "0",
 		MetricsPort:                       "0.0.0.0:9035",

@@ -111,17 +111,14 @@ func (r *OnionServiceReconciler) reconcileSecretAuthorizedClients(ctx context.Co
 		if err != nil {
 			return errors.Wrap(err, "failed to create secret")
 		}
+
 		secret = *newSecret
 	} else if err != nil {
 		return errors.Wrap(err, "failed to get secret")
 	}
 
 	if !metav1.IsControlledBy(&secret.ObjectMeta, onionService) {
-		// msg := fmt.Sprintf("Secret %s already exists and is not controller by %s", secret.Name, onionService.Name)
 		// TODO: generate MessageResourceExists event
-		// msg := fmt.Sprintf(MessageResourceExists, service.Name)
-		// bc.recorder.Event(onionService, corev1.EventTypeWarning, ErrResourceExists, msg)
-		// return errors.New(msg)
 		logger.Info("Secret already exists and is not controlled by",
 			"secret", secret.Name,
 			"controller", onionService.Name)

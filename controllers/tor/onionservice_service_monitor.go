@@ -57,8 +57,8 @@ func (r *OnionServiceReconciler) reconcileServiceMonitor(ctx context.Context, on
 	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
 	newService := osTorServiceMonitor(onionService)
-	if apierrors.IsNotFound(err) {
 
+	if apierrors.IsNotFound(err) {
 		if !onionService.Spec.ServiceMonitor {
 			// ServiceMonitor is not requested, skipping
 			return nil
@@ -68,6 +68,7 @@ func (r *OnionServiceReconciler) reconcileServiceMonitor(ctx context.Context, on
 		if err != nil {
 			return errors.Wrapf(err, "failed to create ServiceMonitor %s", serviceName)
 		}
+
 		service = *newService
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get ServiceMonitor %s", serviceName)
@@ -140,9 +141,6 @@ func osTorServiceMonitor(onion *torv1alpha2.OnionService) *monitoringv1.ServiceM
 func (r *OnionServiceReconciler) monitoringInstalled(ctx context.Context) bool {
 	var monitoring apiextensionsv1.CustomResourceDefinition
 	err := r.Get(ctx, types.NamespacedName{Name: "servicemonitors.monitoring.coreos.com", Namespace: "default"}, &monitoring)
-	// if err != nil {
-	// 	log := k8slog.FromContext(ctx)
-	// 	log.Error(err, "error at monitoringInstalled")
-	// }
+
 	return !apierrors.IsNotFound(err)
 }

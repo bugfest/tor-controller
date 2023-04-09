@@ -34,7 +34,7 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-func (r *TorReconciler) reconcileDeployment(ctx context.Context, tor *torv1alpha2.Tor) error {
+func (r *Reconciler) reconcileDeployment(ctx context.Context, tor *torv1alpha2.Tor) error {
 	logger := k8slog.FromContext(ctx)
 
 	deploymentName := tor.DeploymentName()
@@ -61,6 +61,7 @@ func (r *TorReconciler) reconcileDeployment(ctx context.Context, tor *torv1alpha
 		if err != nil {
 			return errors.Wrapf(err, "failed to create Deployment %s/%s", namespace, deploymentName)
 		}
+
 		deployment = *newDeployment
 	} else if err != nil {
 		// If an error occurs during Get/Create, we'll requeue the item so we can
@@ -128,7 +129,6 @@ func torDeployment(tor *torv1alpha2.Tor, projectConfig *configv2.ProjectConfig) 
 	}
 
 	for i, ConfigMapKeyRef := range tor.Spec.ConfigMapKeyRef {
-
 		volumeName := fmt.Sprintf("custom-%d", i)
 		fileName := fmt.Sprintf("custom-%d.conf", i)
 
@@ -151,7 +151,6 @@ func torDeployment(tor *torv1alpha2.Tor, projectConfig *configv2.ProjectConfig) 
 			Name:      volumeName,
 			MountPath: fmt.Sprintf("/config/%s", volumeName),
 		})
-
 	}
 
 	// Fetch Pod Template

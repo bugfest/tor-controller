@@ -105,7 +105,7 @@ type torConfig struct {
 	ControlHashedPasswords []string
 }
 
-func (r *TorReconciler) reconcileConfigMap(ctx context.Context, tor *torv1alpha2.Tor) error {
+func (r *Reconciler) reconcileConfigMap(ctx context.Context, tor *torv1alpha2.Tor) error {
 	logger := k8slog.FromContext(ctx)
 
 	configMapName := tor.ConfigMapName()
@@ -129,6 +129,7 @@ func (r *TorReconciler) reconcileConfigMap(ctx context.Context, tor *torv1alpha2
 		if err != nil {
 			return errors.Wrapf(err, "failed to create configmap %s/%s", namespace, configMapName)
 		}
+
 		configmap = *newConfigMap
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get configmap %s/%s", namespace, configMapName)

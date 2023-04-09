@@ -74,7 +74,6 @@ func GenerateOnionV3() (*OnionV3, error) {
 }
 
 func GenerateOnionV3FromKeys(publicKey ed25519.PublicKey, privateKey ed25519.PrivateKey) (*OnionV3, error) {
-	// onionAddress := fmt.Sprintf("%s.onion", encodePublicKey(publicKey))
 	onionAddress := fmt.Sprintf("%s.onion", torutil.OnionServiceIDFromV3PublicKey(publicKey))
 
 	privateKeyFile := append([]byte("== ed25519v1-secret: type0 ==\x00\x00\x00"), privateKey[:]...)
@@ -160,18 +159,21 @@ func doHashPassword(input string) (string, error) {
 	}
 
 	// Inspired by: https://stackoverflow.com/questions/48054399/get-the-hashed-tor-password-automated-in-python
-	EXPBIAS := 6
+	expbias := 6
 	c := Iterations
-	count := (16 + (c & 15)) << ((c >> 4) + EXPBIAS)
+	//nolint:gomnd // i can't explain the magic, but it's fine to use magic number in magic line
+	count := (16 + (c & 15)) << ((c >> 4) + expbias)
 	d := sha1.New()
 
 	inb := []byte(input)
+	//nolint:gocritic // append result not assigned to the same slace by design
 	tmp := append(salt[:SpecifierLen-1], inb...)
 	slen := len(tmp)
 
 	for count > 0 {
 		if count > slen {
 			d.Write(tmp)
+
 			count -= slen
 		} else {
 			d.Write(tmp[:count])

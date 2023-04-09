@@ -32,7 +32,7 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-func (r *TorReconciler) reconcileMetricsService(ctx context.Context, tor *torv1alpha2.Tor) error {
+func (r *Reconciler) reconcileMetricsService(ctx context.Context, tor *torv1alpha2.Tor) error {
 	logger := k8slog.FromContext(ctx)
 
 	serviceName := tor.ServiceMetricsName()
@@ -51,8 +51,8 @@ func (r *TorReconciler) reconcileMetricsService(ctx context.Context, tor *torv1a
 	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: namespace}, &service)
 
 	newService := torMetricsService(tor)
-	if apierrors.IsNotFound(err) {
 
+	if apierrors.IsNotFound(err) {
 		if !tor.Spec.Metrics.Enable {
 			logger.Info("No metrics enabled, skipping metrics service for this tor instance")
 
@@ -63,6 +63,7 @@ func (r *TorReconciler) reconcileMetricsService(ctx context.Context, tor *torv1a
 		if err != nil {
 			return errors.Wrapf(err, "failed to create Service %#v", newService)
 		}
+
 		service = *newService
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get Service %s", serviceName)
@@ -105,8 +106,8 @@ func torMetricsService(onion *torv1alpha2.Tor) *corev1.Service {
 			Selector: onion.ServiceSelector(),
 			Ports: []corev1.ServicePort{{
 				Name:       "metrics",
-				TargetPort: intstr.FromInt(9035),
-				Port:       9035,
+				TargetPort: intstr.FromInt(metricsPort),
+				Port:       metricsPort,
 			}},
 		},
 	}

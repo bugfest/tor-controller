@@ -130,6 +130,8 @@ func torOnionServiceDeployment(onion *torv1alpha2.OnionService, projectConfig *c
 		}
 	}
 
+	// The default mode for the authorized_clients file is 0400
+	//nolint:gomnd // 0400 is a valid octal number
 	defaultMode := int32(0o400)
 	volumes := []corev1.Volume{
 		{
@@ -203,7 +205,7 @@ func torOnionServiceDeployment(onion *torv1alpha2.OnionService, projectConfig *c
 			{
 				Name:          "metrics",
 				Protocol:      "TCP",
-				ContainerPort: 9035,
+				ContainerPort: metricsPort,
 			},
 		},
 		Resources: onion.Resources(),

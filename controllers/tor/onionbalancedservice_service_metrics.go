@@ -32,6 +32,10 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
+const (
+	metricsPort = 9035
+)
+
 func (r *OnionBalancedServiceReconciler) reconcileMetricsService(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
 	logger := k8slog.FromContext(ctx)
 
@@ -56,6 +60,7 @@ func (r *OnionBalancedServiceReconciler) reconcileMetricsService(ctx context.Con
 		if err != nil {
 			return errors.Wrap(err, "failed to create Service")
 		}
+
 		service = *newService
 	} else if err != nil {
 		return errors.Wrap(err, "failed to get Service")
@@ -98,8 +103,8 @@ func obsTorMetricsService(onion *torv1alpha2.OnionBalancedService) *corev1.Servi
 			Selector: onion.ServiceSelector(),
 			Ports: []corev1.ServicePort{{
 				Name:       "metrics",
-				TargetPort: intstr.FromInt(9035),
-				Port:       9035,
+				TargetPort: intstr.FromInt(metricsPort),
+				Port:       metricsPort,
 			}},
 		},
 	}

@@ -31,7 +31,7 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-func (r *TorReconciler) reconcileServiceAccount(ctx context.Context, tor *torv1alpha2.Tor) error {
+func (r *Reconciler) reconcileServiceAccount(ctx context.Context, tor *torv1alpha2.Tor) error {
 	logger := k8slog.FromContext(ctx)
 
 	serviceAccountName := tor.ServiceAccountName()
@@ -55,6 +55,7 @@ func (r *TorReconciler) reconcileServiceAccount(ctx context.Context, tor *torv1a
 		if err != nil {
 			return errors.Wrapf(err, "failed to create ServiceAccount %#v", newServiceAccount)
 		}
+
 		serviceAccount = *newServiceAccount
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get ServiceAccount %s", serviceAccountName)

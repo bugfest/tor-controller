@@ -55,6 +55,7 @@ func (r *OnionServiceReconciler) reconcileRole(ctx context.Context, onionService
 		if err != nil {
 			return errors.Wrapf(err, "failed to create Role %#v", newRole)
 		}
+
 		role = *newRole
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get Role %s", roleName)

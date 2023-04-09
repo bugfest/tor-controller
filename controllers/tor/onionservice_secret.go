@@ -55,6 +55,7 @@ func (r *OnionServiceReconciler) reconcileSecret(ctx context.Context, onionServi
 		if err != nil {
 			return errors.Wrap(err, "failed to create secret")
 		}
+
 		secret = *newSecret
 	} else if err != nil {
 		return errors.Wrap(err, "failed to get secret")

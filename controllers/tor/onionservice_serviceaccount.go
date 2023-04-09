@@ -55,6 +55,7 @@ func (r *OnionServiceReconciler) reconcileServiceAccount(ctx context.Context, on
 		if err != nil {
 			return errors.Wrapf(err, "failed to create ServiceAccount %#v", newServiceAccount)
 		}
+
 		serviceAccount = *newServiceAccount
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get ServiceAccount %s", serviceAccountName)

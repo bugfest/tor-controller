@@ -32,7 +32,11 @@ import (
 	"github.com/m1/go-generate-password/generator"
 )
 
-func (r *TorReconciler) reconcileControlSecret(ctx context.Context, tor *torv1alpha2.Tor) error {
+const (
+	passwordLength = 16
+)
+
+func (r *Reconciler) reconcileControlSecret(ctx context.Context, tor *torv1alpha2.Tor) error {
 	logger := k8slog.FromContext(ctx)
 
 	secretName := tor.SecretName()
@@ -58,6 +62,7 @@ func (r *TorReconciler) reconcileControlSecret(ctx context.Context, tor *torv1al
 		if err != nil {
 			return errors.Wrapf(err, "failed to create secret %#v", newSecret)
 		}
+
 		secret = *newSecret
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get secret %s", secretName)
@@ -124,7 +129,7 @@ func torSecret(tor *torv1alpha2.Tor, password string) *corev1.Secret {
 
 func generateRandomPassword() string {
 	config := generator.Config{
-		Length:                     16,
+		Length:                     passwordLength,
 		IncludeSymbols:             false,
 		IncludeNumbers:             true,
 		IncludeLowercaseLetters:    true,

@@ -35,9 +35,8 @@ type TorPodTemplate struct {
 	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,8,opt,name=resources"`
 }
 
-// TorSpec defines the desired state of Tor
+// TorSpec defines the desired state of Tor.
 type TorSpec struct {
-
 	// Replicas.
 	// +kubebuilder:default:=1
 	Replicas int32 `json:"replicas,omitempty"`
@@ -86,7 +85,7 @@ type TorSpec struct {
 	ExtraArgs []string `json:"extraArgs,omitempty"`
 }
 
-// TorStatus defines the observed state of Tor
+// TorStatus defines the observed state of Tor.
 type TorStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
@@ -99,7 +98,7 @@ type TorStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
-// Tor is the Schema for the tor API
+// Tor is the Schema for the tor API.
 type Tor struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -110,7 +109,7 @@ type Tor struct {
 
 //+kubebuilder:object:root=true
 
-// TorList contains a list of Tor
+// TorList contains a list of Tor.
 type TorList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

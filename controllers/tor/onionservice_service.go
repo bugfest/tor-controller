@@ -56,6 +56,7 @@ func (r *OnionServiceReconciler) reconcileService(ctx context.Context, onionServ
 		if err != nil {
 			return errors.Wrapf(err, "failed to create Service %#v", newService)
 		}
+
 		service = *newService
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get Service %s", serviceName)

@@ -31,11 +31,11 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-func (r *OnionBalancedServiceReconciler) reconcileServiceAccount(ctx context.Context, OnionBalancedService *torv1alpha2.OnionBalancedService) error {
+func (r *OnionBalancedServiceReconciler) reconcileServiceAccount(ctx context.Context, onionBalancedService *torv1alpha2.OnionBalancedService) error {
 	logger := k8slog.FromContext(ctx)
 
-	serviceAccountName := OnionBalancedService.ServiceAccountName()
-	namespace := OnionBalancedService.Namespace
+	serviceAccountName := onionBalancedService.ServiceAccountName()
+	namespace := onionBalancedService.Namespace
 
 	if serviceAccountName == "" {
 		// We choose to absorb the error here as the worker would requeue the
@@ -49,7 +49,7 @@ func (r *OnionBalancedServiceReconciler) reconcileServiceAccount(ctx context.Con
 	var serviceAccount corev1.ServiceAccount
 	err := r.Get(ctx, types.NamespacedName{Name: serviceAccountName, Namespace: namespace}, &serviceAccount)
 
-	newServiceAccount := onionbalanceServiceAccount(OnionBalancedService)
+	newServiceAccount := onionbalanceServiceAccount(onionBalancedService)
 	if apierrors.IsNotFound(err) {
 		err := r.Create(ctx, newServiceAccount)
 		if err != nil {
@@ -61,10 +61,10 @@ func (r *OnionBalancedServiceReconciler) reconcileServiceAccount(ctx context.Con
 		return errors.Wrapf(err, "failed to get ServiceAccount %s", serviceAccountName)
 	}
 
-	if !metav1.IsControlledBy(&serviceAccount.ObjectMeta, OnionBalancedService) {
+	if !metav1.IsControlledBy(&serviceAccount.ObjectMeta, onionBalancedService) {
 		logger.Info("ServiceAccount already exists and is not controlled by",
 			"ServiceAccount", serviceAccount.Name,
-			"controller", OnionBalancedService.Name)
+			"controller", onionBalancedService.Name)
 
 		return nil
 	}
