@@ -14,11 +14,6 @@ RUN --mount=target=. \
 
 FROM ${TOR_IMAGE}:${TOR_VERSION} as tor
 
-WORKDIR /root/
-
-# install tor-local-manager
-RUN mkdir -p /run/tor/service
-
 COPY --from=builder /out/tor-local-manager .
 
 ENTRYPOINT ["./tor-local-manager"]
