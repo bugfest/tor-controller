@@ -6,7 +6,7 @@ FROM ${TOR_IMAGE}:${TOR_VERSION} as tor
 USER 0
 
 WORKDIR /app
-RUN chmod g+w .
+RUN chmod g+w /app
 
 VOLUME /run/tor/service
 
