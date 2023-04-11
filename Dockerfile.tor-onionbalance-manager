@@ -1,15 +1,18 @@
-FROM --platform=$BUILDPLATFORM golang:1.17 as builder
+# build
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.17-alpine as builder
 
 WORKDIR /src
 
+COPY . /src
+
 # Build
 ARG TARGETOS TARGETARCH
-RUN --mount=target=. \
-    --mount=type=cache,target=/root/.cache/go-build \
+RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -o /out/onionbalance-local-manager ./agents/onionbalance/main.go
 
-FROM docker.io/library/alpine:3
+# package build
+FROM docker.io/library/alpine:3.17
 
 ARG OB_VERSION="0.2.2"
 
@@ -24,5 +27,4 @@ COPY --from=builder /out/onionbalance-local-manager .
 
 USER 1001
 
-# ENTRYPOINT ["/usr/bin/onionbalance"]
 ENTRYPOINT ["./onionbalance-local-manager"]
