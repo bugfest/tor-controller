@@ -5,20 +5,16 @@ FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.20 as builder
 
 WORKDIR /src
 
+COPY . /src
+
 # Build
 ARG TARGETOS TARGETARCH
-RUN --mount=target=. \
-    --mount=type=cache,target=/root/.cache/go-build \
+RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -ldflags="-s -w" -o /out/tor-local-manager ./agents/tor/main.go
 
 FROM ${TOR_IMAGE}:${TOR_VERSION} as tor
 
-WORKDIR /root/
+COPY --from=builder /out/tor-local-manager /app
 
-# install tor-local-manager
-RUN mkdir -p /run/tor/service
-
-COPY --from=builder /out/tor-local-manager .
-
-ENTRYPOINT ["./tor-local-manager"]
+ENTRYPOINT ["/app/tor-local-manager"]
