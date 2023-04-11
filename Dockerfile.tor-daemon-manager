@@ -1,7 +1,7 @@
 ARG TOR_VERSION="0.4.7.13"
 ARG TOR_IMAGE="quay.io/bugfest/tor"
 
-FROM --platform=$BUILDPLATFORM golang:1.17 as builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.17 as builder
 
 WORKDIR /src
 
@@ -10,7 +10,7 @@ ARG TARGETOS TARGETARCH
 RUN --mount=target=. \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
-    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -o /out/tor-local-manager ./agents/tor/main.go
+    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -ldflags="-s -w" -o /out/tor-local-manager ./agents/tor/main.go
 
 FROM ${TOR_IMAGE}:${TOR_VERSION} as tor
 
