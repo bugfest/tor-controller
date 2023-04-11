@@ -3,7 +3,11 @@ ARG TOR_IMAGE="quay.io/bugfest/tor"
 
 FROM ${TOR_IMAGE}:${TOR_VERSION} as tor
 
+USER 0
+
 WORKDIR /app
 RUN chmod g+w .
+
+VOLUME /run/tor/service
 
 USER 1001
