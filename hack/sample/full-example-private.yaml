@@ -34,37 +34,10 @@ spec:
   selector:
     app: http-app
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: http-app-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-  # Need to specify the ingress class if you don't have a default one
-  # $ kubectl get ingressclass
-  ingressClassName: nginx
-  defaultBackend:
-    service:
-      name: default-http-backend
-      port:
-        number: 80
-  rules:
-  - host: '*.onion'
-    http:
-      paths:
-      - pathType: Prefix
-        path: /
-        backend:
-          service:
-            name: http-app
-            port:
-              number: 8080
----
 apiVersion: tor.k8s.torproject.org/v1alpha2
 kind: OnionService
 metadata:
-  name: ingress-example-onion-service
+  name: http-app-onion-service
 spec:
   version: 3
   rules:
@@ -79,8 +52,8 @@ spec:
           # I used this commands:
           # $ helm repo add nginx-stable https://helm.nginx.com/stable
           # $ helm install nginx-ingress nginx-stable/nginx-ingress
-          name: nginx-ingress-nginx-ingress
+          name: http-app
           port:
-            number: 80
+            number: 8080
   extraConfig: |
       HiddenServiceEnableIntroDoSDefense 1

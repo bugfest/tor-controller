@@ -156,6 +156,13 @@ Some examples you can use to start using tor-controller in your cluster
 Quickstart with random onion address
 ------------------------------------
 
+TLDR
+```bash
+$ kubectl apply -f hack/sample/full-example-private.yaml
+
+$ kubectl get onion
+```
+
 Create some deployment to test against, in this example we'll deploy an echoserver. You can find the definition at [hack/sample/echoserver.yaml](hack/sample/echoserver.yaml):
 
 Apply it:
@@ -443,12 +450,13 @@ spec:
         memory: 128Mi
 ```
 
-
 Using with nginx-ingress
 ------------------------
 
+**WARNING**: This example exposes the service to both clearnet (Internet) and Tor
+
 tor-controller on its own simply directs TCP traffic to a backend service.
-If you want to serve HTTP stuff, you'll probably want to pair it with
+If you want to serve HTTP stuff, you may want to pair it with
 nginx-ingress or some other ingress controller.
 
 To do this, first install nginx-ingress normally. Then point an onion service

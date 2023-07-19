@@ -21,6 +21,12 @@ HiddenServiceVersion {{ .Version }}
 {{ range .Ports }}
 HiddenServicePort {{ .PublicPort }} {{ .ServiceClusterIP }}:{{ .ServicePort }}
 {{ end }}
+
+{{ if .ExtraConfig }}
+# ExtraConfig [START]
+{{ .ExtraConfig }}
+# ExtraConfig [END]
+{{ end }}
 `
 
 const oBconfigFormat = `
@@ -46,6 +52,7 @@ type TorConfig struct {
 	Ports                             []portTuple
 	MasterOnionAddress                string
 	HiddenServiceOnionbalanceInstance bool
+	ExtraConfig                       string
 }
 
 type portTuple struct {
@@ -78,6 +85,7 @@ func OnionServiceInputData(onion *v1alpha2.OnionService) TorConfig {
 		Version:                           onion.Spec.GetVersion(),
 		MasterOnionAddress:                onion.Spec.MasterOnionAddress,
 		HiddenServiceOnionbalanceInstance: onion.Spec.MasterOnionAddress != "",
+		ExtraConfig:                       onion.Spec.ExtraConfig,
 	}
 }
 

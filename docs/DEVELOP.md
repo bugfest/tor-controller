@@ -7,6 +7,14 @@ optional:
 
     - k3d
 
+# Mac/Linux with brew
+
+    brew install go@1.17
+    brew link go@1.17
+    export GOPATH=$HOME/go
+    export GOROOT="$(brew --prefix go@1.17)/libexec"
+    export PATH="${GOPATH}/bin:${GOROOT}/bin:$PATH"
+
 # init
 
     # boilerplates
