@@ -100,6 +100,7 @@ Full changelog: [CHANGELOG](CHANGELOG.md)
   - Controller deployment automatic rollout on chart upgrade
   - Upgraded Tor daemon to 0.4.7.x
   - Bridges support (obfs4 pluggable transport shipped alongside Tor daemon)
+  - Implemented ExtraConfig in OnionService
 
 Roadmap / TODO
 --------------
@@ -653,6 +654,7 @@ Versions
 | 0.1.9              | 0.7.2                  | 0.4.6.10   |                      |
 | 0.1.10             | 0.8.0                  | 0.4.6.10   |                      |
 | 0.1.11             | 0.9.0                  | 0.4.7.13   | Obfs4-0.0.14         |
+| 0.1.12             | 0.9.1                  | 0.4.7.13   | Obfs4-0.0.14         |
 
 References
 ----------
