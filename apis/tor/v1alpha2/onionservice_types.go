@@ -112,7 +112,7 @@ type OnionServiceStatus struct {
 	Hostname string `json:"hostname,omitempty"`
 
 	// +optional
-	TargetClusterIP string `json:"targetClusterIp,omitempty"`
+	TargetClusterIP string `json:"targetClusterIP,omitempty"`
 }
 
 // +kubebuilder:resource:shortName={"onion","os"}

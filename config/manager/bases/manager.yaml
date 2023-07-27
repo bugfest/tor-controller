@@ -28,7 +28,7 @@ spec:
         runAsNonRoot: true
       containers:
       - command:
-        - /manager
+        - /app/manager
         args:
         - --leader-elect
         image: quay.io/bugfest/tor-controller:latest

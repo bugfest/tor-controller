@@ -83,7 +83,7 @@ type OnionBalancedServiceStatus struct {
 	Hostname string `json:"hostname,omitempty"`
 
 	// +optional
-	TargetClusterIP string `json:"targetClusterIp,omitempty"`
+	TargetClusterIP string `json:"targetClusterIP,omitempty"`
 
 	// +optional
 	Backends map[string]OnionServiceStatus `json:"backends,omitempty"`

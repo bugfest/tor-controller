@@ -5,6 +5,8 @@ IMG_DAEMON ?= tor-daemon:latest
 IMG_DAEMON_MANAGER ?= tor-daemon-manager:latest
 IMG_ONIONBALANCE_MANAGER ?= tor-onionbalance-manager:latest
 
+GEN_CRD_PARAMS=:maxDescLen=80
+
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.22
 
@@ -45,7 +47,7 @@ help: ## Display this help.
 
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd$(GEN_CRD_PARAMS) webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 	hack/remove-containers-requirement.sh config/crd/bases
 
 .PHONY: generate

@@ -72,7 +72,7 @@ type SecretReference struct {
 // OnionServiceStatus defines the observed state of OnionService.
 type OnionServiceStatus struct {
 	Hostname        string `json:"hostname"`
-	TargetClusterIP string `json:"targetClusterIp"`
+	TargetClusterIP string `json:"targetClusterIP"`
 }
 
 // +kubebuilder:object:root=true

@@ -53,7 +53,7 @@ Check [install section](#install) bellow for more information.
   - [Bring your own secret](#bring-your-own-secret)
   - [Enable Onion Service protection with Authorization Clients](#enable-onion-service-protection-with-authorization-clients)
   - [Custom settings for Tor daemon](#custom-settings-for-tor-daemon)
-  - [Specifiying Tor network bridges](#specifiying-tor-network-bridges)
+  - [Specifying Tor network bridges](#specifying-tor-network-bridges)
   - [Specify Pod Template Settings](#specify-pod-template-settings)
   - [OnionBalancedService Pod Template](#onionbalancedservice-pod-template)
   - [Using with nginx-ingress](#using-with-nginx-ingress)
@@ -106,12 +106,12 @@ Roadmap / TODO
 --------------
 
 - Tor daemon management via socket (e.g: config reload)
-- Manage Tor Server fingerpting (ed25519_master_id_secret_key, secret_id_key) and automatic family and nickname management 
+- Manage Tor Server fingerprinting (ed25519_master_id_secret_key, secret_id_key) and automatic family and nickname management 
 - Tor relays:
   - Non exit: Bridge, Snowflake, Middle/Guard
   - Exit relay: Tor Exit
 - Tor-Istio plugin/extension to route pod egress traffic thru Tor
-- Automated Vanguards Tor Addon deploy/setup
+- Automated Vanguards Tor Add-on deploy/setup
 
 Install
 -------
@@ -144,7 +144,7 @@ Resources
 
 ***Tor***: Tor instance you can use to route traffic to/thru Tor network
 
-**OnionService**: Exposes a set of k8s services using as a Tor Hidden Service. By default it generates a random .onion adress
+**OnionService**: Exposes a set of k8s services using as a Tor Hidden Service. By default it generates a random .onion address
 
 **OnionBalancedService**: Exposes a set of k8s services using [Onionbalance](https://gitlab.torproject.org/tpo/core/onionbalance.git). It creates multiple backends providing some sort of HA. Users connect to the OnionBalancedService address and the requests are managed by one of the registered backends.
 
@@ -206,7 +206,7 @@ example-onion-service   cfoj4552cvq7fbge6k22qmkun3jl37oz273hndr7ktvoahnqg5kdnzqd
 
 **Note**: you can also the alias `onion` or `os` to interact with these resources. Example: `kubectl get onion`
 
-This service should now be accessable from any tor client,
+This service should now be accessible from any tor client,
 for example [Tor Browser](https://www.torproject.org/projects/torbrowser.html.en):
 
 
@@ -339,10 +339,10 @@ Tor Controller CRDs allows adding extra parameters that will be passed to the To
 - Onion Services: use `spec.extraConfig` field
 - Onion Balanced Services: use `spec.template.extraConfig` field
 
-Specifiying Tor network bridges
+Specifying Tor network bridges
 -------------------------------
 
-Prerequisite: bridges information. You can get obfs4 bridges visiting https://bridges.torproject.org/bridges/?transport=obfs4
+Prerequisite: bridges information. You can get `obfs4` bridges visiting https://bridges.torproject.org/bridges/?transport=obfs4
 
 Tor daemon instance [example](./hack/sample/tor-custom-config-bridges.yaml). Set the `config` field with the following content:
 1. Enable bridges adding the line `UseBridges 1`
@@ -461,7 +461,7 @@ If you want to serve HTTP stuff, you may want to pair it with
 nginx-ingress or some other ingress controller.
 
 To do this, first install nginx-ingress normally. Then point an onion service
-to yor nginx-ingress' controller (find it with `kubectl get svc`), for example:
+to your nginx-ingress' controller (find it with `kubectl get svc`), for example:
 
 ```yaml
 apiVersion: tor.k8s.torproject.org/v1alpha2
@@ -655,6 +655,7 @@ Versions
 | 0.1.10             | 0.8.0                  | 0.4.6.10   |                      |
 | 0.1.11             | 0.9.0                  | 0.4.7.13   | Obfs4-0.0.14         |
 | 0.1.12             | 0.9.1                  | 0.4.7.13   | Obfs4-0.0.14         |
+| 0.1.13             | 0.9.1                  | 0.4.7.13   | Obfs4-0.0.14         |
 
 References
 ----------
