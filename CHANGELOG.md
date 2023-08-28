@@ -2,6 +2,66 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.2] - 2023-08-10
+
+### Bug Fixes
+
+- Limit CRD description fields to 80 chars ([#57](https://github.com/bugfest/tor-controller/issues/57))
+- Invalid selector for OnionBalancedService #58
+
+### Documentation
+
+- Update helm chart and docs
+
+### Features
+
+- Implements/fixes #56 - ExtraConfig implementation for onionService type
+
+### Generic
+
+- Linting, formatting and error wrappers ([#45](https://github.com/bugfest/tor-controller/issues/45))
+
+* small changes
+* fix logger.Info() usage
+* code cleanup
+* reduce fmt usage
+
+---------
+
+Signed-off-by: Aleksey Sviridkin <a.sviridkin@sdventures.com>
+- Update onibalancer image ([#49](https://github.com/bugfest/tor-controller/issues/49))
+
+* update onionbalancer image
+* remove debug info from binary
+* bump go version 1.20
+
+---------
+
+Signed-off-by: Aleksey Sviridkin <a.sviridkin@sdventures.com>
+- Make improvements to containers ([#50](https://github.com/bugfest/tor-controller/issues/50))
+
+## [0.9.0] - 2023-03-14
+
+### Generic
+
+- Add option to use bridges #38 ([#39](https://github.com/bugfest/tor-controller/issues/39))
+
+Tor daemon and manager bumped to 0.4.7.13 (including obfs4proxy binary)
+- Release 0.9.0
+
+* [FEATURE] Add option to use bridges #38
+* [FEATURE] Upgrade Tor daemon to 0.4.7.x enhancement #40
+* [FEATURE] Controller deployment automatic rollout on chart upgrade #41
+* [DOC] Update instructions to use bridges and custom Tor daemon configs
+
+## [0.8.0] - 2023-02-05
+
+### Generic
+
+- Implements #33 - Namespaced Support ([#34](https://github.com/bugfest/tor-controller/issues/34))
+
+
+
 ## [0.7.2] - 2023-01-18
 
 ### Bug Fixes
@@ -10,7 +70,8 @@ All notable changes to this project will be documented in this file.
 
 ### Generic
 
-- Release 0.7.2
+- [ci-skip] Release 0.7.2
+
 
 
 ## [0.7.1] - 2023-01-15
