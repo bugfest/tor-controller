@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.9.2] - 2023-08-10
+## [0.9.2] - 2023-08-28
 
 ### Bug Fixes
 
@@ -39,6 +39,8 @@ Signed-off-by: Aleksey Sviridkin <a.sviridkin@sdventures.com>
 
 Signed-off-by: Aleksey Sviridkin <a.sviridkin@sdventures.com>
 - Make improvements to containers ([#50](https://github.com/bugfest/tor-controller/issues/50))
+- Helm chart release 0.1.14
+
 
 ## [0.9.0] - 2023-03-14
 
