@@ -146,7 +146,7 @@ Resources
 
 **OnionService**: Exposes a set of k8s services using as a Tor Hidden Service. By default it generates a random .onion address
 
-**OnionBalancedService**: Exposes a set of k8s services using [Onionbalance](https://gitlab.torproject.org/tpo/core/onionbalance.git). It creates multiple backends providing some sort of HA. Users connect to the OnionBalancedService address and the requests are managed by one of the registered backends.
+**OnionBalancedService**: Exposes a set of k8s services using [Onionbalance](https://gitlab.torproject.org/tpo/onion-services/onionbalance.git). It creates multiple backends providing some sort of HA. Users connect to the OnionBalancedService address and the requests are managed by one of the registered backends.
 
 
 How to
@@ -610,7 +610,7 @@ only serve traffic on the tor network (available on `.onion` addresses).
 See [this page](https://www.torproject.org/docs/onion-services.html.en) for
 more information about onion services.
 
-HA Hidden Services are implemented by [OnionBalance](https://gitlab.torproject.org/tpo/core/onionbalance). Implements round-robin like load balancing on top of Tor onion services. A typical Onionbalance deployment will incorporate one frontend servers and multiple backend instances.` https://onionbalance.readthedocs.io/en/latest/v3/tutorial-v3.html
+HA Hidden Services are implemented by [OnionBalance](https://gitlab.torproject.org/tpo/onion-services/onionbalance). Implements round-robin like load balancing on top of Tor onion services. A typical Onionbalance deployment will incorporate one frontend servers and multiple backend instances.` https://onionbalance.readthedocs.io/en/latest/v3/tutorial-v3.html
 
 
 # How it works
@@ -663,7 +663,7 @@ References
 
 ## Documentation
 - Tor man pages: https://manpages.debian.org/testing/tor/tor.1.en.html
-- Onionbalance: https://gitlab.torproject.org/tpo/core/onionbalance
+- Onionbalance: https://gitlab.torproject.org/tpo/onion-services/onionbalance
 - Onionbalance tutorial: https://onionbalance.readthedocs.io/en/latest/v3/tutorial-v3.html
 - Obfs4 pluggable transport: https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/obfs4
 
