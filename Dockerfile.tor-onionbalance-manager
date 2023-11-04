@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.20  as builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.20 as builder
 
 WORKDIR /src
 
@@ -15,7 +15,7 @@ FROM docker.io/library/alpine:3.17.2
 
 ARG OB_VERSION="0.2.2"
 
-RUN apk add --update \
+RUN apk add --no-cache --update \
         git=2.38.5-r0 \
         py3-cryptography=38.0.3-r1 \
         py3-pip=22.3.1-r1 \
@@ -26,5 +26,7 @@ RUN apk add --update \
 
 WORKDIR /app
 COPY --from=builder /out/onionbalance-local-manager /app
+
+USER 1001
 
 ENTRYPOINT ["/app/onionbalance-local-manager"]
