@@ -1,4 +1,4 @@
-ARG TOR_VERSION="0.4.8.8"
+ARG TOR_VERSION="0.4.8.7"
 ARG TOR_IMAGE="quay.io/bugfest/tor"
 
 FROM ${TOR_IMAGE}:${TOR_VERSION} as tor
