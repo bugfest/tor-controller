@@ -1,4 +1,4 @@
-ARG TOR_VERSION="0.4.8.7"
+ARG TOR_VERSION="0.4.8.8"
 ARG TOR_IMAGE="quay.io/bugfest/tor"
 
 FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.20 as builder
