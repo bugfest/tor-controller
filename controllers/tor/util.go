@@ -46,6 +46,8 @@ const (
 	privateKeyVolume         = "private-key"
 	authorizedClientsVolume  = "authorized-clients"
 	torConfigVolume          = "tor-config"
+	torDataVolume            = "tor-data"
+	torServiceVolume         = "tor-service"
 	torConfigExtraVolume     = "tor-config-extra"
 	obConfigVolume           = "ob-config"
 	onionBalanceConfigVolume = "onionbalance-config"

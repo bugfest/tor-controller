@@ -98,11 +98,21 @@ func torDeployment(tor *torv1alpha2.Tor, projectConfig *configv2.ProjectConfig) 
 	}
 
 	torConfigMountDir := "/run/tor"
+	torServiceMountDir := "/run/tor/service"
+	torDataMountDir := "/var/lib/tor"
 
 	torVolumeMounts := []corev1.VolumeMount{
 		{
 			Name:      torConfigVolume,
 			MountPath: torConfigMountDir,
+		},
+		{
+			Name:      torServiceVolume,
+			MountPath: torServiceMountDir,
+		},
+		{
+			Name:      torDataVolume,
+			MountPath: torDataMountDir,
 		},
 	}
 
@@ -124,6 +134,18 @@ func torDeployment(tor *torv1alpha2.Tor, projectConfig *configv2.ProjectConfig) 
 						Path: "torfile",
 					}},
 				},
+			},
+		},
+		{
+			Name: torServiceVolume,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+		{
+			Name: torDataVolume,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
 		},
 	}

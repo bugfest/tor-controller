@@ -36,6 +36,7 @@ import (
 
 const torConfigFormat = `# Config automatically generated
 # {{ .Tor.Namespace }}/{{ .Tor.Name }}
+DataDirectory /var/lib/tor/data
 
 {{- if .Tor.Spec.Client.DNS.Enable }}
 # Client:DNS
