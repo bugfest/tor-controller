@@ -33,7 +33,7 @@ helm repo update
 helm upgrade \
   --install \
   --create-namespace \
-  --namespace tor-controller-system \
+  --namespace tor-controller \
   tor-controller \
   bugfest/tor-controller
 ```
