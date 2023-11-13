@@ -105,7 +105,7 @@ func (manager *Manager) Run() error {
 	defer cancel()
 	manager.daemon.SetContext(ctx)
 
-	err := os.Chmod("/run/tor/service", defaultUnixPermission)
+	err := os.Chmod("/run/tor/service", 0o700)
 	if err != nil {
 		log.Error(err, "error changing /run/tor/service permissions")
 	}
