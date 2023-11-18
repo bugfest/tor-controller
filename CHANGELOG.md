@@ -2,12 +2,98 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.9.2] - 2023-08-28
+## [0.10.0] - 2023-11-18
 
 ### Bug Fixes
 
-- Limit CRD description fields to 80 chars ([#57](https://github.com/bugfest/tor-controller/issues/57))
+- Fix auth client dir permissions
+
+## [0.10.0-rc.2] - 2023-11-13
+
+### Bug Fixes
+
+- Fix tag filter
+
+Signed-off-by: Bug Fest <52962234+bugfest@users.noreply.github.com>
+
+- Fix tag filter II
+
+Signed-off-by: Bug Fest <52962234+bugfest@users.noreply.github.com>
+
+- Fix tag filter III
+
+Signed-off-by: Bug Fest <52962234+bugfest@users.noreply.github.com>
+
+- Fix tag filter IV
+
+Signed-off-by: Bug Fest <52962234+bugfest@users.noreply.github.com>
+
+
+### Generic
+
+- Rc.2 build
+
+Signed-off-by: Bug Fest <52962234+bugfest@users.noreply.github.com>
+
+
+## [tor-controller-0.1.15-rc.1] - 2023-11-13
+
+### Bug Fixes
+
+- Avoid failure when /app already exists ([#65](https://github.com/bugfest/tor-controller/issues/65))
+- Tor instances missing volume/volumeMounts and default DataDirectory config ([#68](https://github.com/bugfest/tor-controller/issues/68))
+
+### Generic
+
+- Update Onionbalance URL ([#61](https://github.com/bugfest/tor-controller/issues/61))
+
+
+- Update tor version to 0.4.8.7 ([#63](https://github.com/bugfest/tor-controller/issues/63))
+
+* Update latest tor version - 0.4.8.7
+- Tor 0.4.8.8, minor fixes; consistenecy ([#66](https://github.com/bugfest/tor-controller/issues/66))
+
+* update: remove redundant config, tor version 0.4.8.8, Dockerfile, minor fixes, security settings, docs
+* fix: permissions on folder
+- Release/0.1.15-rc.1
+
+Signed-off-by: Bug Fest <52962234+bugfest@users.noreply.github.com>
+
+- Add release branch filter for helm chart release
+
+Signed-off-by: Bug Fest <52962234+bugfest@users.noreply.github.com>
+
+
+## [tor-controller-0.1.14] - 2023-08-28
+
+### Bug Fixes
+
 - Invalid selector for OnionBalancedService #58
+- Fixed python version breaks tor-onionbalance-manager dependencies install
+
+### Generic
+
+- Helm chart release 0.1.14
+
+- [ci-skip] update changelog
+
+- [ci-skip] forced chart re-release
+
+- [ci-skip] forced chart re-release 0.9.2/0.1.14
+
+- [ci-skip] Add workflow_dispatch to helm chart release
+
+
+## [tor-controller-0.1.13] - 2023-07-27
+
+### Bug Fixes
+
+- Fix: limit CRD description fields to 80 chars ([#57](https://github.com/bugfest/tor-controller/issues/57))
+fix: tor-controller manager path moved to /app/manager
+fix: README typos
+
+
+## [tor-controller-0.1.12] - 2023-07-19
 
 ### Documentation
 
@@ -39,10 +125,8 @@ Signed-off-by: Aleksey Sviridkin <a.sviridkin@sdventures.com>
 
 Signed-off-by: Aleksey Sviridkin <a.sviridkin@sdventures.com>
 - Make improvements to containers ([#50](https://github.com/bugfest/tor-controller/issues/50))
-- Helm chart release 0.1.14
 
-
-## [0.9.0] - 2023-03-14
+## [tor-controller-0.1.11] - 2023-03-14
 
 ### Generic
 
@@ -56,7 +140,7 @@ Tor daemon and manager bumped to 0.4.7.13 (including obfs4proxy binary)
 * [FEATURE] Controller deployment automatic rollout on chart upgrade #41
 * [DOC] Update instructions to use bridges and custom Tor daemon configs
 
-## [0.8.0] - 2023-02-05
+## [tor-controller-0.1.10] - 2023-02-05
 
 ### Generic
 
@@ -64,7 +148,7 @@ Tor daemon and manager bumped to 0.4.7.13 (including obfs4proxy binary)
 
 
 
-## [0.7.2] - 2023-01-18
+## [tor-controller-0.1.9] - 2023-01-18
 
 ### Bug Fixes
 
@@ -76,7 +160,7 @@ Tor daemon and manager bumped to 0.4.7.13 (including obfs4proxy binary)
 
 
 
-## [0.7.1] - 2023-01-15
+## [tor-controller-0.1.8] - 2023-01-15
 
 ### Bug Fixes
 
@@ -93,7 +177,7 @@ Tor daemon and manager bumped to 0.4.7.13 (including obfs4proxy binary)
 - [ci-skip] build help release
 
 
-## [0.7.0] - 2022-09-19
+## [tor-controller-0.1.7] - 2022-09-19
 
 ### Bug Fixes
 
@@ -122,6 +206,13 @@ Tor daemon and manager bumped to 0.4.7.13 (including obfs4proxy binary)
 
 ### Generic
 
+- [ci-skip] Reformat README. Fix some typos
+
+
+## [tor-controller-0.1.6] - 2022-07-28
+
+### Generic
+
 - [ci-skip] Updated helm chart to use version 0.6.0
 
 - Tor crd 0.6.1 ([#20](https://github.com/bugfest/tor-controller/issues/20))
@@ -143,10 +234,8 @@ Tor daemon and manager bumped to 0.4.7.13 (including obfs4proxy binary)
 * fix: helm chart project config. ClusterRole update. Default Tor daemon image
 
 * chore(release): prepare for 0.6.1
-- [ci-skip] Reformat README. Fix some typos
 
-
-## [0.6.0] - 2022-07-12
+## [tor-controller-0.1.5] - 2022-07-12
 
 ### Features
 
@@ -154,10 +243,15 @@ Tor daemon and manager bumped to 0.4.7.13 (including obfs4proxy binary)
 
 ### Generic
 
-- [ci-skip] Updated helm chart to use version 0.5.1
-
 - * Updating dependencies - version v0.6.0
 * Updating Helm Chart - preparing helm chart version v0.1.5
+
+
+## [tor-controller-0.1.4] - 2022-03-10
+
+### Generic
+
+- [ci-skip] Updated helm chart to use version 0.5.1
 
 
 ## [0.5.1] - 2022-03-10
@@ -178,7 +272,7 @@ Add QEMU arm64 instructions to get a k3s sanbox
 
 
 
-## [0.5.0] - 2022-02-20
+## [tor-controller-0.1.3] - 2022-02-20
 
 ### Generic
 
@@ -192,15 +286,9 @@ Metrics exporters (controller and managers)
 Helm chart service monitor creation (controller)
 Updated CRDs to enable Service Monitor creation
 
-## [0.4.0] - 2022-02-10
+## [tor-controller-0.1.2] - 2022-02-10
 
 ### Generic
-
-- [ci-skip] reverting chart version
-
-- [ci-skip] App version 0.3.2, Chart version 0.1.1
-
-- [ci-skip] Updated Chart Readme
 
 - [ci-skip] Update issue templates
 - [ci-skip] Updated Changelog
@@ -235,22 +323,20 @@ Updated CRDs to enable Service Monitor creation
 
 OnionBalancedService implementation - Fixes #8 
 
-## [0.3.2] - 2022-01-29
+## [tor-controller-0.1.1] - 2022-01-29
 
 ### Generic
 
-- #1 Helm chart for installing
+- [ci-skip] reverting chart version
 
-- Merge pull request #2 from bugfest/helm
+- [ci-skip] App version 0.3.2, Chart version 0.1.1
 
-Helm chart for installing. Fixes #1 
-- Updated CHANGELOG
+- [ci-skip] Updated Chart Readme
 
-- Preparing chart-releaser-action changes
 
-- Updating chart repo URL and instructions
+## [0.3.2] - 2022-01-29
 
-- Update action branch: master
+### Generic
 
 - Update action branch: master
 
@@ -267,6 +353,24 @@ Fixing tags typo
 - App version 0.3.2, Chart version 0.1.1
 
 - Testing CI workflows with a blank commit
+
+
+## [tor-controller-0.1.0] - 2022-01-29
+
+### Generic
+
+- #1 Helm chart for installing
+
+- Merge pull request #2 from bugfest/helm
+
+Helm chart for installing. Fixes #1 
+- Updated CHANGELOG
+
+- Preparing chart-releaser-action changes
+
+- Updating chart repo URL and instructions
+
+- Update action branch: master
 
 
 ## [0.3.1] - 2022-01-05

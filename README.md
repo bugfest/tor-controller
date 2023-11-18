@@ -33,7 +33,7 @@ helm repo update
 helm upgrade \
   --install \
   --create-namespace \
-  --namespace tor-controller-system \
+  --namespace tor-controller \
   tor-controller \
   bugfest/tor-controller
 ```
@@ -103,6 +103,9 @@ Full changelog: [CHANGELOG](CHANGELOG.md)
   - Upgraded Tor daemon to 0.4.7.x
   - Bridges support (obfs4 pluggable transport shipped alongside Tor daemon)
   - Implemented ExtraConfig in OnionService
+- **v0.10.x**
+  - Tor & controllers running as non-root
+  - Tor compiled with PoW anti-DoS protection
 
 Roadmap / TODO
 --------------
@@ -666,6 +669,7 @@ Versions
 | 0.1.12             | 0.9.1                  | 0.4.7.13   | Obfs4-0.0.14         |
 | 0.1.13             | 0.9.1                  | 0.4.7.13   | Obfs4-0.0.14         |
 | 0.1.14             | 0.9.2                  | 0.4.7.13   | Obfs4-0.0.14         |
+| 0.1.15             | 0.10.0                 | 0.4.8.9    | Obfs4-0.0.14         |
 
 References
 ----------
