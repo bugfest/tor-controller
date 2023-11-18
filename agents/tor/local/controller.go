@@ -168,7 +168,7 @@ func (c *Controller) sync(key string) error {
 	} else {
 		// Create `authorized_clients_dir` directory if it does not exist
 		if _, err := os.Stat(authorizedClientsDir); errors.Is(err, os.ErrNotExist) {
-			err := os.Mkdir(authorizedClientsDir, os.ModePerm)
+			err := os.Mkdir(authorizedClientsDir, 0o700)
 			if err != nil {
 				log.Fatalf("Creating directory %s failed with %v", authorizedClientsDir, err)
 			}
