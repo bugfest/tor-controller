@@ -103,6 +103,9 @@ Full changelog: [CHANGELOG](CHANGELOG.md)
   - Upgraded Tor daemon to 0.4.7.x
   - Bridges support (obfs4 pluggable transport shipped alongside Tor daemon)
   - Implemented ExtraConfig in OnionService
+- **v0.10.x**
+  - Tor & controllers running as non-root
+  - Tor compiled with PoW anti-DoS protection
 
 Roadmap / TODO
 --------------
