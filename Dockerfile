@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.20 as builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.20 AS builder
 
 WORKDIR /src
 
