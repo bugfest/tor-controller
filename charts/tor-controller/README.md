@@ -1,6 +1,6 @@
 # tor-controller
 
-![Version: 0.1.15](https://img.shields.io/badge/Version-0.1.15-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.10.0](https://img.shields.io/badge/AppVersion-0.10.0-informational?style=flat-square)
+![Version: 0.1.17](https://img.shields.io/badge/Version-0.1.17-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.10.0](https://img.shields.io/badge/AppVersion-0.10.0-informational?style=flat-square)
 
 Tor hidden services controller for kubernetes
 
@@ -15,6 +15,10 @@ Tor hidden services controller for kubernetes
 | image | object | `{"pullPolicy":"Always","repository":"quay.io/bugfest/tor-controller","tag":""}` | tor-controller image, it watches onionservices objects |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` |  |
+| kubeRbacProxy.image.pullPolicy | string | `"IfNotPresent"` |  |
+| kubeRbacProxy.image.repository | string | `"gcr.io/kubebuilder/kube-rbac-proxy"` |  |
+| kubeRbacProxy.image.tag | string | `"v0.8.0"` | Overrides the image tag whose default is the chart appVersion. |
+| kubeRbacProxy.resources | object | `{}` |  |
 | manager.image | object | `{"pullPolicy":"Always","repository":"quay.io/bugfest/tor-daemon-manager","tag":""}` | tor-daemon-manager image, it runs Tor client with manager |
 | manager.image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | nameOverride | string | `""` |  |
