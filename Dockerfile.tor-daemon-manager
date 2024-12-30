@@ -1,7 +1,7 @@
 ARG TOR_VERSION="0.4.8.9-r1"
 ARG TOR_IMAGE="quay.io/bugfest/tor"
 
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.20 as builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.20 AS builder
 
 WORKDIR /src
 
@@ -13,7 +13,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -ldflags="-s -w" -o /out/tor-local-manager ./agents/tor/main.go
 
-FROM ${TOR_IMAGE}:${TOR_VERSION} as tor
+FROM ${TOR_IMAGE}:${TOR_VERSION} AS tor
 
 RUN mkdir -p /app
 COPY --from=builder --chmod=0555 /out/tor-local-manager /app
